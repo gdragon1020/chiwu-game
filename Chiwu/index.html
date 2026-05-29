@@ -1,0 +1,2522 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鑄霧城日誌</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+TC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1e2130;
+    --bg2: #252838;
+    --bg3: #2c3045;
+    --panel: #2a2e42;
+    --panel2: #303450;
+    --border: #3d4260;
+    --border2: #4e5478;
+    --gold: #e0b84a;
+    --gold2: #f0d080;
+    --gold-dim: rgba(224,184,74,0.18);
+    --cyan: #5eddd4;
+    --cyan-dim: rgba(94,221,212,0.14);
+    --red: #f07070;
+    --red-dim: rgba(240,112,112,0.14);
+    --green: #6ed06e;
+    --purple: #a090ff;
+    --text: #f0ece0;
+    --text2: #c0bcd0;
+    --text3: #9898b0;
+    --exp-color: #90c8ff;
+    --steam: rgba(200,180,140,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif TC', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Gear background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 10% 90%, rgba(201,168,76,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 10%, rgba(78,205,196,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Steam pipes decoration */
+  .pipe-h {
+    position: fixed;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--border), var(--border2), var(--border), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .pipe-h.top { top: 60px; left: 0; right: 0; }
+  .pipe-h.bottom { bottom: 0; left: 0; right: 0; }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-bottom: 2px solid var(--gold);
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '⚙';
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    font-size: 60px;
+    opacity: 0.04;
+    animation: spin 20s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .header-title {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
+  .header-title span {
+    font-size: 11px;
+    color: var(--text3);
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 3px;
+    margin-top: 2px;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+  }
+  .stat-pill.gold { border-color: rgba(201,168,76,0.4); color: var(--gold); }
+  .stat-pill.exp { border-color: rgba(126,184,247,0.4); color: var(--exp-color); }
+  .stat-pill .icon { font-size: 14px; }
+
+  /* Player card */
+  .player-card {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .player-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  }
+
+  .player-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .player-avatar {
+    width: 52px;
+    height: 52px;
+    border: 2px solid var(--gold);
+    background: var(--bg2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+  .player-avatar::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 1px solid var(--border);
+    pointer-events: none;
+  }
+
+  .player-info { flex: 1; }
+  .player-name {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    color: var(--gold2);
+    margin-bottom: 3px;
+  }
+  .player-level {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 2px;
+  }
+  .player-level span { color: var(--cyan); }
+
+  .debt-warning {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: var(--red-dim);
+    border: 1px solid rgba(224,92,92,0.3);
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--red);
+    font-family: 'Share Tech Mono', monospace;
+    margin-bottom: 10px;
+  }
+  .debt-warning.show { display: flex; }
+
+  .exp-bar-wrap {
+    position: relative;
+    margin-top: 4px;
+  }
+  .exp-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 4px;
+  }
+  .exp-bar-track {
+    height: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .exp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--exp-color), var(--cyan));
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+  }
+  .exp-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: white;
+    opacity: 0.6;
+    filter: blur(2px);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    background: var(--bg2);
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text3);
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .tab:last-child { border-right: none; }
+  .tab.active {
+    color: var(--gold);
+    background: var(--gold-dim);
+  }
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+  }
+  .tab:hover:not(.active) { color: var(--text); background: var(--bg3); }
+
+  /* Tab content */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Add Task */
+  .add-task-panel {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .add-task-title {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .input-field {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: var(--gold); }
+  .input-field::placeholder { color: var(--text3); }
+
+  textarea.input-field {
+    resize: none;
+    height: 60px;
+    width: 100%;
+  }
+
+  .btn {
+    padding: 9px 18px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--bg);
+    font-weight: bold;
+  }
+  .btn-gold:hover { background: var(--gold2); }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+  .btn-red {
+    background: transparent;
+    border: 1px solid rgba(224,92,92,0.3);
+    color: var(--red);
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  .btn-red:hover { background: var(--red-dim); }
+  .btn-cyan {
+    background: var(--cyan);
+    color: var(--bg);
+    font-weight: bold;
+  }
+  .btn-cyan:hover { opacity: 0.85; }
+
+  .ai-loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    padding: 8px 0;
+  }
+  .ai-loading.show { display: flex; }
+  .ai-loading-dot {
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  .ai-loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .ai-loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
+
+  /* Task list */
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .task-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .task-item:hover { border-color: var(--border2); }
+  .task-item.completing {
+    animation: taskComplete 0.6s forwards;
+  }
+  @keyframes taskComplete {
+    0% { transform: translateX(0); opacity: 1; }
+    50% { background: rgba(92,184,92,0.1); border-color: var(--green); }
+    100% { transform: translateX(100%); opacity: 0; height: 0; padding: 0; margin: 0; }
+  }
+
+  .task-check {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border2);
+    background: var(--bg);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .task-check:hover { border-color: var(--green); background: rgba(92,184,92,0.1); }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-name {
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .task-desc {
+    font-size: 13px;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .task-rewards {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .reward-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border: 1px solid;
+  }
+  .reward-tag.exp { color: var(--exp-color); border-color: rgba(126,184,247,0.3); background: rgba(126,184,247,0.05); }
+  .reward-tag.coin { color: var(--gold); border-color: rgba(201,168,76,0.3); background: var(--gold-dim); }
+  .reward-tag.size { color: var(--text3); border-color: var(--border); }
+  .reward-tag.cat-daily  { color: #7ed6a0; border-color: rgba(126,214,160,0.35); background: rgba(126,214,160,0.07); }
+  .reward-tag.cat-focus  { color: #90c8ff; border-color: rgba(144,200,255,0.35); background: rgba(144,200,255,0.07); }
+  .reward-tag.cat-outing { color: #f0a050; border-color: rgba(240,160,80,0.35); background: rgba(240,160,80,0.07); }
+  .reward-tag.cat-social { color: #d08cf0; border-color: rgba(208,140,240,0.35); background: rgba(208,140,240,0.07); }
+  .reward-tag.cat-quest  { color: #f07070; border-color: rgba(240,112,112,0.35); background: rgba(240,112,112,0.07); }
+
+  .task-actions { display: flex; gap: 6px; align-items: flex-start; padding-top: 2px; }
+
+  /* Completed tasks */
+  .completed-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.6;
+  }
+  .completed-check { color: var(--green); font-size: 16px; }
+  .completed-name { font-size: 15px; text-decoration: line-through; color: var(--text3); flex: 1; }
+  .completed-time { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text3); }
+
+  /* Shop */
+  .shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .shop-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .shop-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 14px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .shop-item:hover { border-color: var(--border2); }
+  .shop-item.purchased {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  .shop-item-name {
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .shop-item-desc { font-size: 13px; color: var(--text3); margin-bottom: 10px; }
+  .shop-item-cost {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .shop-item-actions { display: flex; gap: 6px; }
+
+  .add-shop-form {
+    background: var(--panel);
+    border: 1px dashed var(--border2);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Advance/Debt */
+  .debt-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .debt-panel-title {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .debt-info {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .debt-stat {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .debt-stat span { color: var(--red); }
+
+  /* NPC */
+  .npc-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .npc-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .npc-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .npc-header:hover { background: var(--bg3); }
+  .npc-avatar {
+    width: 48px; height: 48px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .npc-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+  .npc-info { flex: 1; }
+  .npc-name {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    color: var(--gold2);
+    margin-bottom: 2px;
+  }
+  .npc-role { font-size: 13px; color: var(--text3); font-family: 'Share Tech Mono', monospace; }
+  .npc-status {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'Share Tech Mono', monospace;
+    text-align: right;
+  }
+
+  .npc-chat {
+    display: none;
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .npc-chat.open { display: flex; }
+
+  .chat-messages {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .chat-bubble {
+    max-width: 85%;
+    padding: 8px 12px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .chat-bubble.npc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--gold);
+    align-self: flex-start;
+    color: var(--text);
+  }
+  .chat-bubble.player {
+    background: var(--cyan-dim);
+    border: 1px solid rgba(78,205,196,0.2);
+    border-right: 2px solid var(--cyan);
+    align-self: flex-end;
+    color: var(--text);
+  }
+  .chat-bubble .bubble-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 3px;
+  }
+
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input-row .input-field { font-size: 12px; padding: 7px 10px; }
+
+  .npc-loading {
+    display: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    padding: 4px 0;
+  }
+  .npc-loading.show { display: block; }
+
+  /* Notifications */
+  .notif-container {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .notif {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--green);
+    padding: 10px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    animation: notifIn 0.3s ease, notifOut 0.3s ease 2.7s forwards;
+    pointer-events: auto;
+    min-width: 200px;
+  }
+  .notif.gold { border-left-color: var(--gold); }
+  .notif.exp { border-left-color: var(--exp-color); }
+  .notif.red { border-left-color: var(--red); }
+  @keyframes notifIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes notifOut { to { transform: translateX(100%); opacity: 0; } }
+
+  /* Section labels */
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--text3);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    border: 1px dashed var(--border);
+    background: var(--bg2);
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .loading-title {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-shadow: 0 0 30px rgba(201,168,76,0.4);
+  }
+  .loading-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 2px;
+  }
+  .loading-bar-track {
+    width: 200px;
+    height: 3px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .loading-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--cyan));
+    animation: loadingProgress 1.5s ease-in-out forwards;
+  }
+  @keyframes loadingProgress { from { width: 0; } to { width: 100%; } }
+
+
+  .deadline-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 2px 7px;
+    border: 1px solid;
+    color: var(--cyan);
+    border-color: rgba(94,221,212,0.3);
+    background: rgba(94,221,212,0.05);
+  }
+  .deadline-tag.urgent { color: var(--red); border-color: rgba(240,112,112,0.4); background: var(--red-dim); animation: urgentPulse 1.5s ease-in-out infinite; }
+  .deadline-tag.soon { color: #f0a050; border-color: rgba(240,160,80,0.4); background: rgba(240,160,80,0.08); }
+  .deadline-tag.overdue { color: var(--red); border-color: rgba(240,112,112,0.4); background: var(--red-dim); text-decoration: line-through; }
+  @keyframes urgentPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .task-item.overdue { border-color: rgba(240,112,112,0.3); background: rgba(240,112,112,0.04); }
+  .task-item.overdue .task-name { color: var(--text2); }
+
+  .npc-visit-banner {
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-left: 3px solid var(--gold);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: none;
+    gap: 12px;
+    align-items: flex-start;
+    position: relative;
+  }
+  .npc-visit-banner.show { display: flex; }
+  .npc-visit-avatar { font-size: 24px; flex-shrink: 0; width: 48px; height: 48px; overflow: hidden; }
+  .npc-visit-body { flex: 1; }
+  .npc-visit-name { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold); margin-bottom: 4px; letter-spacing: 1px; }
+  .npc-visit-msg { font-size: 14px; color: var(--text); line-height: 1.6; }
+  .npc-visit-close { position: absolute; top: 8px; right: 12px; color: var(--text3); cursor: pointer; font-size: 16px; }
+  .npc-visit-close:hover { color: var(--text); }
+
+  .deadline-input-row { display: flex; gap: 8px; margin-top: 6px; align-items: center; }
+  .deadline-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+  .cooldown-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border: 1px solid rgba(139,124,246,0.4);
+    color: var(--purple);
+    background: rgba(139,124,246,0.07);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .cooldown-badge.half {
+    border-color: rgba(240,160,80,0.4);
+    color: #f0a050;
+    background: rgba(240,160,80,0.07);
+  }
+  .task-item.on-cooldown {
+    border-left: 2px solid rgba(139,124,246,0.4);
+  }
+  .task-item.on-cooldown .task-check {
+    border-color: rgba(139,124,246,0.4);
+  }
+  .cooldown-notice {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: #f0a050;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+
+  /* ── WEATHER CARD ── */
+  .weather-card {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    display: none;
+  }
+  .weather-card.show { display: block; }
+  .weather-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(78,205,196,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .weather-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .weather-left { display: flex; align-items: center; gap: 12px; }
+  .weather-icon { font-size: 28px; }
+  .weather-main {}
+  .weather-name {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .weather-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .weather-right { text-align: right; }
+  .weather-temp {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    color: var(--text2);
+  }
+  .weather-location {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .weather-effect {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--cyan);
+    padding: 7px 12px;
+    margin-top: 8px;
+  }
+  .weather-effect-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+  .weather-effect-desc {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+  .weather-flavor {
+    font-size: 11px;
+    color: var(--text3);
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .weather-triggered {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--green);
+    margin-top: 4px;
+  }
+  .weather-effect.done {
+    opacity: 0.6;
+  }
+  .weather-effect.done .weather-effect-desc {
+    text-decoration: line-through;
+    color: var(--text3);
+  }
+  .weather-effect-badge {
+    display: inline-block;
+    background: rgba(110,208,110,0.15);
+    border: 1px solid rgba(110,208,110,0.4);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+  .weather-reset {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 6px;
+    text-align: right;
+  }
+  .weather-fallback {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: #f0a050;
+    margin-bottom: 6px;
+  }
+
+  .cat-select {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    padding: 4px 6px;
+    font-size: 11px;
+    font-family: 'Share Tech Mono', monospace;
+    cursor: pointer;
+    outline: none;
+  }
+  .cat-select:hover { border-color: var(--gold); }
+
+  .quota-banner {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel);
+    border: 1px solid rgba(240,160,80,0.6);
+    border-left: 3px solid #f0a050;
+    padding: 12px 20px;
+    z-index: 999;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .quota-banner.show { display: block; }
+  .quota-banner-title {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: #f0a050;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .quota-banner-msg {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .quota-banner-close {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    cursor: pointer;
+    float: right;
+  }
+  .quota-banner-close:hover { color: var(--text); }
+
+  /* ── DECOR SYSTEM ── */
+  .scene-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .scene-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 7px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .scene-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .scene-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+  .scene-viewport {
+    position: relative;
+    width: 100%;
+    border: 1px solid var(--border2);
+    overflow: hidden;
+    background: var(--bg);
+    cursor: default;
+  }
+  .scene-img {
+    width: 100%;
+    display: block;
+    user-select: none;
+  }
+
+  .hotspot {
+    position: absolute;
+    border: 2px dashed rgba(100,180,255,0.7);
+    background: rgba(100,180,255,0.05);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 8px rgba(100,180,255,0.3);
+  }
+  .hotspot:hover {
+    background: rgba(100,180,255,0.15);
+    border-color: rgba(100,180,255,1);
+    box-shadow: 0 0 16px rgba(100,180,255,0.6);
+  }
+  .hotspot.equipped {
+    border-color: rgba(201,168,76,0.8);
+    box-shadow: 0 0 10px rgba(201,168,76,0.4);
+  }
+  .hotspot-label {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,11,15,0.9);
+    border: 1px solid var(--border2);
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .hotspot:hover .hotspot-label { opacity: 1; }
+
+  .slot-info-panel {
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-left: 3px solid var(--gold);
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+  .slot-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .slot-info-name {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .slot-info-close {
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .slot-info-close:hover { color: var(--text); }
+  .slot-info-current {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .slot-info-hint {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    .header { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .shop-grid { grid-template-columns: 1fr; }
+    .input-row { flex-direction: column; }
+    .header-stats { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-title">鑄霧城日誌</div>
+  <div class="loading-sub">CONNECTING TO IRONMIST CITY...</div>
+  <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+</div>
+
+<div class="pipe-h top"></div>
+<div class="notif-container" id="notifContainer"></div>
+<div class="npc-visit-banner" id="npcVisitBanner">
+  <div class="npc-visit-avatar" id="npcVisitAvatar"></div>
+  <div class="npc-visit-body">
+    <div class="npc-visit-name" id="npcVisitName"></div>
+    <div class="npc-visit-msg" id="npcVisitMsg"></div>
+  </div>
+  <div class="npc-visit-close" onclick="document.getElementById('npcVisitBanner').classList.remove('show')">✕</div>
+</div>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">
+      鑄霧城日誌
+      <span>IRONMIST CITY CHRONICLE</span>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill exp"><span class="icon">⚡</span> <span id="headerExp">0</span> EXP</div>
+      <div class="stat-pill gold"><span class="icon">◈</span> <span id="headerCoins">0</span> 金幣</div>
+    </div>
+  </div>
+
+  <!-- Player Card -->
+  <div class="player-card">
+    <div class="debt-warning" id="debtWarning">
+      ⚠ 你目前有預支債務 <strong id="debtAmount">0</strong> 金幣，每日產生利息
+    </div>
+    <div class="player-top">
+      <div class="player-avatar"><img src="character/player.png" alt="主角" onerror="this.parentElement.innerHTML='🧭'"></div>
+      <div class="player-info">
+        <div class="player-name" id="playerName">旅人</div>
+        <div class="player-level">LV.<span id="playerLevel">1</span> &nbsp;|&nbsp; 鑄霧城新來的外鄉人</div>
+      </div>
+    </div>
+    <div class="exp-bar-wrap">
+      <div class="exp-bar-label">
+        <span>EXP</span>
+        <span id="expLabel">0 / 300</span>
+      </div>
+      <div class="exp-bar-track">
+        <div class="exp-bar-fill" id="expBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weather Card -->
+  <div class="weather-card show" id="weatherCard">
+    <div class="weather-fallback" id="weatherFallback" style="display:none">⚠ 天氣資料不穩定，套用備用天氣</div>
+
+    <!-- City input (shown when no city set) -->
+    <div id="weatherCityInput">
+      <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:2px;margin-bottom:10px">✦ 設定城市天氣</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" class="input-field" id="cityInputField" placeholder="輸入城市名稱，例如：新北市、Taipei..." style="font-size:13px;padding:8px 12px" />
+        <button class="btn btn-gold" onclick="submitCity()">確認</button>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-top:6px">設定後每天會自動使用此城市抓取天氣</div>
+    </div>
+
+    <!-- Weather display (shown after city set) -->
+    <div id="weatherDisplay" style="display:none">
+      <div class="weather-top">
+        <div class="weather-left">
+          <div class="weather-icon" id="weatherIcon">🌫</div>
+          <div class="weather-main">
+            <div class="weather-name" id="weatherEffectTitle">鑄霧城天氣讀取中</div>
+            <div class="weather-sub" id="weatherDisplayText">取得天氣資料...</div>
+          </div>
+        </div>
+        <div class="weather-right">
+          <div class="weather-temp" id="weatherTemp">--°C</div>
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:2px">
+            <div class="weather-location" id="weatherLocation"></div>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);cursor:pointer" onclick="changeCity()">✎ 更改</span>
+          </div>
+        </div>
+      </div>
+      <div class="weather-effect" id="weatherEffectBox">
+        <div class="weather-effect-title">今日天氣效果</div>
+        <div class="weather-effect-desc" id="weatherEffectDesc">讀取中...</div>
+        <div class="weather-flavor" id="weatherFlavor"></div>
+        <div class="weather-triggered" id="weatherTriggered" style="display:none"><span class="weather-effect-badge">✓ 今日效果已觸發</span></div>
+      </div>
+      <div class="weather-reset" id="weatherReset"></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('tasks')">📋 任務</div>
+    <div class="tab" onclick="switchTab('shop')">🏪 商店</div>
+    <div class="tab" onclick="switchTab('npc')">👥 居民</div>
+    <div class="tab" onclick="switchTab('decor')">🏠 裝潢</div>
+    <div class="tab" onclick="switchTab('debt')">💸 帳務</div>
+  </div>
+
+  <!-- TASKS TAB -->
+  <div class="tab-content active" id="tab-tasks">
+    <div class="add-task-panel">
+      <div class="add-task-title">✦ 新增委託</div>
+      <div class="input-row">
+        <input type="text" class="input-field" id="taskInput" placeholder="輸入任務名稱..." />
+        <button class="btn btn-gold" onclick="addTask()">送出</button>
+      </div>
+      <textarea class="input-field" id="taskDesc" placeholder="詳細說明（選填）..."></textarea>
+      <div class="deadline-input-row">
+        <span class="deadline-label">截止日期（選填）：</span>
+        <input type="date" class="input-field" id="taskDeadline" style="max-width:160px;font-size:12px;padding:6px 10px" />
+      </div>
+      <div class="ai-loading" id="aiLoading">
+        <div class="ai-loading-dot"></div>
+        <div class="ai-loading-dot"></div>
+        <div class="ai-loading-dot"></div>
+        <span>魔法鑑定師正在評估任務難度...</span>
+      </div>
+    </div>
+
+    <div class="section-label">進行中的委託</div>
+    <div class="task-list" id="taskList">
+      <div class="empty-state" id="emptyTasks">尚無委託。去找點事情做吧，外鄉人。</div>
+    </div>
+
+    <div style="margin-top:20px" class="section-label">已完成的委託</div>
+    <div class="task-list" id="completedList">
+      <div class="empty-state" id="emptyCompleted" style="display:none">尚無完成記錄。</div>
+    </div>
+  </div>
+
+  <!-- SHOP TAB -->
+  <div class="tab-content" id="tab-shop">
+    <div class="add-shop-form">
+      <div class="section-label">✦ 登記心願</div>
+      <div class="input-row">
+        <input type="text" class="input-field" id="shopName" placeholder="商品名稱..." />
+        <input type="number" class="input-field" id="shopCost" placeholder="價格（金幣）" style="max-width:140px" />
+      </div>
+      <div class="input-row">
+        <input type="text" class="input-field" id="shopDesc" placeholder="說明（選填）..." />
+        <button class="btn btn-gold" onclick="addShopItem()">新增</button>
+      </div>
+    </div>
+
+    <div class="section-label">我的願望清單</div>
+    <div class="shop-grid" id="shopGrid">
+      <div class="empty-state" id="emptyShop" style="grid-column:1/-1">願望清單是空的。想買什麼就登記上來吧。</div>
+    </div>
+  </div>
+
+  <!-- NPC TAB -->
+  <div class="tab-content" id="tab-npc">
+    <div class="section-label">鑄霧城的居民</div>
+    <div class="npc-list" id="npcList"></div>
+  </div>
+
+  <!-- DECOR TAB -->
+  <div class="tab-content" id="tab-decor">
+    <!-- Scene selector -->
+    <div class="scene-selector">
+      <button class="scene-btn active" onclick="switchScene('entrance')" data-scene="entrance">🚪 門面區</button>
+      <button class="scene-btn" onclick="switchScene('reception')" data-scene="reception">🏛 接待區</button>
+      <button class="scene-btn" onclick="switchScene('work')" data-scene="work">📖 工作區</button>
+      <button class="scene-btn" onclick="switchScene('storehouse')" data-scene="storehouse">📦 倉儲區</button>
+      <button class="scene-btn" onclick="switchScene('home')" data-scene="home">🛋 小屋</button>
+      <button class="scene-btn" onclick="switchScene('equip')" data-scene="equip">⚔️ 裝備</button>
+    </div>
+
+    <!-- Scene viewport -->
+    <div class="scene-viewport" id="sceneViewport">
+      <img class="scene-img" id="sceneImg" src="" alt="" />
+      <!-- Hotspots rendered here by JS -->
+    </div>
+
+    <!-- Selected slot info -->
+    <div class="slot-info-panel" id="slotInfoPanel" style="display:none">
+      <div class="slot-info-header">
+        <span class="slot-info-name" id="slotInfoName"></span>
+        <span class="slot-info-close" onclick="closeSlotInfo()">✕</span>
+      </div>
+      <div class="slot-info-current" id="slotInfoCurrent"></div>
+      <div class="slot-info-hint">此欄位將在道具系統開放後可更換裝備</div>
+    </div>
+  </div>
+
+  <!-- DEBT TAB -->
+  <div class="tab-content" id="tab-debt">
+    <div class="debt-panel">
+      <div class="debt-panel-title">✦ 帳務中心</div>
+      <div class="debt-info">
+        <div class="debt-stat">目前金幣：<span style="color:var(--gold)" id="debtPageCoins">0</span></div>
+        <div class="debt-stat">負債金額：<span id="debtPageDebt">0</span></div>
+        <div class="debt-stat">每日利率：<span>5%</span></div>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.7">
+        預支系統讓你可以先用未來的金幣購買獎勵，但每天會產生 5% 的複利。<br>
+        建議盡快完成任務還清債務。
+      </p>
+      <div class="input-row">
+        <input type="number" class="input-field" id="advanceAmount" placeholder="預支金額..." />
+        <button class="btn btn-red" onclick="takeAdvance()">申請預支</button>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn btn-ghost" onclick="applyInterest()" style="font-size:11px">模擬一天利息</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="quota-banner" id="quotaBanner">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div class="quota-banner-title">⚠ AI 額度不足</div>
+    <span class="quota-banner-close" onclick="dismissQuotaBanner()">✕ 關閉</span>
+  </div>
+  <div class="quota-banner-msg">
+    Gemini 今日免費額度已用完。<br>
+    任務分類將改用備用規則，NPC 暫時無法回應。<br>
+    額度將於明日重置，或考慮儲值 OpenAI $5 作為備用。
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────
+const SUPABASE_URL = 'https://xdgwmnpmvoalwckeamqh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkZ3dtbnBtdm9hbHdja2VhbXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MzE3NjQsImV4cCI6MjA5NTUwNzc2NH0.ht3mvrli_osiCmHl72xCqL4YWdETc9VXOMfXaZj1wX8';
+
+const LEVEL_THRESHOLDS = [0, 300, 800, 1500, 3000, 5000, 8000, 12000];
+const LEVEL_TITLES = [
+  '鑄霧城新來的外鄉人', '找到落腳地的旅人', '街坊認識的新面孔',
+  '城裡站穩腳跟的人', '行會注目的新星', '行會的正式成員',
+  '備受信任的冒險者', '鑄霧城的傳奇人物'
+];
+const NPC_DATA = [
+  { name: '葛莉達・鐵心', role: '房東', emoji: '👵', img: 'character/Greta.png', status: '在走廊修東西', personality: '妳是個說話直接、不客氣但實際上很照顧房客的老太太。有機械義肢手臂，年輕時是工廠技師，退休後靠收租過活。偶爾提到房租或是走廊上的貓「鏽斑」。講話簡短有力，不廢話，但關鍵時刻會說出溫暖的話。',
+    visits: {
+      0: ['今天一件事都沒做？我年輕時在工廠，懶的人第一個被開除。','房租不會因為你沒動而消失，委託也是。','鏽斑比你勤快，牠今天已經抓了兩隻耗子。','沒事可做嗎？走廊的管線還在漏，去修一修。','我不管你有多累，任務不會自己完成的。','空手來空手去，這樣下去在鑄霧城待不久。','年輕人沒有不做事的本錢，聽好了。','我見過太多像你這樣的外鄉人，最後都灰頭土臉回鄉。趁早動起來。','不要讓今天白白過去，即使只做一件小事也好。','義肢這條手臂就是當年不偷懶換來的。'],
+      1: ['做了一件，不錯，至少沒荒廢。','鏽斑今天心情好，算你有點長進。','一件也是件，繼續。','有在動就好，別停下來。','義肢修好一個螺絲，也算修好了。繼續。','還可以，但別以為這樣就夠了。','做了一件？好。現在去做第二件。','進度有了，別讓它消失。','不多，但總比零好。加油。','開始了就不要停，慣性是最好的工具。'],
+      2: ['做了幾件，我看見了。','不壞，這才像個在城裡打拚的人。','鏽斑今天也在曬太陽，但你沒有理由這樣。繼續動。','中規中矩，還有進步空間。','義肢這條手臂做了三十年的活，你才剛開始。','看來今天有在用腦，好。','幾件下來，感覺你在上軌道了。','別讓這個勢頭斷掉。','做得不錯，但不要讓自己太滿意太早。','繼續，城裡的機會不等人。'],
+      3: ['今天做了不少，我得承認。','這個速度，在鑄霧城能撐得下去。','鏽斑都朝你點頭了，這是牠最高的讚美。','義肢手臂要是能有你今天這樣的效率就好了。','七到十件，這不是普通的努力。','你今天讓我少擔心一點，難得。','繼續保持這個節奏，別讓自己鬆懈。','這種表現，租金我考慮打九折。只是考慮。','做得很好，不過別驕傲，明天一樣要動。','我見過很多人，你今天算是讓我刮目相看了。'],
+      4: ['十件以上？你不是來玩的，是真的來打拚的。','這種幹勁，讓我想起年輕時的自己。','鏽斑說你可以留下來，牠的眼光很準。','義肢換來了三十年的努力，你今天換來了什麼？繼續積累。','我不常說這種話，但你今天做得很好。','這樣下去，鑄霧城會記住你的名字。','好好休息，明天繼續。這才是真正的強者。','你今天的表現值得一頓好飯。去吧。','有這樣的決心，在哪裡都能站穩。','今天夠了，把剩下的力氣留給明天。']
+    }
+  },
+  { name: '席爾・煙霧', role: '咖啡館老闆', emoji: '☕', img: 'character/Seal.png', status: '在吧台擦杯子', personality: '你是個半精靈，調的咖啡有輕微魔法效果。說話不多，但溫柔，是個好的傾聽者。偶爾分享城裡的觀察，從不評判別人。話少但每句都有份量。喜歡用詩意的方式描述事物。',
+    visits: {
+      0: ['今天的咖啡還沒沖，你的任務也是。','霧裡什麼都看不清，動起來才能找到方向。','空杯子什麼都裝不了。先把今天填滿。','今天的蒸汽還沒升起，和你的進度一樣。','靜止的水會長苔，你懂我意思。','我沖了一杯「起步」，放在這裡等你。','城裡的鐘聲響了幾次，你聽見了嗎。','今天的光線很好，可惜進度跟不上。','什麼都還沒開始，這樣可惜了。','你知道咖啡豆不自己跳進杯子的，對吧。'],
+      1: ['開始了，這是最難的一步，你跨過了。','一件事完成，一縷霧散開。','進度像咖啡，慢慢來，但別讓它涼了。','好的開始。繼續。','第一杯沖好了，接下來的才是重點。','動起來了，感覺怎麼樣？','一件事的重量，有時候比十件還重要。','你今天選擇動了，這個選擇沒有白費。','繼續走，霧會慢慢散的。','不快，但在動，這樣就夠了。'],
+      2: ['幾件下來，你的輪廓開始清晰了。','霧中的路，一步一步就走出來了。','中等的進度，釀出中等的咖啡。不夠香，但夠喝。','你今天的狀態，像中焙豆，平衡。','不快不慢，但別忘了今天還沒結束。','幾件任務，幾口咖啡，都是積累。','看得出來你在努力，繼續。','霧還沒全散，但你走對方向了。','今天的進度算是過得去。','不要讓自己停在一半的地方。'],
+      3: ['七件以上，你今天讓這裡的空氣都輕了一點。','這種節奏，咖啡都沖得更香。','你今天的樣子，讓我想起某個我很佩服的人。','鑄霧城的霧，今天被你撥開了一大片。','好好的一天，值得一杯好咖啡。','這樣的努力，城裡都看在眼裡。','進度這麼好，晚上可以睡得安穩了。','你讓我覺得今天的咖啡沒有白沖。','繼續這個步調，你會走得很遠。','今天的你，比昨天的你更接近想要的地方了。'],
+      4: ['十件以上。這樣的人，城裡不多。','你今天的進度，連我都覺得安靜地高興。','喝杯特調吧，你今天值得。','這樣的努力，霧都不敢擋你的路了。','我不常說這種話，但今天你真的很好。','鑄霧城需要像你這樣的人。','好好休息，明天的霧還在等你。','你今天做到的事，明天的你會感謝的。','這種表現，讓人想在你身上押注。','去睡一覺吧，你今天夠了。']
+    }
+  },
+  { name: '娜娜', role: '市場攤販', emoji: '🧺', img: 'character/Nana.png', status: '在攤子整理香料', personality: '你是個從南方省份來的活潑女生，跟主角一樣是外來者，賣家鄉香料和草藥。愛聊天，會八卦整條街的事，是個情報站。說話快、活潑，喜歡用感嘆號，偶爾說漏嘴一些秘密。',
+    visits: {
+      0: ['欸欸！你今天一件事都沒做喔！我看見了！','我聽說懶惰的人在鑄霧城活不過第三個冬天！是真的嗎？！','快去做事啦！我今天賣了二十包香料了欸！','你知道隔壁的米迦今天接了五個委託嗎？！加油啦！','沒有進度的話今晚的鹽燒魚你沒份喔！','我從南方走了三個月來這裡，結果看到你這樣，唉！','動起來啦！鑄霧城不養閒人的！','你知道嗎，攤位旁邊那個大叔說今天有新的委託公告！快去看！','欸！沒有做事就沒有金幣，沒有金幣就沒有香料，邏輯很簡單！','我不是在催你啦…好啦我就是在催你，快點！'],
+      1: ['一件！比零件好多了！哈哈！','好的開始！我今天開攤也是賣出第一包才開始順的！','哇你動了！我還以為你今天要擺爛咧！','一件嘛，還可以啦，但是可以更多的！','有做就好有做就好，繼續加油！','我聽說行會的人很欣賞有在動的外鄉人哦！繼續！','你知道嗎，就算只有一件，也比街角那個傢伙強！','一件！香料的香味今天特別給你加持一下！','不錯不錯，繼續保持！我在幫你加油！','一件委託完成！撒花！繼續前進！'],
+      2: ['幾件下來了！你今天不錯嘛！','我偷偷聽說今天完成三件以上的人行會會多看一眼！不知道是不是真的！','進度中等，但是有在動就很棒了！','哇你認真起來還蠻厲害的嘛！','繼續加油！我今天也要賣到一百包！','幾件任務下來，感覺你的運氣也變好了一點！我的香草說的！','不賴嘛！繼續這個速度！','中等進度，但是你的眼神看起來比昨天有力！','幾件了！繼續衝！攤位旁邊幫你加油！','不錯嘛！繼續，我看好你！'],
+      3: ['哇！七件以上！你今天超猛的！','我要跟大家說你今天做了這麼多！！','七到十件，這個在街上算很有效率的了！','欸你今天這樣下去遲早被行會盯上的！加油！','哇你今天讓我覺得我也要更努力了！','七件！！你今天是喝了什麼魔法咖啡嗎！','這個進度，今天的鑄霧城都覺得你很行！','哇你今天超厲害的！我要給你一小包幸運香料！','這種速度，在南方省份也算是快手了！','七件以上！！讚！讚！讚！'],
+      4: ['十一件以上！！！我的天啊你是超人嗎！！','這個進度！！！整條街都要聽說了！！','哇我要跟所有人說今天有個外鄉人做了超多事！！','你今天做了這麼多，今晚一定要好好休息喔！','十一件以上！！我要把這個記在攤子日記裡！！','哇你今天真的讓我大開眼界！！','這種幹勁，在鑄霧城一定能出人頭地的！！','十一件！你今天是整條街最勤快的人了！！','哇好厲害！！今天的香料費算你便宜一點！','你今天真的太強了！！我超級佩服你！！']
+    }
+  },
+  { name: '托比', role: '行會雜役', emoji: '⚙️', img: 'character/Toby.png', status: '在行會門口打瞌睡', personality: '你是個17歲的少年，是行會的雜役，很崇拜行會的人。對主角又羨慕又想親近。說話有點結巴和緊張，但很熱情。偶爾偷偷透露行會的消息，馬上後悔說了。',
+    visits: {
+      0: ['欸、欸…你今天還沒做事嗎？行會的前輩說過，每天至少要動一下…','我、我不是要說你啦，但是沒有進度的話會被忘記的…','行會那邊說，有委託空著是一種浪費！快去做吧！','欸我偷聽到說今天還沒開始的人…算了算了我不能說，但快去做啦！','我在門口等委託的人，但你一直沒出現，所以我來找你了…','行、行會的前輩說有在動的人才看得見機會，沒動的人…嗯，你懂吧。','你沒事嗎？要不要我陪你去接個委託？我、我是說，如果你需要的話…','快點啦！行會的通知板今天有新的！我偷瞄了一下，好像很值得…','呃，我只是剛好路過啦，不是特地來催你的！但快去做事！','沒有進度的話，你的名字不會出現在行會的名冊上的，我聽說的…'],
+      1: ['一件！你做了一件！這樣就夠了嗎？呃、我的意思是，可以繼續的！','你開始了！行會的前輩說，開始是最重要的！','一件委託！我、我要記下來，說不定有用！','有在動了！繼續！我在旁邊幫你加油！','一件下來了，感覺你今天狀態不錯？繼續加油！','我今天也搬了好多東西，你也在努力，我們一起！','一件！不多但是有！繼續！','你動了，行會那邊說不定有人注意到你了！我、我也不確定啦！','一件委託，這是好的開始，繼續加油！','有在做就好有在做就好！我替你高興！'],
+      2: ['幾件了！你今天算是在狀態的！','行會的人說，穩定輸出比一次爆發重要！你今天算是穩定了！','幾件委託，不多不少，但我覺得你可以更多的…我、我只是說說啦！','中等進度！我在門口也是一直在跑腿，我們都在努力！','幾件下來了，感覺行會那邊開始注意你了！欸，我可能說了不該說的…','繼續！幾件任務，幾步路，都在往前！','中等進度，我覺得你今天比昨天好！感覺到嗎？','幾件委託，這個在外鄉人裡算不錯的！繼續！','行會的公告板今天有一個新任務，你要不要去看看？、哦不、沒事沒事…','幾件了，繼續加油！我在幫你數！'],
+      3: ['七件以上！你、你今天真的很厲害！','行會的前輩說像這樣的人遲早會進來的！我偷聽到的，真的！','七到十件！我覺得你今天讓行會的人看到你了！','哇，你今天這樣下去，很快就不會是外鄉人了！','七件！我在門口都替你緊張！你真的做到了！','這個進度，行會的人應該已經在討論你了！欸、我說太多了…','七件以上，你今天真的很強，我有點崇拜你了…','行會裡面有人說今天有個外鄉人表現不錯，是你嗎！！','七件！你今天讓我覺得我也要更努力了！','哇！這個速度，你是我看過最努力的外鄉人之一！'],
+      4: ['十一件以上！！行會一定已經注意到你了！我確定！','你今天做了這麼多！！我、我感動到說不出話！','十一件！！我要去偷偷記在行會的外牆上！不是，我不會真的去…','你今天的表現，行會的前輩一定看見了！我剛好也在，所以我也看見了！','十一件以上！你今天是鑄霧城最努力的外鄉人了！我說的！','哇你今天讓我覺得我跟了個了不起的人！欸、那個、我不是跟著你啦…','十一件！！這種表現，不進行會說不過去！','你今天讓我超興奮的！十一件！這是真的嗎！','我要去跟前輩說！欸、算了，我還是讓你自己展示給他們看吧！','你今天真的太厲害了。我，我以後也想像你一樣。']
+    }
+  },
+  { name: '伊萊・碎晶', role: '碎光工坊老闆', emoji: '🔮', img: 'character/Elijah.png',
+    status: '在工坊裡修東西',
+    personality: '你是伊萊・碎晶，29歲，人類，右眼是靈石義眼。在下城經營碎光工坊，回收壞掉的靈石燈、廢棄齒輪、破損道具。曾在煉金師行會做低階鑑定員，因拒絕把下城居民的靈石器具轉賣給上城而被排擠，後來自己出來開店。說話帶點冷靜的諷刺感，但對下城的人有真實的情感。偶爾提到行會的不合理、或工坊裡奇怪的收藏品。義眼在觀察人的時候會微微發光。',
+    visits: {
+      0: ['店裡很安靜。太安靜了。你也不打算做點什麼嗎？','義眼掃了你一下，沒有任何任務完成的跡象。我收過更廢的零件，但不多。','上城的人喜歡說「沉澱是一種智慧」。我覺得那是藉口。','工坊今天進了一批廢料，你今天的產出跟它們差不多。','靈石放著不用會慢慢暗掉。人也一樣。','我修過很多壞掉的東西，但自己不動的那種我修不了。','你知道嗎，最難修的不是壞掉的器具，是停著不動的人。','碎晶放著不管會繼續碎。你的任務也是。','行會以前說我不夠積極。現在看看你，我覺得他們說得有點道理。','今天什麼都沒做嗎？那至少來看看我工坊的廢料，說不定會有靈感。'],
+      1: ['一件。比昨天的廢料堆強一點。','義眼記錄了你今天的第一個動作。繼續。','開始了，這樣就夠了。繼續往前。','一件任務，一塊拼回去的碎晶。慢慢來。','不壞。至少沒有完全靜止。','一件事做完，今天就不算白費了。','比零強，這是事實。','工坊的第一個修復永遠最難。你跨過去了。','一件任務，我記下來了。繼續。','不錯的開始。義眼給你一個微弱的認可光。'],
+      2: ['幾件下來了，看來你今天有在運作。','中等輸出，正常水準。對下城的人來說夠了。','行會那邊不會看到你今天的努力，但我看到了。','幾件任務，幾塊碎晶拼回去，差不多就是這樣。','不快不慢，但有在動，這樣就好。','幾件下來，義眼給你個點頭。','中等進度，繼續，別讓它停下來。','工坊今天修了三個燈，你今天也差不多。','幾件任務，這個水準在下城算得上認真了。','不錯，繼續保持這個節奏。'],
+      3: ['七件以上。你今天讓義眼多閃了幾次。','這個進度，連上城的鑑定員都說不出話。','七到十件，我工坊最好的師傅也不過這樣。','你今天的輸出，讓我想起以前還在行會時認真工作的自己。','七件以上，下城今天因為你更穩了一點。','這種節奏，廢料也會開始敬你三分。','七件，義眼的光比平常亮一些。','不是在誇你，只是在陳述事實：你今天做得很好。','七到十件，碎晶都排好了，很整齊。','這樣下去，你在鑄霧城站得住的。'],
+      4: ['十一件以上。義眼過熱了，需要冷卻一下。','這種產出，行會看到會後悔當初排擠我的決定。','十一件以上，你今天是下城最勤快的人之一。','工坊從來沒有一天修這麼多東西。你讓我反省了。','十一件。說真的，我有點佩服你。','義眼今天因為你閃了太多次，我需要換一下電晶。','你今天的表現，值得我拿出壓箱底的好茶招待。','十一件，這不是普通的努力，這是真的在拚。','下城需要你這樣的人。我說真的。','十一件以上，今天的你讓鑄霧城的霧散了一點。']
+    }
+  }
+];
+
+let player = null;
+let tasks = [];
+let completedTasks = [];
+let shopItems = [];
+let npcChats = {};
+
+// ─── SUPABASE ───────────────────────────────────────
+async function sb(path, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, opts);
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ─── WEATHER SYSTEM ─────────────────────────────────
+const WEATHER_EFFECTS = {
+  clear:        { icon:'☀️',  title:'晴朗開市',    desc:'今日第一個外出委託金幣 +8%',          flavor:'水晶街燈在薄霧後微微發亮，今天適合出門處理一件小事。',        trigger:'外出委託', type:'coinPercent', value:8 },
+  cloudy:       { icon:'☁️',  title:'雲層遮光',    desc:'今日第一個專注委託 EXP +5%',          flavor:'光線不刺眼，適合坐下來處理一點事情。',                        trigger:'專注委託', type:'expPercent',  value:5 },
+  rain:         { icon:'🌧',  title:'雨聲靜心',    desc:'今日第一個專注委託 EXP +8%',          flavor:'雨聲落在下城石板路上，咖啡館裡的燈比平常更安靜。',            trigger:'專注委託', type:'expPercent',  value:8 },
+  thunderstorm: { icon:'⛈',  title:'暫避風暴',    desc:'今日第一個日常委託 EXP +8%',          flavor:'外面太吵了，先把自己照顧好。',                                trigger:'日常委託', type:'expPercent',  value:8 },
+  fog:          { icon:'🌫',  title:'鑄霧城本色',  desc:'今日完成任意2個任務後，額外 +5 金幣',  flavor:'霧氣從礦脈縫隙裡漫出來，整座城市像被藍灰色布料蓋住。',        trigger:'any2',     type:'coins',       value:5 },
+  hot:          { icon:'🌡',  title:'熱浪補給',    desc:'今日第一個「喝水」任務額外 +5 金幣',   flavor:'工廠的蒸汽和熱浪混在一起。葛莉達會叫你先喝水。',              trigger:'喝水',     type:'coins',       value:5 },
+  cold:         { icon:'❄️',  title:'暖爐旁的開始',desc:'今日第一個日常委託金幣 +5%',          flavor:'下城窗縫裡透著冷風，暖爐旁的第一個任務會比較容易開始。',      trigger:'日常委託', type:'coinPercent', value:5 },
+  windy:        { icon:'💨',  title:'順風跑腿',    desc:'今日第一個外出委託 EXP +5%',          flavor:'風很大，但至少走起來不悶。',                                  trigger:'外出委託', type:'expPercent',  value:5 },
+  unknown:      { icon:'🌫',  title:'霧氣不明',    desc:'今日第一個任務 EXP +3%',              flavor:'天氣資料有點混亂，但委託還是可以開始。',                      trigger:'any1',     type:'expPercent',  value:3 },
+};
+
+function mapWeatherType(apiDesc, temp) {
+  const d = (apiDesc || '').toLowerCase();
+  if (/thunderstorm|thunder/.test(d)) return 'thunderstorm';
+  if (/drizzle|rain|shower/.test(d)) return 'rain';
+  if (/fog|mist|haze/.test(d)) return 'fog';
+  if (/snow|sleet/.test(d)) return 'cold';
+  if (/wind|breezy|gale/.test(d)) return 'windy';
+  if (/cloud|overcast/.test(d)) return 'cloudy';
+  if (/clear|sunny/.test(d)) {
+    if (temp >= 32) return 'hot';
+    if (temp <= 10) return 'cold';
+    return 'clear';
+  }
+  if (temp >= 35) return 'hot';
+  if (temp <= 8) return 'cold';
+  return 'unknown';
+}
+
+function getDateKey() {
+  const now = new Date();
+  const reset = new Date(now);
+  reset.setHours(5,0,0,0);
+  if (now < reset) {
+    const prev = new Date(now);
+    prev.setDate(prev.getDate()-1);
+    return prev.toISOString().slice(0,10);
+  }
+  return now.toISOString().slice(0,10);
+}
+
+function getNextReset() {
+  const now = new Date();
+  const next = new Date(now);
+  next.setDate(next.getDate()+1);
+  next.setHours(5,0,0,0);
+  if (now.getHours() < 5) {
+    next.setDate(now.getDate());
+  }
+  return next;
+}
+
+let weatherState = null;
+
+async function initWeather() {
+  const dateKey = getDateKey();
+  // Check if we have today's weather in DB
+  try {
+    const rows = await sb(`weather_state?date_key=eq.${dateKey}&limit=1`);
+    if (rows && rows.length > 0) {
+      weatherState = rows[0];
+      document.getElementById('weatherCityInput').style.display = 'none';
+      document.getElementById('weatherDisplay').style.display = '';
+      renderWeatherCard();
+      return;
+    }
+  } catch(e) {}
+
+  // Check if player has a saved city
+  const savedCity = localStorage.getItem('chiwu_city');
+  if (savedCity) {
+    document.getElementById('weatherCityInput').style.display = 'none';
+    document.getElementById('weatherDisplay').style.display = '';
+    await fetchWeatherByCity(savedCity);
+  } else {
+    // Show city input
+    document.getElementById('weatherCityInput').style.display = '';
+    document.getElementById('weatherDisplay').style.display = 'none';
+  }
+}
+
+async function submitCity() {
+  const city = document.getElementById('cityInputField').value.trim();
+  if (!city) return;
+  localStorage.setItem('chiwu_city', city);
+  document.getElementById('weatherCityInput').style.display = 'none';
+  document.getElementById('weatherDisplay').style.display = '';
+  await fetchWeatherByCity(city);
+}
+
+async function changeCity() {
+  localStorage.removeItem('chiwu_city');
+  // Delete today's weather record from DB so it gets re-fetched
+  const dateKey = getDateKey();
+  try {
+    await sb(`weather_state?date_key=eq.${dateKey}`, 'DELETE');
+  } catch(e) { console.error('delete weather failed', e); }
+  weatherState = null;
+  document.getElementById('cityInputField').value = '';
+  document.getElementById('weatherCityInput').style.display = '';
+  document.getElementById('weatherDisplay').style.display = 'none';
+}
+
+async function fetchWeatherByCity(city) {
+  try {
+    const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+    const data = await res.json();
+    const current = data.current_condition[0];
+    const desc = current.weatherDesc[0].value;
+    const temp = parseInt(current.temp_C);
+    const wtype = mapWeatherType(desc, temp);
+    await saveWeatherState(wtype, city, temp, false);
+  } catch(e) {
+    setFallbackWeather('unknown', city, null, true);
+  }
+}
+
+async function fetchWeather(lat, lon) {
+  try {
+    const res = await fetch(`https://wttr.in/${lat},${lon}?format=j1`);
+    const data = await res.json();
+    const current = data.current_condition[0];
+    const desc = current.weatherDesc[0].value;
+    const temp = parseInt(current.temp_C);
+    const area = data.nearest_area?.[0]?.areaName?.[0]?.value || '鑄霧城';
+    const wtype = mapWeatherType(desc, temp);
+    await saveWeatherState(wtype, area, temp, false);
+  } catch(e) {
+    setFallbackWeather('unknown', '鑄霧城', null, true);
+  }
+}
+
+async function saveWeatherState(wtype, location, temp, isFallback) {
+  const effect = WEATHER_EFFECTS[wtype] || WEATHER_EFFECTS.unknown;
+  const dateKey = getDateKey();
+  const expires = getNextReset();
+  const record = {
+    date_key: dateKey,
+    location_name: location,
+    weather_type: wtype,
+    weather_display: { clear:'晴朗', cloudy:'多雲', rain:'下雨', thunderstorm:'雷雨', fog:'起霧', hot:'炎熱', cold:'寒冷', windy:'風大', unknown:'未知天氣' }[wtype],
+    temperature: temp,
+    effect_id: wtype,
+    effect_title: effect.title,
+    effect_desc: effect.desc,
+    flavor_text: effect.flavor,
+    expires_at: expires.toISOString(),
+    triggered: false
+  };
+  try {
+    const saved = await sb('weather_state', 'POST', record);
+    weatherState = saved[0];
+    weatherState._isFallback = isFallback;
+  } catch(e) {
+    weatherState = { ...record, id: 'local', _isFallback: isFallback };
+  }
+  renderWeatherCard();
+}
+
+function setFallbackWeather(wtype, location, temp, isFallback) {
+  saveWeatherState(wtype, location, temp, isFallback);
+}
+
+function renderWeatherCard() {
+  if (!weatherState) return;
+  const card = document.getElementById('weatherCard');
+  card.classList.add('show');
+
+  const wtype = weatherState.weather_type || 'unknown';
+  const effect = WEATHER_EFFECTS[wtype] || WEATHER_EFFECTS.unknown;
+  const next = getNextReset();
+  const resetStr = `${String(next.getMonth()+1).padStart(2,'0')}/${String(next.getDate()).padStart(2,'0')} 05:00 刷新`;
+
+  document.getElementById('weatherIcon').textContent = effect.icon;
+  document.getElementById('weatherEffectTitle').textContent = effect.title;
+  document.getElementById('weatherDisplayText').textContent = weatherState.weather_display || '未知天氣';
+  document.getElementById('weatherTemp').textContent = weatherState.temperature != null ? weatherState.temperature + '°C' : '--°C';
+  document.getElementById('weatherLocation').textContent = weatherState.location_name || '鑄霧城';
+  document.getElementById('weatherEffectDesc').textContent = effect.desc;
+  document.getElementById('weatherFlavor').textContent = effect.flavor;
+  document.getElementById('weatherReset').textContent = resetStr;
+
+  if (weatherState._isFallback) {
+    document.getElementById('weatherFallback').style.display = '';
+  }
+  if (weatherState.triggered) {
+    document.getElementById('weatherTriggered').style.display = '';
+    document.getElementById('weatherEffectBox').classList.add('done');
+  }
+}
+
+async function applyWeatherBonus(task, expGain, coinGain) {
+  if (!weatherState || weatherState.triggered) return { expGain, coinGain };
+  const wtype = weatherState.weather_type || 'unknown';
+  const effect = WEATHER_EFFECTS[wtype] || WEATHER_EFFECTS.unknown;
+  const todayCompleted = completedTasks.filter(t => {
+    const d = new Date(t.completed_at);
+    return d.toISOString().slice(0,10) === getDateKey();
+  });
+
+  let triggered = false;
+  let bonusExp = 0, bonusCoin = 0;
+
+  if (effect.trigger === 'any1') {
+    triggered = true;
+  } else if (effect.trigger === 'any2') {
+    if (todayCompleted.length >= 1) triggered = true;
+  } else if (effect.trigger === '喝水') {
+    if (task.title.includes('喝水')) triggered = true;
+  } else {
+    if (task.category === effect.trigger) triggered = true;
+  }
+
+  if (triggered) {
+    if (effect.type === 'expPercent') bonusExp = Math.ceil(expGain * effect.value / 100);
+    if (effect.type === 'coinPercent') bonusCoin = Math.ceil(coinGain * effect.value / 100);
+    if (effect.type === 'coins') bonusCoin = effect.value;
+
+    // Mark as triggered
+    weatherState.triggered = true;
+    if (weatherState.id && weatherState.id !== 'local') {
+      await sb(`weather_state?id=eq.${weatherState.id}`, 'PATCH', { triggered: true });
+    }
+    document.getElementById('weatherTriggered').style.display = '';
+    document.getElementById('weatherEffectBox').classList.add('done');
+    notify(`🌤 天氣加成：${effect.title}！+${bonusExp} EXP / +${bonusCoin} ◈`, 'exp');
+  }
+
+  return { expGain: expGain + bonusExp, coinGain: coinGain + bonusCoin };
+}
+
+// ─── INIT ───────────────────────────────────────────
+async function init() {
+  try {
+    const players = await sb('player?select=*&limit=1');
+    player = players[0];
+
+    const allTasks = await sb('tasks?select=*&order=created_at.desc');
+    tasks = allTasks.filter(t => t.status === 'pending');
+    completedTasks = allTasks.filter(t => t.status === 'completed');
+
+    shopItems = await sb('shop_items?select=*');
+
+    const msgs = await sb('npc_messages?select=*&order=created_at.asc');
+    npcChats = {};
+    msgs.forEach(m => {
+      if (!npcChats[m.npc_name]) npcChats[m.npc_name] = [];
+      npcChats[m.npc_name].push(m);
+    });
+
+    await loadCooldownLog();
+    renderAll();
+    initWeather();
+    setTimeout(() => {
+      checkOverdueTasks();
+      triggerNPCVisit();
+    }, 800);
+  } catch(e) {
+    console.error(e);
+    notify('連線失敗，請確認網路', 'red');
+  }
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// ─── RENDER ─────────────────────────────────────────
+function renderAll() {
+  renderPlayer();
+  renderTasks();
+  renderShop();
+  renderNPCs();
+  renderDebt();
+}
+
+function renderPlayer() {
+  if (!player) return;
+  const lv = getLevel(player.exp);
+  const { current, next } = getLevelRange(lv);
+  const pct = Math.min(100, ((player.exp - current) / (next - current)) * 100);
+
+  document.getElementById('playerName').textContent = player.name;
+  document.getElementById('playerLevel').textContent = lv;
+  document.getElementById('headerExp').textContent = player.exp;
+  document.getElementById('headerCoins').textContent = player.coins;
+  document.getElementById('expBar').style.width = pct + '%';
+  document.getElementById('expLabel').textContent = `${player.exp} / ${next}`;
+
+  const title = LEVEL_TITLES[Math.min(lv - 1, LEVEL_TITLES.length - 1)];
+  document.querySelector('.player-level').innerHTML = `LV.<span id="playerLevel">${lv}</span> &nbsp;|&nbsp; ${title}`;
+
+  if (player.debt > 0) {
+    document.getElementById('debtWarning').classList.add('show');
+    document.getElementById('debtAmount').textContent = player.debt;
+  } else {
+    document.getElementById('debtWarning').classList.remove('show');
+  }
+}
+
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  const empty = document.getElementById('emptyTasks');
+
+  if (tasks.length === 0) {
+    list.innerHTML = '<div class="empty-state">尚無委託。去找點事情做吧，外鄉人。</div>';
+    return;
+  }
+  list.innerHTML = '';
+  tasks.forEach(t => {
+    const el = document.createElement('div');
+    const cd = getCooldownStatus(t);
+    el.className = 'task-item' + (t.status === 'failed' ? ' overdue' : (t.deadline && isOverdue(t.deadline) ? ' overdue' : '')) + (cd.onCooldown ? ' on-cooldown' : '');
+    el.id = 'task-' + t.id;
+    el.innerHTML = `
+      <div class="task-check" onclick="completeTask('${t.id}')">✓</div>
+      <div class="task-body">
+        <div class="task-name">${t.title}</div>
+        ${t.description ? `<div class="task-desc">${t.description}</div>` : ''}
+        <div class="task-rewards">
+          ${t.exp_reward ? `<span class="reward-tag exp">${cd.half ? '~' : '+'}${cd.half ? Math.ceil(t.exp_reward*0.5) : t.exp_reward} EXP</span>` : '<span class="reward-tag exp">評估中...</span>'}
+          ${t.coin_reward ? `<span class="reward-tag coin">${cd.half ? '~' : '+'}${cd.half ? Math.ceil(t.coin_reward*0.5) : t.coin_reward} ◈</span>` : ''}
+          ${t.size ? `<span class="reward-tag size">${t.size}</span>` : ''}
+          ${t.category ? `<span class="reward-tag ${getCatClass(t.category)}">${t.category}</span>` : ''}
+          ${t.cooldown_type ? `<span class="cooldown-badge ${cd.half ? 'half' : ''}">⏱ ${t.cooldown_type === 'time' ? t.cooldown_minutes+'分鐘冷卻' : '每日'+t.daily_limit+'次'}</span>` : ''}
+          ${t.deadline ? `<span class="deadline-tag ${getDeadlineClass(t.deadline)}">${getDeadlineText(t.deadline)}</span>` : ''}
+        </div>
+        ${cd.notice ? `<div class="cooldown-notice">${cd.notice}</div>` : ''}
+      </div>
+      <div class="task-actions">
+        <select class="cat-select" onchange="correctCategory('${t.id}', '${t.title}', this.value)" title="修改分類">
+          ${['日常委託','專注委託','外出委託','社交委託','任務委託'].map(c =>
+            `<option value="${c}" ${c === t.category ? 'selected' : ''}>${c}</option>`
+          ).join('')}
+        </select>
+        <button class="btn btn-red" onclick="deleteTask('${t.id}')">刪除</button>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+
+  const clist = document.getElementById('completedList');
+  if (completedTasks.length === 0) {
+    clist.innerHTML = '<div class="empty-state">尚無完成記錄。</div>';
+    return;
+  }
+  clist.innerHTML = '';
+  completedTasks.slice(0, 10).forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'completed-item';
+    const date = new Date(t.completed_at).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    el.innerHTML = `
+      <span class="completed-check">✓</span>
+      <span class="completed-name">${t.title}</span>
+      <span class="completed-time">${date}</span>
+    `;
+    clist.appendChild(el);
+  });
+}
+
+function renderShop() {
+  const grid = document.getElementById('shopGrid');
+  const empty = document.getElementById('emptyShop');
+  if (shopItems.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">願望清單是空的。想買什麼就登記上來吧。</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  shopItems.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'shop-item' + (item.purchased ? ' purchased' : '');
+    const canAfford = player && player.coins >= item.cost;
+    el.innerHTML = `
+      <div class="shop-item-name">${item.purchased ? '✓ ' : ''}${item.name}</div>
+      ${item.description ? `<div class="shop-item-desc">${item.description}</div>` : ''}
+      <div class="shop-item-cost">◈ ${item.cost} 金幣</div>
+      <div class="shop-item-actions">
+        ${!item.purchased ? `<button class="btn btn-gold" style="font-size:11px;padding:5px 10px" onclick="buyItem('${item.id}')" ${canAfford ? '' : 'disabled style="opacity:0.4;cursor:not-allowed"'}>兌換</button>` : '<span style="font-size:11px;color:var(--green)">已購買</span>'}
+        <button class="btn btn-red" onclick="deleteShopItem('${item.id}')">刪</button>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function renderNPCs() {
+  const list = document.getElementById('npcList');
+  list.innerHTML = '';
+  NPC_DATA.forEach(npc => {
+    const msgs = npcChats[npc.name] || [];
+    const el = document.createElement('div');
+    el.className = 'npc-card';
+    el.innerHTML = `
+      <div class="npc-header" onclick="toggleNPC('${npc.name}')">
+        <div class="npc-avatar">${npc.img ? `<img src="${npc.img}" alt="${npc.name}" onerror="this.parentElement.innerHTML='${npc.emoji}'">` : npc.emoji}</div>
+        <div class="npc-info">
+          <div class="npc-name">${npc.name}</div>
+          <div class="npc-role">${npc.role}</div>
+        </div>
+        <div class="npc-status">${npc.status}</div>
+      </div>
+      <div class="npc-chat" id="chat-${npc.name.replace(/\s/g,'_')}">
+        <div class="chat-messages" id="msgs-${npc.name.replace(/\s/g,'_')}">
+          ${msgs.length === 0 ? '<div style="color:var(--text3);font-size:12px;font-family:Share Tech Mono,monospace">還沒說過話。要去打個招呼嗎？</div>' : msgs.map(m => `
+            <div class="chat-bubble ${m.npc_name === npc.name && m.message.startsWith('[玩家]') ? 'player' : 'npc'}">
+              <div class="bubble-name">${m.message.startsWith('[玩家]') ? '你' : npc.name}</div>
+              ${m.message.replace('[玩家]','').trim()}
+            </div>
+          `).join('')}
+        </div>
+        <div class="npc-loading" id="npcload-${npc.name.replace(/\s/g,'_')}">⚙ ${npc.name} 正在思考...</div>
+        <div class="chat-input-row">
+          <input type="text" class="input-field" id="chatinput-${npc.name.replace(/\s/g,'_')}" placeholder="說點什麼..." />
+          <button class="btn btn-gold" style="padding:7px 14px;font-size:11px" onclick="sendChat('${npc.name}')">說</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function renderDebt() {
+  if (!player) return;
+  document.getElementById('debtPageCoins').textContent = player.coins;
+  document.getElementById('debtPageDebt').textContent = player.debt;
+}
+
+// ─── TASKS ──────────────────────────────────────────
+async function addTask() {
+  const title = document.getElementById('taskInput').value.trim();
+  const desc = document.getElementById('taskDesc').value.trim();
+  const deadline = document.getElementById('taskDeadline').value || null;
+  if (!title) return;
+
+  document.getElementById('aiLoading').classList.add('show');
+  document.getElementById('taskInput').value = '';
+  document.getElementById('taskDesc').value = '';
+  document.getElementById('taskDeadline').value = '';
+
+  try {
+    const assessment = await assessTask(title, desc);
+    const task = await sb('tasks', 'POST', {
+      title,
+      description: desc || null,
+      exp_reward: assessment.exp,
+      coin_reward: assessment.coins,
+      size: assessment.size,
+      category: assessment.category || null,
+      cooldown_type: assessment.cooldown_type !== 'none' ? assessment.cooldown_type : null,
+      cooldown_minutes: assessment.cooldown_minutes || null,
+      daily_limit: assessment.daily_limit || null,
+      status: 'pending',
+      deadline: deadline
+    });
+    tasks.unshift(task[0]);
+    renderTasks();
+    notify(`委託已登記！預計 +${assessment.exp} EXP / +${assessment.coins} ◈`, 'exp');
+  } catch(e) {
+    console.error(e);
+    notify('登記失敗', 'red');
+  }
+  document.getElementById('aiLoading').classList.remove('show');
+}
+
+async function assessTask(title, desc) {
+  const t = title + (desc || '');
+
+  // Check task cache in DB first
+  try {
+    const cached = await sb(`tasks?title=eq.${encodeURIComponent(title)}&status=neq.pending&exp_reward=not.is.null&limit=1`);
+    if (cached && cached.length > 0) {
+      const c = cached[0];
+      const userCorrections = JSON.parse(localStorage.getItem('chiwu_cat_corrections') || '{}');
+      const correctedCat = userCorrections[title];
+      console.log('Using cached task assessment for:', title);
+      return {
+        exp: c.exp_reward,
+        coins: c.coin_reward,
+        size: c.size,
+        category: correctedCat || c.category,
+        cooldown_type: c.cooldown_type || 'none',
+        cooldown_minutes: c.cooldown_minutes,
+        daily_limit: c.daily_limit
+      };
+    }
+  } catch(e) { console.warn('cache check failed', e); }
+
+  try {
+    const userCorrections = JSON.parse(localStorage.getItem('chiwu_cat_corrections') || '{}');
+  const correctedCat = userCorrections[title];
+
+  const prompt = `判斷以下任務，只回傳JSON。
+任務：「${title}」${desc?'（'+desc+'）':''}
+
+分類（照順序判斷，符合就停）：
+Q1: 是大型/長期任務嗎？(搬家/論文/期末作業/完整專案/找房/申請文件) → 任務委託
+Q2: 需要出門/移動嗎？(去某地/出門/通勤/領貨/看醫生/辦手續) → 外出委託
+Q3: 核心是和人溝通嗎？(回訊息/回email/傳訊息/打電話/跟誰確認/和誰出去) → 社交委託
+Q4: 是腦力/創作/資料工作嗎？(修改文件/畫圖/整理資料/寫報告/做PPT/打包資料/看文獻/寫程式/算數據/任何修改或製作內容) → 專注委託
+Q5: 其他生活維持(喝水/洗澡/吃飯/刷牙/整理環境) → 日常委託
+
+大小：微(exp3-8,coins1-3)/小(exp10-20,coins5-15)/中(exp30-60,coins20-50)/大(exp100-200,coins70-150)
+冷卻：time=喝水30分/整理桌面60分，daily=刷牙2/洗澡2/吃飯3/保健食品1/收拾包包1/睡前1/設鬧鐘1，none=其他
+
+JSON格式：{"exp":5,"coins":2,"size":"微任務","category":"專注委託","cooldown_type":"none","cooldown_minutes":null,"daily_limit":null}`;
+    const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 150, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    console.log('AI raw response:', JSON.stringify(data));
+    const text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    if (!text) { console.warn('AI returned empty text, debug:', data); }
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      const result = JSON.parse(match[0]);
+      if (correctedCat) result.category = correctedCat;
+      console.log('AI result:', result);
+      return result;
+    }
+  } catch(e) { console.error('AI assess failed:', e.message); }
+  const userCorrections = JSON.parse(localStorage.getItem('chiwu_cat_corrections') || '{}');
+  const correctedCat = userCorrections[title];
+
+  function makeFallback(exp, coins, size, category, cooldown_type, cooldown_minutes, daily_limit) {
+    return { exp, coins, size, category: correctedCat || category, cooldown_type, cooldown_minutes, daily_limit };
+  }
+
+  // Priority 1: 任務委託 - large/complex tasks
+  if (/搬家|找房子|申請學校|投稿|寫論文|研究報告|期末作業|準備考試|完整簡報|整份報告|寫SOP|完成專案|準備研討會|大型/.test(t))
+    return makeFallback(120, 100, '大任務', '任務委託', 'none', null, null);
+
+  // Priority 2: 外出委託 - going out
+  if (/^去|出門|通勤|搭車|看醫生|看房|領貨|寄包裹|取包裹|去買|去超商|去郵局|去銀行|去學校|去實驗室|去某|跑一趟/.test(t))
+    return makeFallback(20, 15, '小任務', '外出委託', 'none', null, null);
+
+  // Priority 3: 社交委託 - communication
+  if (/回email|回訊息|傳訊息|打電話|約時間|跟.*(確認|討論|問|報告|meeting|Meeting)|和.*出去|寄email|通知|問.*老師|問.*教授|回覆|聯絡/.test(t))
+    return makeFallback(15, 10, '小任務', '社交委託', 'none', null, null);
+
+  // Priority 4: 專注委託 - ANY modify/create/organize/study work
+  if (/修改|修正|編輯|改寫|校對|潤稿|畫圖|畫.*圖|繪製|製作|打包.*資料|整理.*資料|整理.*檔案|整理.*文件|彙整|歸納|分析|統整|看文獻|看論文|讀書|背單字|算數據|做圖|改文章|寫程式|修程式|做簡報|寫.*段|寫.*草稿|整理購物清單|PPT|ppt|整理筆記|看.*教學|研究.*方法|查資料|找資料|規劃|設計|排版|錄音|剪輯|後製/.test(t))
+    return makeFallback(40, 30, '中任務', '專注委託', 'none', null, null);
+
+  // Priority 5: 日常委託 with cooldowns
+  if (/喝水|上廁所/.test(t)) return makeFallback(5, 2, '微任務', '日常委託', 'time', 30, null);
+  if (/整理桌面/.test(t)) return makeFallback(8, 5, '微任務', '日常委託', 'time', 60, null);
+  if (/刷牙/.test(t)) return makeFallback(5, 2, '微任務', '日常委託', 'daily', null, 2);
+  if (/保健食品|收拾包包|睡前準備|設鬧鐘/.test(t)) return makeFallback(5, 3, '微任務', '日常委託', 'daily', null, 1);
+  if (/洗澡/.test(t)) return makeFallback(6, 4, '微任務', '日常委託', 'daily', null, 2);
+  if (/早餐|午餐|晚餐/.test(t)) return makeFallback(5, 3, '微任務', '日常委託', 'daily', null, 1);
+  if (/吃飯|吃.*飯/.test(t)) return makeFallback(5, 3, '微任務', '日常委託', 'daily', null, 3);
+  if (/喝水|洗臉|洗碗|丟垃圾|洗衣|收衣|充手機|整理床|換衣|整理家/.test(t)) return makeFallback(5, 3, '微任務', '日常委託', 'none', null, null);
+
+  return makeFallback(15, 10, '小任務', '日常委託', 'none', null, null);
+}
+
+async function completeTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+
+  const el = document.getElementById('task-' + id);
+  el.classList.add('completing');
+
+  setTimeout(async () => {
+    try {
+      await sb(`tasks?id=eq.${id}`, 'PATCH', {
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      });
+
+      const cd = getCooldownStatus(task);
+      await logCooldown(task.title);
+      let expGain = cd.half ? Math.ceil(task.exp_reward * 0.5) : task.exp_reward;
+      let coinGain = cd.half ? Math.ceil(task.coin_reward * 0.5) : task.coin_reward;
+      const weatherBonus = await applyWeatherBonus(task, expGain, coinGain);
+      expGain = weatherBonus.expGain;
+      coinGain = weatherBonus.coinGain;
+      const newExp = player.exp + expGain;
+      let newCoins = player.coins + coinGain;
+      let newDebt = player.debt;
+      if (newDebt > 0) {
+        const pay = Math.min(newCoins, newDebt);
+        newCoins -= pay;
+        newDebt -= pay;
+        if (pay > 0) notify(`自動還債 ${pay} 金幣`, 'gold');
+      }
+
+      await sb(`player?id=eq.${player.id}`, 'PATCH', {
+        exp: newExp, coins: newCoins, debt: newDebt
+      });
+
+      player.exp = newExp;
+      player.coins = newCoins;
+      player.debt = newDebt;
+
+      const oldLv = getLevel(player.exp - task.exp_reward);
+      const newLv = getLevel(player.exp);
+      if (newLv > oldLv) notify(`🎉 升級！LV.${newLv}`, 'gold');
+
+      tasks = tasks.filter(t => t.id !== id);
+      completedTasks.unshift({ ...task, status: 'completed', completed_at: new Date().toISOString() });
+
+      const cdNote = cd.half ? '（冷卻中，獎勵減半）' : '';
+      notify(`✓ ${task.title} 完成！+${expGain} EXP / +${coinGain} ◈ ${cdNote}`);
+      renderAll();
+    } catch(e) {
+      console.error(e);
+      notify('完成任務失敗', 'red');
+    }
+  }, 400);
+}
+
+async function deleteTask(id) {
+  if (!confirm('確定要放棄這個委託？')) return;
+  await sb(`tasks?id=eq.${id}`, 'DELETE');
+  tasks = tasks.filter(t => t.id !== id);
+  renderTasks();
+}
+
+// ─── SHOP ────────────────────────────────────────────
+async function addShopItem() {
+  const name = document.getElementById('shopName').value.trim();
+  const cost = parseInt(document.getElementById('shopCost').value);
+  const desc = document.getElementById('shopDesc').value.trim();
+  if (!name || !cost) return;
+
+  const item = await sb('shop_items', 'POST', { name, cost, description: desc || null });
+  shopItems.push(item[0]);
+  document.getElementById('shopName').value = '';
+  document.getElementById('shopCost').value = '';
+  document.getElementById('shopDesc').value = '';
+  renderShop();
+  notify(`${name} 已加入願望清單`, 'gold');
+}
+
+async function buyItem(id) {
+  const item = shopItems.find(i => i.id === id);
+  if (!item || player.coins < item.cost) return;
+  if (!confirm(`花費 ${item.cost} 金幣購買「${item.name}」？`)) return;
+
+  const newCoins = player.coins - item.cost;
+  await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: newCoins });
+  await sb(`shop_items?id=eq.${id}`, 'PATCH', { purchased: true });
+  player.coins = newCoins;
+  shopItems = shopItems.map(i => i.id === id ? { ...i, purchased: true } : i);
+  renderAll();
+  notify(`🎉 購買成功！享受你的「${item.name}」吧`, 'gold');
+}
+
+async function deleteShopItem(id) {
+  await sb(`shop_items?id=eq.${id}`, 'DELETE');
+  shopItems = shopItems.filter(i => i.id !== id);
+  renderShop();
+}
+
+// ─── NPC ─────────────────────────────────────────────
+function toggleNPC(name) {
+  const key = name.replace(/\s/g,'_');
+  const chat = document.getElementById('chat-' + key);
+  chat.classList.toggle('open');
+  if (chat.classList.contains('open')) {
+    const msgs = document.getElementById('msgs-' + key);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    if (!npcChats[name] || npcChats[name].length === 0) {
+      setTimeout(() => greetNPC(name), 300);
+    }
+  }
+}
+
+async function greetNPC(name) {
+  const npc = NPC_DATA.find(n => n.name === name);
+  if (!npc) return;
+  const key = name.replace(/\s/g,'_');
+  document.getElementById('npcload-' + key).classList.add('show');
+
+  const playerInfo = `玩家是個剛從小鎮來到鑄霧城的年輕人，目前等級 ${getLevel(player?.exp || 0)}，金幣 ${player?.coins || 0}。`;
+
+  try {
+    const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 150,
+        system: `你是鑄霧城裡的 ${npc.name}，${npc.role}。${npc.personality}\n\n${playerInfo}\n\n請用繁體中文回應，保持角色個性，簡短自然（50字以內），像是剛好遇到這個外來的年輕人。`,
+        messages: [{ role: 'user', content: '（主角走近）' }]
+      })
+    });
+    const data = await res.json();
+    if (data.debug?.code === 429 || data.debug?.status === 'RESOURCE_EXHAUSTED') { showQuotaWarning(); return; }
+    const msg = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
+    if (!msg) { console.error('empty NPC response', data); return; }
+    await saveNPCMsg(name, msg, false);
+    renderNPCChat(name);
+  } catch(e) { console.error('greetNPC error:', e); }
+  document.getElementById('npcload-' + key).classList.remove('show');
+}
+
+async function sendChat(name) {
+  const key = name.replace(/\s/g,'_');
+  const input = document.getElementById('chatinput-' + key);
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  await saveNPCMsg(name, '[玩家] ' + text, true);
+  renderNPCChat(name);
+
+  const npc = NPC_DATA.find(n => n.name === name);
+  document.getElementById('npcload-' + key).classList.add('show');
+
+  const history = (npcChats[name] || []).slice(-10)
+    .map(m => ({
+      role: m.message.startsWith('[玩家]') ? 'user' : 'assistant',
+      content: m.message.replace('[玩家]','').trim()
+    }))
+    .filter(m => m.content.length > 0);
+
+  const playerInfo = `玩家等級 ${getLevel(player?.exp || 0)}，金幣 ${player?.coins || 0}，負債 ${player?.debt || 0}。任務完成數 ${completedTasks.length}。`;
+
+  try {
+    const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 150,
+        system: `你是鑄霧城裡的 ${npc.name}，${npc.role}。${npc.personality}\n\n${playerInfo}\n\n用繁體中文，保持個性，簡短自然（60字以內）。`,
+        messages: history
+      })
+    });
+    const data = await res.json();
+    console.log('Worker response:', JSON.stringify(data));
+    if (data.debug?.code === 429 || data.debug?.status === 'RESOURCE_EXHAUSTED') { showQuotaWarning(); return; }
+    const msg = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
+    if (!msg) { notify('NPC沒有回應', 'red'); console.error('empty response', data); return; }
+    await saveNPCMsg(name, msg, false);
+    renderNPCChat(name);
+  } catch(e) { console.error('sendChat error:', e); notify('NPC沒有回應', 'red'); }
+  document.getElementById('npcload-' + key).classList.remove('show');
+}
+
+async function saveNPCMsg(npcName, message, isPlayer) {
+  const record = await sb('npc_messages', 'POST', { npc_name: npcName, message });
+  if (!npcChats[npcName]) npcChats[npcName] = [];
+  npcChats[npcName].push(record[0]);
+}
+
+function renderNPCChat(name) {
+  const key = name.replace(/\s/g,'_');
+  const msgs = npcChats[name] || [];
+  const container = document.getElementById('msgs-' + key);
+  container.innerHTML = msgs.map(m => {
+    const isPlayer = m.message.startsWith('[玩家]');
+    const text = m.message.replace('[玩家]','').trim();
+    return `<div class="chat-bubble ${isPlayer ? 'player' : 'npc'}">
+      <div class="bubble-name">${isPlayer ? '你' : name}</div>
+      ${text}
+    </div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+// ─── DEBT ────────────────────────────────────────────
+async function takeAdvance() {
+  const amount = parseInt(document.getElementById('advanceAmount').value);
+  if (!amount || amount <= 0) return;
+  if (!confirm(`確定要預支 ${amount} 金幣？每天會產生 5% 利息。`)) return;
+
+  const newCoins = player.coins + amount;
+  const newDebt = player.debt + amount;
+  await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: newCoins, debt: newDebt });
+  player.coins = newCoins;
+  player.debt = newDebt;
+  document.getElementById('advanceAmount').value = '';
+  renderAll();
+  notify(`預支了 ${amount} 金幣，記得還喔`, 'red');
+}
+
+async function applyInterest() {
+  if (!player.debt || player.debt === 0) { notify('目前沒有負債', 'gold'); return; }
+  const interest = Math.ceil(player.debt * 0.05);
+  const newDebt = player.debt + interest;
+  await sb(`player?id=eq.${player.id}`, 'PATCH', { debt: newDebt });
+  player.debt = newDebt;
+  renderAll();
+  notify(`利息 +${interest} 金幣，總負債 ${newDebt}`, 'red');
+}
+
+// ─── COOLDOWN UTILS ─────────────────────────────────
+let cooldownCache = {};
+
+async function loadCooldownLog() {
+  // Get today's 5am reset time
+  const now = new Date();
+  const reset = new Date(now);
+  reset.setHours(5, 0, 0, 0);
+  if (now < reset) reset.setDate(reset.getDate() - 1);
+
+  const logs = await sb(`cooldown_log?select=*&completed_at=gte.${reset.toISOString()}&order=completed_at.desc`);
+  cooldownCache = {};
+  logs.forEach(l => {
+    if (!cooldownCache[l.task_title]) cooldownCache[l.task_title] = [];
+    cooldownCache[l.task_title].push(new Date(l.completed_at));
+  });
+}
+
+function getCooldownStatus(task) {
+  if (!task.cooldown_type) return { onCooldown: false, half: false, notice: '' };
+  const logs = cooldownCache[task.title] || [];
+  const now = new Date();
+
+  if (task.cooldown_type === 'time') {
+    const mins = task.cooldown_minutes || 30;
+    const last = logs[0];
+    if (last) {
+      const diffMin = (now - last) / 60000;
+      if (diffMin < mins) {
+        const remaining = Math.ceil(mins - diffMin);
+        return { onCooldown: true, half: true, notice: `冷卻中，完成後獎勵減半（還有 ${remaining} 分鐘恢復滿額）` };
+      }
+    }
+    return { onCooldown: false, half: false, notice: '' };
+  }
+
+  if (task.cooldown_type === 'daily') {
+    const limit = task.daily_limit || 1;
+    if (logs.length >= limit) {
+      return { onCooldown: true, half: true, notice: `今日已記錄 ${logs.length}/${limit} 次，完成後獎勵減半` };
+    }
+    return { onCooldown: false, half: false, notice: `今日已記錄 ${logs.length}/${limit} 次` };
+  }
+
+  return { onCooldown: false, half: false, notice: '' };
+}
+
+async function logCooldown(title) {
+  await sb('cooldown_log', 'POST', { task_title: title });
+  if (!cooldownCache[title]) cooldownCache[title] = [];
+  cooldownCache[title].unshift(new Date());
+}
+
+// ─── CATEGORY UTILS ─────────────────────────────────
+function getCatClass(cat) {
+  if (!cat) return '';
+  if (cat === '日常委託') return 'cat-daily';
+  if (cat === '專注委託') return 'cat-focus';
+  if (cat === '外出委託') return 'cat-outing';
+  if (cat === '社交委託') return 'cat-social';
+  if (cat === '任務委託') return 'cat-quest';
+  return '';
+}
+
+// ─── DEADLINE UTILS ─────────────────────────────────
+function isOverdue(deadline) {
+  return deadline && new Date(deadline) < new Date(new Date().toDateString());
+}
+function getDeadlineClass(deadline) {
+  if (!deadline) return '';
+  const now = new Date();
+  const d = new Date(deadline);
+  const diff = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return 'overdue';
+  if (diff <= 1) return 'urgent';
+  if (diff <= 3) return 'soon';
+  return '';
+}
+function getDeadlineText(deadline) {
+  if (!deadline) return '';
+  const now = new Date();
+  const d = new Date(deadline);
+  const diff = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return '已逾期';
+  if (diff === 0) return '今天到期！';
+  if (diff === 1) return '明天到期！';
+  return `還有 ${diff} 天`;
+}
+
+// ─── NPC VISIT ───────────────────────────────────────
+function triggerNPCVisit() {
+  if (Math.random() > 0.35) return;
+  const count = completedTasks.length;
+  let tier;
+  if (count === 0) tier = 0;
+  else if (count <= 3) tier = 1;
+  else if (count <= 6) tier = 2;
+  else if (count <= 10) tier = 3;
+  else tier = 4;
+
+  const npc = NPC_DATA[Math.floor(Math.random() * NPC_DATA.length)];
+  const lines = npc.visits[tier];
+  const msg = lines[Math.floor(Math.random() * lines.length)];
+
+  document.getElementById('npcVisitBanner').classList.add('show');
+  const avatarEl = document.getElementById('npcVisitAvatar');
+  if (npc.img) {
+    avatarEl.innerHTML = `<img src="${npc.img}" alt="${npc.name}" style="width:48px;height:48px;object-fit:cover;object-position:top center;" onerror="this.parentElement.textContent='${npc.emoji}'">`;
+  } else {
+    avatarEl.textContent = npc.emoji;
+  }
+  document.getElementById('npcVisitName').textContent = npc.name + '　' + npc.role;
+  document.getElementById('npcVisitMsg').textContent = msg;
+
+  setTimeout(() => {
+    document.getElementById('npcVisitBanner').classList.remove('show');
+  }, 12000);
+}
+
+// ─── OVERDUE CHECK ───────────────────────────────────
+async function checkOverdueTasks() {
+  const overdue = tasks.filter(t => t.deadline && isOverdue(t.deadline) && t.status === 'pending');
+  for (const t of overdue) {
+    await sb(`tasks?id=eq.${t.id}`, 'PATCH', { status: 'failed' });
+    t.status = 'failed';
+    const penalty = Math.floor((t.exp_reward || 10) * 0.3);
+    const coinPenalty = Math.floor((t.coin_reward || 5) * 0.3);
+    const newExp = Math.max(0, player.exp - penalty);
+    const newCoins = Math.max(0, player.coins - coinPenalty);
+    await sb(`player?id=eq.${player.id}`, 'PATCH', { exp: newExp, coins: newCoins });
+    player.exp = newExp;
+    player.coins = newCoins;
+    notify(`⚠ 「${t.title}」已逾期！-${penalty} EXP / -${coinPenalty} ◈`, 'red');
+  }
+  if (overdue.length > 0) renderAll();
+}
+
+// ─── UTILS ──────────────────────────────────────────
+function getLevel(exp) {
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (exp >= LEVEL_THRESHOLDS[i]) return i + 1;
+  }
+  return 1;
+}
+function getLevelRange(lv) {
+  return {
+    current: LEVEL_THRESHOLDS[lv - 1] || 0,
+    next: LEVEL_THRESHOLDS[lv] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1] * 2
+  };
+}
+
+let quotaWarningShown = false;
+function showQuotaWarning() {
+  if (quotaWarningShown) return;
+  quotaWarningShown = true;
+  document.getElementById('quotaBanner').classList.add('show');
+  // Also persist so it shows on next load today
+  localStorage.setItem('chiwu_quota_warn', new Date().toDateString());
+}
+function dismissQuotaBanner() {
+  document.getElementById('quotaBanner').classList.remove('show');
+}
+
+// ─── DECOR SYSTEM ────────────────────────────────────
+const SCENES = {
+  entrance: {
+    name: '門面區', img: 'place/Entrance.png',
+    slots: [
+      { id: 'sign',    name: '招牌',     top: '3%',  left: '35%', width: '32%', height: '28%' },
+      { id: 'doorbell',name: '門鈴',     top: '41%', left: '59%', width: '8%',  height: '16%' },
+      { id: 'carpet',  name: '門口地毯', top: '73%', left: '32%', width: '36%', height: '20%' },
+    ]
+  },
+  reception: {
+    name: '接待區', img: 'place/Reception.png',
+    slots: [
+      { id: 'board',   name: '委託板',   top: '18%', left: '4%',  width: '28%', height: '38%' },
+      { id: 'counter', name: '櫃檯',     top: '38%', left: '28%', width: '44%', height: '42%' },
+      { id: 'chair',   name: '接待椅',   top: '54%', left: '32%', width: '14%', height: '30%' },
+      { id: 'book',    name: '帳本',     top: '30%', left: '75%', width: '22%', height: '38%' },
+    ]
+  },
+  work: {
+    name: '工作區', img: 'place/Work.png',
+    slots: [
+      { id: 'desk',    name: '書桌',     top: '38%', left: '22%', width: '56%', height: '50%' },
+      { id: 'chair',   name: '椅子',     top: '28%', left: '35%', width: '18%', height: '40%' },
+      { id: 'lamp',    name: '桌燈',     top: '32%', left: '24%', width: '16%', height: '28%' },
+      { id: 'ink',     name: '墨水',     top: '42%', left: '65%', width: '12%', height: '20%' },
+    ]
+  },
+  storehouse: {
+    name: '倉儲區', img: 'place/Storehouse.png',
+    slots: [
+      { id: 'cabinet', name: '收納櫃',   top: '8%',  left: '4%',  width: '28%', height: '72%' },
+      { id: 'shelf',   name: '置物架',   top: '5%',  left: '33%', width: '34%', height: '72%' },
+      { id: 'filebox', name: '文件櫃',   top: '10%', left: '60%', width: '18%', height: '72%' },
+    ]
+  },
+  home: {
+    name: '小屋', img: 'place/Home.png',
+    slots: [
+      { id: 'sofa',    name: '沙發',     top: '33%', left: '8%',  width: '30%', height: '32%' },
+      { id: 'table',   name: '餐桌',     top: '48%', left: '24%', width: '50%', height: '38%' },
+      { id: 'bed',     name: '床鋪',     top: '28%', left: '62%', width: '32%', height: '35%' },
+      { id: 'fireplace',name:'暖爐',     top: '33%', left: '0%',  width: '12%', height: '38%' },
+      { id: 'petbed',  name: '寵物窩',  top: '65%', left: '72%', width: '15%', height: '20%' },
+    ]
+  },
+  equip: {
+    name: '裝備', img: 'place/Equip.png',
+    slots: [
+      { id: 'head',    name: '頭部',     top: '5%',  left: '38%', width: '22%', height: '18%' },
+      { id: 'neck',    name: '頸部',     top: '22%', left: '38%', width: '22%', height: '16%' },
+      { id: 'body',    name: '上身',     top: '25%', left: '28%', width: '42%', height: '30%' },
+      { id: 'bracelet',name: '手環',     top: '36%', left: '12%', width: '16%', height: '18%' },
+      { id: 'bag',     name: '背包',     top: '30%', left: '72%', width: '18%', height: '22%' },
+      { id: 'gloves',  name: '手套',     top: '54%', left: '10%', width: '16%', height: '18%' },
+      { id: 'pants',   name: '下身',     top: '52%', left: '28%', width: '42%', height: '24%' },
+      { id: 'boots',   name: '鞋子',     top: '74%', left: '32%', width: '34%', height: '18%' },
+    ]
+  }
+};
+
+let currentScene = 'entrance';
+let equippedItems = JSON.parse(localStorage.getItem('chiwu_equipped') || '{}');
+
+function switchScene(sceneId) {
+  currentScene = sceneId;
+  document.querySelectorAll('.scene-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.scene === sceneId);
+  });
+  renderScene();
+  closeSlotInfo();
+}
+
+function renderScene() {
+  const scene = SCENES[currentScene];
+  if (!scene) return;
+  const viewport = document.getElementById('sceneViewport');
+  const img = document.getElementById('sceneImg');
+  img.src = scene.img;
+  img.alt = scene.name;
+
+  // Remove old hotspots
+  viewport.querySelectorAll('.hotspot').forEach(h => h.remove());
+
+  // Add hotspots
+  scene.slots.forEach(slot => {
+    const key = currentScene + '_' + slot.id;
+    const isEquipped = !!equippedItems[key];
+    const div = document.createElement('div');
+    div.className = 'hotspot' + (isEquipped ? ' equipped' : '');
+    div.style.cssText = `top:${slot.top};left:${slot.left};width:${slot.width};height:${slot.height}`;
+    div.innerHTML = `<span class="hotspot-label">${slot.name}</span>`;
+    div.onclick = () => openSlotInfo(currentScene, slot);
+    viewport.appendChild(div);
+  });
+}
+
+function openSlotInfo(sceneId, slot) {
+  const key = sceneId + '_' + slot.id;
+  const equipped = equippedItems[key];
+  document.getElementById('slotInfoName').textContent = slot.name;
+  document.getElementById('slotInfoCurrent').textContent = equipped
+    ? `目前裝備：${equipped}`
+    : '目前空置';
+  document.getElementById('slotInfoPanel').style.display = '';
+}
+
+function closeSlotInfo() {
+  document.getElementById('slotInfoPanel').style.display = 'none';
+}
+
+function correctCategory(taskId, taskTitle, newCat) {
+  // Save correction to localStorage
+  const corrections = JSON.parse(localStorage.getItem('chiwu_cat_corrections') || '{}');
+  corrections[taskTitle] = newCat;
+  localStorage.setItem('chiwu_cat_corrections', JSON.stringify(corrections));
+
+  // Update in DB
+  sb(`tasks?id=eq.${taskId}`, 'PATCH', { category: newCat });
+
+  // Update local state
+  const task = tasks.find(t => t.id === taskId);
+  if (task) task.category = newCat;
+  renderTasks();
+  notify(`分類已更新為「${newCat}」，下次相同任務會優先使用此分類`, 'gold');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['tasks', 'shop', 'npc', 'decor', 'debt'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab-' + name);
+  });
+  if (name === 'decor') renderScene();
+}
+
+function notify(msg, type = 'green') {
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.textContent = msg;
+  document.getElementById('notifContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'taskInput') addTask();
+  if (e.key === 'Enter' && e.target.id === 'cityInputField') submitCity();
+});
+
+// ─── START ───────────────────────────────────────────
+const savedWarn = localStorage.getItem('chiwu_quota_warn');
+if (savedWarn === new Date().toDateString()) {
+  quotaWarningShown = true;
+  document.getElementById('quotaBanner').classList.add('show');
+}
+init();
+</script>
+</body>
+</html>
