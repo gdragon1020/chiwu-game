@@ -3160,28 +3160,50 @@ async function checkDailyLogin() {
 const EARLY_REWARD_LEVELS = [2, 3, 5, 7];
 const CHOICE_REWARD_LEVELS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
 
+let _levelUpChoices = []; // store choices to avoid JSON serialization issues
+
+function randAmount() { return Math.floor(Math.random() * 19) + 2; }
+function makeFallback() {
+  return [
+    { type: 'gold', amount: randAmount() },
+    { type: 'fragment', amount: randAmount() },
+    { type: 'gold', amount: randAmount() * 2 }
+  ];
+}
+
 async function generateLevelUpChoices(level) {
   const isEarly = EARLY_REWARD_LEVELS.includes(level);
   const isChoice = CHOICE_REWARD_LEVELS.includes(level);
   if (!isEarly && !isChoice) return null;
 
-  const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
-  const consumables = Object.keys(CONSUMABLE_DATA);
-  const pool = [...available, ...consumables];
-
-  if (pool.length === 0) {
-    const amount = Math.floor(Math.random() * 19) + 2;
-    return [{ type: 'gold', amount }, { type: 'fragment', amount }, { type: 'gold', amount: amount * 2 }];
+  // For early levels (2,3,5,7): prioritize Lv.1 equipment that player doesn't have
+  let pool = [];
+  if (isEarly) {
+    const lv1equip = Object.keys(EQUIPMENT_DATA)
+      .filter(id => EQUIPMENT_DATA[id].level === 1 && canObtainItem(id));
+    const consumables = Object.keys(CONSUMABLE_DATA);
+    pool = [...lv1equip, ...consumables];
+  } else {
+    const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
+    const consumables = Object.keys(CONSUMABLE_DATA);
+    pool = [...available, ...consumables];
   }
 
-  const shuffled = pool.sort(() => Math.random() - 0.5);
-  const choices = shuffled.slice(0, 3).map(id => {
+  // All obtained — fallback to gold/fragments
+  if (pool.length === 0) return makeFallback();
+
+  // Shuffle
+  pool = pool.sort(() => Math.random() - 0.5);
+  const choices = pool.slice(0, 3).map(id => {
     const item = EQUIPMENT_DATA[id] || CONSUMABLE_DATA[id];
     return { type: 'item', itemId: id, item };
   });
 
+  // Pad with gold/fragment if less than 3
   while (choices.length < 3) {
-    choices.push({ type: 'gold', amount: Math.floor(Math.random() * 19) + 2 });
+    choices.push(Math.random() > 0.5
+      ? { type: 'gold', amount: randAmount() }
+      : { type: 'fragment', amount: randAmount() });
   }
   return choices;
 }
@@ -3189,6 +3211,7 @@ async function generateLevelUpChoices(level) {
 async function showLevelUpChoices(level) {
   const choices = await generateLevelUpChoices(level);
   if (!choices) return;
+  _levelUpChoices = choices;
 
   const existing = document.getElementById('levelUpChoiceModal');
   if (existing) existing.remove();
@@ -3198,34 +3221,43 @@ async function showLevelUpChoices(level) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2100;display:flex;align-items:center;justify-content:center;padding:20px;';
 
   const choicesHtml = choices.map((c, i) => {
-    const name = c.type === 'item' ? c.item.name : (c.type === 'gold' ? `${c.amount} 金幣` : `${c.amount} 碎片`);
+    const name = c.type === 'item'
+      ? c.item.name
+      : c.type === 'gold' ? `${c.amount} 金幣` : `${c.amount} 碎片`;
     const desc = c.type === 'item' ? c.item.description : '';
-    return `<div onclick="selectLevelUpChoice(${i}, ${JSON.stringify(choices).replace(/"/g,'&quot;')})" style="
+    const sub = c.type === 'item' && c.item.slot
+      ? `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px">${SLOT_LABELS[c.item.slot] || c.item.slot} · Lv.${c.item.level}</div>`
+      : '';
+    const icon = c.type === 'gold' ? '💰' : c.type === 'fragment' ? '◈' : '✦';
+    return `<div onclick="selectLevelUpChoice(${i})" style="
       background:var(--bg2);border:1px solid var(--border2);padding:14px;cursor:pointer;
       transition:all 0.2s;margin-bottom:8px;
     " onmouseover="this.style.borderColor='var(--gold)';this.style.background='var(--gold-dim)'"
        onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--bg2)'">
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:4px">${name}</div>
-      ${desc ? `<div style="font-size:12px;color:var(--text2)">${desc}</div>` : ''}
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:4px">${icon} ${name}</div>
+      ${sub}
+      ${desc ? `<div style="font-size:12px;color:var(--text2);line-height:1.5">${desc}</div>` : ''}
     </div>`;
   }).join('');
 
   modal.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--gold);max-width:480px;width:100%">
       <div style="padding:16px 20px;border-bottom:1px solid var(--border2)">
-        <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold)">升級獎勵 · LV.${level}</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:4px;font-family:'Share Tech Mono',monospace">選擇一項獎勵</div>
+        <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold)">✦ 升級獎勵 · LV.${level}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;font-family:'Share Tech Mono',monospace">選擇一項獎勵，只能選一次</div>
       </div>
       <div style="padding:20px">${choicesHtml}</div>
     </div>`;
   document.body.appendChild(modal);
 }
 
-async function selectLevelUpChoice(index, choices) {
-  const choice = choices[index];
+async function selectLevelUpChoice(index) {
+  const choice = _levelUpChoices[index];
+  if (!choice) return;
   document.getElementById('levelUpChoiceModal')?.remove();
   if (choice.type === 'item') {
     await obtainItem(choice.itemId);
+    renderBag();
   } else if (choice.type === 'gold') {
     await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + choice.amount });
     player.coins += choice.amount;
@@ -3235,6 +3267,7 @@ async function selectLevelUpChoice(index, choices) {
     notify(`✦ 升級獎勵：+${choice.amount} 碎片`, 'exp');
   }
   renderPlayer();
+  renderStatusPanel();
 }
 
 // ─── FRAGMENT SHOP ───────────────────────────────────
