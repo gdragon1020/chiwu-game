@@ -5077,8 +5077,8 @@ function openFurnitureModal(slot, slotLabel) {
         <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="this.closest('.equip-modal-overlay').remove()">✕</span>
       </div>
       <div style="padding:16px">
-        ${!canChange ? '<div style="background:var(--red-dim);border:1px solid rgba(240,112,112,0.3);padding:8px 12px;margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red)">今日家具更換次數已用完（每日3次），明日5:00重置</div>' : ''}
-        ${currentItem ? `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前裝置：${currentItem.name}</div>` : '<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前空置</div>'}
+        ${!canChange ? `<div style="background:var(--red-dim);border:1px solid rgba(240,112,112,0.3);padding:8px 12px;margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red)">今日家具更換次數已用完（每日3次），明日5:00重置</div>` : `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:10px">今日剩餘更換次數：${changesLeft}/3</div>`}
+        ${currentItem ? `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前裝置：${currentItem.name}</div>` : `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前空置</div>`}
         ${itemsHtml}
       </div>
     </div>`;
