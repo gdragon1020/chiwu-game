@@ -1477,9 +1477,9 @@
 
     <!-- Inventory -->
     <div class="bag-section" style="margin-top:16px">
-      <div class="section-label">📦 背包道具</div>
+      <div class="section-label">🧪 消耗品</div>
       <div class="inventory-grid" id="inventoryGrid">
-        <div class="empty-state">背包是空的。完成任務、開寶箱或升級可以獲得道具。</div>
+        <div class="empty-state">目前沒有消耗品。開寶箱或升級可以獲得。</div>
       </div>
     </div>
 
@@ -2770,6 +2770,460 @@ function openStoryLog() {
 }
 
 
+
+// ─── KEYWORD GROUPS ──────────────────────────────────
+const keywordGroups = {
+  daily: {
+    organize: ['整理','收拾','丟垃圾','洗碗','歸位','清理','打掃','洗衣'],
+    food: ['吃飯','吃一餐','早餐','午餐','晚餐','喝水','保健食品','吃藥','維他命'],
+    sleepPrep: ['睡前','睡覺','刷牙','洗臉','設鬧鐘','關燈','充手機'],
+    outingPrep: ['收拾包包','換衣服','帶鑰匙','帶錢包','帶文件']
+  },
+  focus: {
+    writing: ['寫','文字','文章','報告','SOP','論文','草稿','段落'],
+    notes: ['筆記','整理資料','文獻','閱讀','摘要'],
+    slides: ['PPT','簡報','投影片'],
+    english: ['英文','修改英文','翻譯','校稿','潤稿']
+  },
+  outside: {
+    errands: ['買','領貨','取貨','寄包裹','辦手續'],
+    places: ['去','學校','實驗室','郵局','銀行','超商'],
+    housing: ['看房','租屋','房東']
+  },
+  social: {
+    reply: ['回訊息','回email','回信','回覆'],
+    confirm: ['確認','詢問','通知','約時間'],
+    contact: ['打電話','傳訊息','聯絡','meeting','討論']
+  },
+  project: {
+    documents: ['期末作業','研究報告','申請文件','SOP','論文'],
+    moving: ['搬家','打包','找房子','租屋'],
+    project: ['專案','投稿','研討會','完整簡報']
+  }
+};
+
+function taskMatchesKeywords(task, keywords) {
+  const text = [task.title, task.description || '', ...(task.tags || [])].join(' ').toLowerCase();
+  return keywords.some(kw => text.includes(kw.toLowerCase()));
+}
+
+// ─── FURNITURE DATA ───────────────────────────────────
+const FURNITURE_DATA = {
+  // ── 門面區：招牌 ──
+  signboard_lv1: { id:'signboard_lv1', name:'歪斜木招牌', kind:'guildFurniture', area:'門面區', slot:'signboard', level:1, description:'全委託金幣 +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:2 }] },
+  signboard_lv2: { id:'signboard_lv2', name:'下城鐵框招牌', kind:'guildFurniture', area:'門面區', slot:'signboard', level:2, description:'全委託金幣 +5%', prerequisiteItemId:'signboard_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:5 }] },
+  signboard_lv3: { id:'signboard_lv3', name:'霧燈商會招牌', kind:'guildFurniture', area:'門面區', slot:'signboard', level:3, description:'每日第一個任務金幣 +10%', prerequisiteItemId:'signboard_lv2', isConsumable:false,
+    effects:[{ type:'dailyFirstTaskBonus', target:'gold', valuePercent:10 }] },
+  signboard_lv4: { id:'signboard_lv4', name:'藍晶發光招牌', kind:'guildFurniture', area:'門面區', slot:'signboard', level:4, description:'全委託金幣 +7%；每日第一個外出委託金幣 +10%', prerequisiteItemId:'signboard_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'外出委託', target:'gold', valuePercent:10 }] },
+  signboard_lv5: { id:'signboard_lv5', name:'無印商會主招牌', kind:'guildFurniture', area:'門面區', slot:'signboard', level:5, description:'全委託金幣 +7%；今日完成3類不同委託時，額外 +10 碎片', prerequisiteItemId:'signboard_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:7 }, { type:'balanceBonus', completedCategoryCount:3, target:'fragment', amount:10 }] },
+
+  // ── 門面區：門鈴 ──
+  doorbell_lv1: { id:'doorbell_lv1', name:'生鏽銅鈴', kind:'guildFurniture', area:'門面區', slot:'doorbell', level:1, description:'社交委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:2 }] },
+  doorbell_lv2: { id:'doorbell_lv2', name:'下城迎客鈴', kind:'guildFurniture', area:'門面區', slot:'doorbell', level:2, description:'社交委託 EXP +5%', prerequisiteItemId:'doorbell_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:5 }] },
+  doorbell_lv3: { id:'doorbell_lv3', name:'彩繩小門鈴', kind:'guildFurniture', area:'門面區', slot:'doorbell', level:3, description:'社交委託 EXP +7%；每日第一個社交委託 EXP +10%', prerequisiteItemId:'doorbell_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'社交委託', target:'exp', valuePercent:10 }] },
+  doorbell_lv4: { id:'doorbell_lv4', name:'信鴿報時鈴', kind:'guildFurniture', area:'門面區', slot:'doorbell', level:4, description:'社交委託 EXP +7%；完成社交委託時有5%機率額外+5金幣', prerequisiteItemId:'doorbell_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:7 }, { type:'criticalBonus', category:'社交委託', chancePercent:5, reward:{ target:'gold', amount:5 } }] },
+  doorbell_lv5: { id:'doorbell_lv5', name:'靈石共鳴門鈴', kind:'guildFurniture', area:'門面區', slot:'doorbell', level:5, description:'社交委託 EXP +7%；每完成3個社交委託獲得來客充能，下一個社交委託 EXP x2', prerequisiteItemId:'doorbell_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:7 }, { type:'charge', chargeName:'來客充能', gainCondition:{ completedCount:3, category:'社交委託' }, consumeEffect:{ nextTaskCategory:'社交委託', target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // ── 門面區：門口地毯 ──
+  entranceMat_lv1: { id:'entranceMat_lv1', name:'磨損麻布地毯', kind:'guildFurniture', area:'門面區', slot:'entranceMat', level:1, description:'日常委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:2 }] },
+  entranceMat_lv2: { id:'entranceMat_lv2', name:'下城迎客地毯', kind:'guildFurniture', area:'門面區', slot:'entranceMat', level:2, description:'日常委託 EXP +5%', prerequisiteItemId:'entranceMat_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:5 }] },
+  entranceMat_lv3: { id:'entranceMat_lv3', name:'暖色防霧地毯', kind:'guildFurniture', area:'門面區', slot:'entranceMat', level:3, description:'每日第一個日常委託 EXP +10%', prerequisiteItemId:'entranceMat_lv2', isConsumable:false,
+    effects:[{ type:'dailyFirstTaskBonus', category:'日常委託', target:'exp', valuePercent:10 }] },
+  entranceMat_lv4: { id:'entranceMat_lv4', name:'鏽斑抓痕地毯', kind:'guildFurniture', area:'門面區', slot:'entranceMat', level:4, description:'日常委託 EXP +7%；完成包含整理詞條的日常委託時額外+5金幣，每日1次', prerequisiteItemId:'entranceMat_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:7 }, { type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.organize, target:'gold', amount:5, dailyLimit:1 }] },
+  entranceMat_lv5: { id:'entranceMat_lv5', name:'破霧迎門毯', kind:'guildFurniture', area:'門面區', slot:'entranceMat', level:5, description:'若昨天沒有完成任務，今日第一個任務 EXP +30%', prerequisiteItemId:'entranceMat_lv4', isConsumable:false,
+    effects:[{ type:'streakRecoveryBonus', category:null, target:'exp', valuePercent:30 }] },
+
+  // ── 接待區：櫃檯 ──
+  counter_lv1: { id:'counter_lv1', name:'破舊木櫃檯', kind:'guildFurniture', area:'接待區', slot:'counter', level:1, description:'全委託金幣 +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:2 }] },
+  counter_lv2: { id:'counter_lv2', name:'二手橡木櫃檯', kind:'guildFurniture', area:'接待區', slot:'counter', level:2, description:'全委託金幣 +5%', prerequisiteItemId:'counter_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:5 }] },
+  counter_lv3: { id:'counter_lv3', name:'齒輪收銀櫃檯', kind:'guildFurniture', area:'接待區', slot:'counter', level:3, description:'外出委託金幣 +5%；社交委託金幣 +2%', prerequisiteItemId:'counter_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'gold', valuePercent:5 }, { type:'categoryBonus', category:'社交委託', target:'gold', valuePercent:2 }] },
+  counter_lv4: { id:'counter_lv4', name:'藍晶交易櫃檯', kind:'guildFurniture', area:'接待區', slot:'counter', level:4, description:'全委託金幣 +7%', prerequisiteItemId:'counter_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:7 }] },
+  counter_lv5: { id:'counter_lv5', name:'商會接待主櫃', kind:'guildFurniture', area:'接待區', slot:'counter', level:5, description:'全委託金幣 +7%；今日完成5類不同委託時，額外 +20 金幣', prerequisiteItemId:'counter_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:7 }, { type:'balanceBonus', completedCategoryCount:5, target:'gold', amount:20 }] },
+
+  // ── 接待區：委託板 ──
+  questBoard_lv1: { id:'questBoard_lv1', name:'釘滿紙條的木板', kind:'guildFurniture', area:'接待區', slot:'questBoard', level:1, description:'任務委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:2 }] },
+  questBoard_lv2: { id:'questBoard_lv2', name:'分欄公告板', kind:'guildFurniture', area:'接待區', slot:'questBoard', level:2, description:'任務委託 EXP +5%', prerequisiteItemId:'questBoard_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:5 }] },
+  questBoard_lv3: { id:'questBoard_lv3', name:'行會回收委託板', kind:'guildFurniture', area:'接待區', slot:'questBoard', level:3, description:'任務委託 EXP +7%；每日第一個任務委託 EXP +10%', prerequisiteItemId:'questBoard_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'任務委託', target:'exp', valuePercent:10 }] },
+  questBoard_lv4: { id:'questBoard_lv4', name:'藍晶發光委託板', kind:'guildFurniture', area:'接待區', slot:'questBoard', level:4, description:'任務委託 EXP +7%；完成大型任務時，額外 +20 碎片', prerequisiteItemId:'questBoard_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'flatReward', trigger:'大型任務', reward:{ target:'fragment', amount:20 } }] },
+  questBoard_lv5: { id:'questBoard_lv5', name:'無印商會委託牆', kind:'guildFurniture', area:'接待區', slot:'questBoard', level:5, description:'任務委託 EXP +7%；每完成3個任務委託獲得合約充能，下一個任務委託 EXP x2', prerequisiteItemId:'questBoard_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'charge', chargeName:'合約充能', gainCondition:{ completedCount:3, category:'任務委託' }, consumeEffect:{ nextTaskCategory:'任務委託', target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // ── 接待區：帳本 ──
+  ledger_lv1: { id:'ledger_lv1', name:'小型記帳本', kind:'guildFurniture', area:'接待區', slot:'ledger', level:1, description:'全委託金幣 +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:2 }] },
+  ledger_lv2: { id:'ledger_lv2', name:'雙欄商會帳冊', kind:'guildFurniture', area:'接待區', slot:'ledger', level:2, description:'全委託金幣 +5%', prerequisiteItemId:'ledger_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'all', target:'gold', valuePercent:5 }] },
+  ledger_lv3: { id:'ledger_lv3', name:'娜娜的進貨帳', kind:'guildFurniture', area:'接待區', slot:'ledger', level:3, description:'外出委託金幣 +7%', prerequisiteItemId:'ledger_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'gold', valuePercent:7 }] },
+  ledger_lv4: { id:'ledger_lv4', name:'藍晶自動記帳本', kind:'guildFurniture', area:'接待區', slot:'ledger', level:4, description:'今日完成3類不同委託時，額外 +5 碎片', prerequisiteItemId:'ledger_lv3', isConsumable:false,
+    effects:[{ type:'balanceBonus', completedCategoryCount:3, target:'fragment', amount:5 }] },
+  ledger_lv5: { id:'ledger_lv5', name:'商會總帳', kind:'guildFurniture', area:'接待區', slot:'ledger', level:5, description:'今日完成4類時額外+10碎片；完成5類時額外+20金幣', prerequisiteItemId:'ledger_lv4', isConsumable:false,
+    effects:[{ type:'balanceBonus', completedCategoryCount:4, target:'fragment', amount:10 }, { type:'balanceBonus', completedCategoryCount:5, target:'gold', amount:20 }] },
+
+  // ── 工作區：書桌 ──
+  desk_lv1: { id:'desk_lv1', name:'搖晃小木桌', kind:'guildFurniture', area:'工作區', slot:'desk', level:1, description:'專注委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:2 }] },
+  desk_lv2: { id:'desk_lv2', name:'二手書記桌', kind:'guildFurniture', area:'工作區', slot:'desk', level:2, description:'專注委託 EXP +5%', prerequisiteItemId:'desk_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:5 }] },
+  desk_lv3: { id:'desk_lv3', name:'防霧工作桌', kind:'guildFurniture', area:'工作區', slot:'desk', level:3, description:'專注委託 EXP +7%；每日第一個專注委託 EXP +10%', prerequisiteItemId:'desk_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'專注委託', target:'exp', valuePercent:10 }] },
+  desk_lv4: { id:'desk_lv4', name:'齒輪升降書桌', kind:'guildFurniture', area:'工作區', slot:'desk', level:4, description:'專注委託 EXP +7%；晚上完成專注委託時，額外 EXP +5%', prerequisiteItemId:'desk_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:7 }, { type:'timeBonus', category:'專注委託', timeRange:'晚上', target:'exp', valuePercent:5 }] },
+  desk_lv5: { id:'desk_lv5', name:'藍晶書記台', kind:'guildFurniture', area:'工作區', slot:'desk', level:5, description:'專注委託 EXP +7%；每完成3個專注委託獲得書記充能，下一個專注委託 EXP x2', prerequisiteItemId:'desk_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:7 }, { type:'charge', chargeName:'書記充能', gainCondition:{ completedCount:3, category:'專注委託' }, consumeEffect:{ nextTaskCategory:'專注委託', target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // ── 工作區：椅子 ──
+  chair_lv1: { id:'chair_lv1', name:'硬木椅', kind:'guildFurniture', area:'工作區', slot:'chair', level:1, description:'專注委託金幣 +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'gold', valuePercent:2 }] },
+  chair_lv2: { id:'chair_lv2', name:'軟墊書記椅', kind:'guildFurniture', area:'工作區', slot:'chair', level:2, description:'專注委託金幣 +5%', prerequisiteItemId:'chair_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'gold', valuePercent:5 }] },
+  chair_lv3: { id:'chair_lv3', name:'皮革轉椅', kind:'guildFurniture', area:'工作區', slot:'chair', level:3, description:'連鎖時第2個專注委託 EXP +5%', prerequisiteItemId:'chair_lv2', isConsumable:false,
+    effects:[{ type:'chainBonus', category:'專注委託', chainIndex:2, target:'exp', valuePercent:5 }] },
+  chair_lv4: { id:'chair_lv4', name:'蒸汽調節椅', kind:'guildFurniture', area:'工作區', slot:'chair', level:4, description:'連鎖時第3個專注委託 EXP +7%', prerequisiteItemId:'chair_lv3', isConsumable:false,
+    effects:[{ type:'chainBonus', category:'專注委託', chainIndex:3, target:'exp', valuePercent:7 }] },
+  chair_lv5: { id:'chair_lv5', name:'靜音靠背椅', kind:'guildFurniture', area:'工作區', slot:'chair', level:5, description:'連鎖時第3個專注委託 EXP +10%；每日最多觸發1次', prerequisiteItemId:'chair_lv4', isConsumable:false,
+    effects:[{ type:'chainBonus', category:'專注委託', chainIndex:3, target:'exp', valuePercent:10, dailyLimit:1 }] },
+
+  // ── 工作區：桌燈 ──
+  deskLamp_lv1: { id:'deskLamp_lv1', name:'昏黃油燈', kind:'guildFurniture', area:'工作區', slot:'deskLamp', level:1, description:'每日第一個專注委託 EXP +10%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'dailyFirstTaskBonus', category:'專注委託', target:'exp', valuePercent:10 }] },
+  deskLamp_lv2: { id:'deskLamp_lv2', name:'霧中燈檯燈', kind:'guildFurniture', area:'工作區', slot:'deskLamp', level:2, description:'每日第一個專注委託 EXP +20%', prerequisiteItemId:'deskLamp_lv1', isConsumable:false,
+    effects:[{ type:'dailyFirstTaskBonus', category:'專注委託', target:'exp', valuePercent:20 }] },
+  deskLamp_lv3: { id:'deskLamp_lv3', name:'防霧閱讀燈', kind:'guildFurniture', area:'工作區', slot:'deskLamp', level:3, description:'晚上完成專注委託時，額外 EXP +5%', prerequisiteItemId:'deskLamp_lv2', isConsumable:false,
+    effects:[{ type:'timeBonus', category:'專注委託', timeRange:'晚上', target:'exp', valuePercent:5 }] },
+  deskLamp_lv4: { id:'deskLamp_lv4', name:'藍晶工作燈', kind:'guildFurniture', area:'工作區', slot:'deskLamp', level:4, description:'每日第一個任務若為專注委託，額外 +5 碎片', prerequisiteItemId:'deskLamp_lv3', isConsumable:false,
+    effects:[{ type:'dailyFirstTaskBonus', category:'專注委託', target:'fragment', valuePercent:0, flatAmount:5 }] },
+  deskLamp_lv5: { id:'deskLamp_lv5', name:'破霧主檯燈', kind:'guildFurniture', area:'工作區', slot:'deskLamp', level:5, description:'每日第一個專注委託 EXP +30%', prerequisiteItemId:'deskLamp_lv4', isConsumable:false,
+    effects:[{ type:'dailyFirstTaskBonus', category:'專注委託', target:'exp', valuePercent:30 }] },
+
+  // ── 工作區：墨水瓶 ──
+  inkBottle_lv1: { id:'inkBottle_lv1', name:'乾涸小墨瓶', kind:'guildFurniture', area:'工作區', slot:'inkBottle', level:1, description:'完成包含寫作/筆記/英文詞條的專注委託時 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'專注委託', keywords:[...keywordGroups.focus.writing,...keywordGroups.focus.notes,...keywordGroups.focus.english], target:'exp', valuePercent:2 }] },
+  inkBottle_lv2: { id:'inkBottle_lv2', name:'下城書記墨水', kind:'guildFurniture', area:'工作區', slot:'inkBottle', level:2, description:'完成包含寫作/筆記/英文詞條的專注委託時 EXP +5%', prerequisiteItemId:'inkBottle_lv1', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'專注委託', keywords:[...keywordGroups.focus.writing,...keywordGroups.focus.notes,...keywordGroups.focus.english], target:'exp', valuePercent:5 }] },
+  inkBottle_lv3: { id:'inkBottle_lv3', name:'防霧藍墨瓶', kind:'guildFurniture', area:'工作區', slot:'inkBottle', level:3, description:'包含寫作/筆記/英文詞條的專注委託 EXP +7%；每日第一次觸發額外 +3 碎片', prerequisiteItemId:'inkBottle_lv2', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'專注委託', keywords:[...keywordGroups.focus.writing,...keywordGroups.focus.notes,...keywordGroups.focus.english], target:'exp', valuePercent:7 }, { type:'keywordBonus', category:'專注委託', keywords:[...keywordGroups.focus.writing,...keywordGroups.focus.notes,...keywordGroups.focus.english], target:'fragment', amount:3, dailyLimit:1 }] },
+  inkBottle_lv4: { id:'inkBottle_lv4', name:'速乾靈墨瓶', kind:'guildFurniture', area:'工作區', slot:'inkBottle', level:4, description:'包含寫作/筆記/英文詞條的專注委託 EXP +7%；完成英文/翻譯/校稿時額外 +5 金幣，每日1次', prerequisiteItemId:'inkBottle_lv3', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'專注委託', keywords:[...keywordGroups.focus.writing,...keywordGroups.focus.notes,...keywordGroups.focus.english], target:'exp', valuePercent:7 }, { type:'keywordBonus', category:'專注委託', keywords:['英文','修改英文','翻譯','校稿','潤稿'], target:'gold', amount:5, dailyLimit:1 }] },
+  inkBottle_lv5: { id:'inkBottle_lv5', name:'星紋書記墨瓶', kind:'guildFurniture', area:'工作區', slot:'inkBottle', level:5, description:'包含寫作/筆記/英文詞條的專注委託 EXP +7%；每完成3個此類委託獲得書寫充能，下一個此類委託 EXP x2', prerequisiteItemId:'inkBottle_lv4', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'專注委託', keywords:[...keywordGroups.focus.writing,...keywordGroups.focus.notes,...keywordGroups.focus.english], target:'exp', valuePercent:7 }, { type:'charge', chargeName:'書寫充能', gainCondition:{ completedCount:3, category:'專注委託', keywords:[...keywordGroups.focus.writing,...keywordGroups.focus.notes,...keywordGroups.focus.english] }, consumeEffect:{ nextTaskCategory:'專注委託', target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // ── 倉儲區：收納櫃 ──
+  storageCabinet_lv1: { id:'storageCabinet_lv1', name:'木製收納櫃', kind:'guildFurniture', area:'倉儲區', slot:'storageCabinet', level:1, description:'包含整理詞條的日常委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.organize, target:'exp', valuePercent:2 }] },
+  storageCabinet_lv2: { id:'storageCabinet_lv2', name:'鐵皮收納櫃', kind:'guildFurniture', area:'倉儲區', slot:'storageCabinet', level:2, description:'包含整理詞條的日常委託 EXP +5%', prerequisiteItemId:'storageCabinet_lv1', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.organize, target:'exp', valuePercent:5 }] },
+  storageCabinet_lv3: { id:'storageCabinet_lv3', name:'分格貨物櫃', kind:'guildFurniture', area:'倉儲區', slot:'storageCabinet', level:3, description:'包含整理詞條的日常委託 EXP +7%；額外+5金幣，每日1次', prerequisiteItemId:'storageCabinet_lv2', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.organize, target:'exp', valuePercent:7 }, { type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.organize, target:'gold', amount:5, dailyLimit:1 }] },
+  storageCabinet_lv4: { id:'storageCabinet_lv4', name:'蒸汽升降貨櫃', kind:'guildFurniture', area:'倉儲區', slot:'storageCabinet', level:4, description:'日常委託 EXP +7%；完成3個日常委託時額外+5碎片', prerequisiteItemId:'storageCabinet_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:7 }, { type:'charge', chargeName:'整頓充能', gainCondition:{ completedCount:3, category:'日常委託', keywords:keywordGroups.daily.organize }, consumeEffect:{ nextTaskCategory:'日常委託', target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+  storageCabinet_lv5: { id:'storageCabinet_lv5', name:'靈石分類收納櫃', kind:'guildFurniture', area:'倉儲區', slot:'storageCabinet', level:5, description:'每完成3個含整理詞條的日常委託獲得整頓充能，下一個日常委託 EXP x2', prerequisiteItemId:'storageCabinet_lv4', isConsumable:false,
+    effects:[{ type:'charge', chargeName:'整頓充能', gainCondition:{ completedCount:3, category:'日常委託', keywords:keywordGroups.daily.organize }, consumeEffect:{ nextTaskCategory:'日常委託', target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // ── 倉儲區：置物架 ──
+  shelf_lv1: { id:'shelf_lv1', name:'簡易置物架', kind:'guildFurniture', area:'倉儲區', slot:'shelf', level:1, description:'外出委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:2 }] },
+  shelf_lv2: { id:'shelf_lv2', name:'出門備品架', kind:'guildFurniture', area:'倉儲區', slot:'shelf', level:2, description:'外出委託 EXP +5%', prerequisiteItemId:'shelf_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:5 }] },
+  shelf_lv3: { id:'shelf_lv3', name:'跑腿補給架', kind:'guildFurniture', area:'倉儲區', slot:'shelf', level:3, description:'外出委託 EXP +7%；每日第一個外出委託 EXP +10%', prerequisiteItemId:'shelf_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'外出委託', target:'exp', valuePercent:10 }] },
+  shelf_lv4: { id:'shelf_lv4', name:'赤沙旅行架', kind:'guildFurniture', area:'倉儲區', slot:'shelf', level:4, description:'外出委託 EXP +7%；早上完成外出委託時，額外金幣 +5%', prerequisiteItemId:'shelf_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:7 }, { type:'timeBonus', category:'外出委託', timeRange:'早上', target:'gold', valuePercent:5 }] },
+  shelf_lv5: { id:'shelf_lv5', name:'防霧遠行架', kind:'guildFurniture', area:'倉儲區', slot:'shelf', level:5, description:'每完成3個外出委託獲得備品充能，下一個外出委託金幣 x2', prerequisiteItemId:'shelf_lv4', isConsumable:false,
+    effects:[{ type:'charge', chargeName:'備品充能', gainCondition:{ completedCount:3, category:'外出委託' }, consumeEffect:{ nextTaskCategory:'外出委託', target:'gold', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // ── 倉儲區：文件櫃 ──
+  fileCabinet_lv1: { id:'fileCabinet_lv1', name:'生鏽文件盒', kind:'guildFurniture', area:'倉儲區', slot:'fileCabinet', level:1, description:'任務委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:2 }] },
+  fileCabinet_lv2: { id:'fileCabinet_lv2', name:'分類文件櫃', kind:'guildFurniture', area:'倉儲區', slot:'fileCabinet', level:2, description:'任務委託 EXP +5%', prerequisiteItemId:'fileCabinet_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:5 }] },
+  fileCabinet_lv3: { id:'fileCabinet_lv3', name:'行會檔案櫃', kind:'guildFurniture', area:'倉儲區', slot:'fileCabinet', level:3, description:'任務委託 EXP +7%；每日第一個任務委託 EXP +10%', prerequisiteItemId:'fileCabinet_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'任務委託', target:'exp', valuePercent:10 }] },
+  fileCabinet_lv4: { id:'fileCabinet_lv4', name:'藍晶索引櫃', kind:'guildFurniture', area:'倉儲區', slot:'fileCabinet', level:4, description:'任務委託 EXP +7%；提早1天完成有期限任務額外 EXP +5%', prerequisiteItemId:'fileCabinet_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'deadlineBonus', category:'任務委託', daysEarly:1, target:'exp', valuePercent:5 }] },
+  fileCabinet_lv5: { id:'fileCabinet_lv5', name:'無印商會合約櫃', kind:'guildFurniture', area:'倉儲區', slot:'fileCabinet', level:5, description:'任務委託 EXP +7%；完成大型任務時額外獲得小寶箱', prerequisiteItemId:'fileCabinet_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'flatReward', trigger:'大型任務', reward:{ target:'chest', chestType:'small' } }] },
+
+  // ── 小屋：沙發 ──
+  sofa_lv1: { id:'sofa_lv1', name:'舊布沙發', kind:'cottageFurniture', area:'小屋', slot:'sofa', level:1, description:'日常委託金幣 +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'gold', valuePercent:2 }] },
+  sofa_lv2: { id:'sofa_lv2', name:'軟墊二手沙發', kind:'cottageFurniture', area:'小屋', slot:'sofa', level:2, description:'日常委託金幣 +5%', prerequisiteItemId:'sofa_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'gold', valuePercent:5 }] },
+  sofa_lv3: { id:'sofa_lv3', name:'暖色休息沙發', kind:'cottageFurniture', area:'小屋', slot:'sofa', level:3, description:'每日第一個日常委託金幣 +10%', prerequisiteItemId:'sofa_lv2', isConsumable:false,
+    effects:[{ type:'dailyFirstTaskBonus', category:'日常委託', target:'gold', valuePercent:10 }] },
+  sofa_lv4: { id:'sofa_lv4', name:'下城長沙發', kind:'cottageFurniture', area:'小屋', slot:'sofa', level:4, description:'今日完成任務少於3個時，前幾個任務 EXP +5%', prerequisiteItemId:'sofa_lv3', isConsumable:false,
+    effects:[{ type:'lowProgressBonus', threshold:3, target:'exp', valuePercent:5 }] },
+  sofa_lv5: { id:'sofa_lv5', name:'靜霧休息沙發', kind:'cottageFurniture', area:'小屋', slot:'sofa', level:5, description:'若昨天沒有完成任務，今日第一個任務額外 +10 碎片', prerequisiteItemId:'sofa_lv4', isConsumable:false,
+    effects:[{ type:'streakRecoveryBonus', category:null, target:'fragment', flatAmount:10 }] },
+
+  // ── 小屋：餐桌 ──
+  diningTable_lv1: { id:'diningTable_lv1', name:'單人小餐桌', kind:'cottageFurniture', area:'小屋', slot:'diningTable', level:1, description:'日常委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:2 }] },
+  diningTable_lv2: { id:'diningTable_lv2', name:'熱湯餐桌', kind:'cottageFurniture', area:'小屋', slot:'diningTable', level:2, description:'日常委託 EXP +5%', prerequisiteItemId:'diningTable_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:5 }] },
+  diningTable_lv3: { id:'diningTable_lv3', name:'下城共餐桌', kind:'cottageFurniture', area:'小屋', slot:'diningTable', level:3, description:'包含飲食詞條的日常委託額外+5金幣，每日2次', prerequisiteItemId:'diningTable_lv2', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.food, target:'gold', amount:5, dailyLimit:2 }] },
+  diningTable_lv4: { id:'diningTable_lv4', name:'葛莉達的燉鍋桌', kind:'cottageFurniture', area:'小屋', slot:'diningTable', level:4, description:'每日第一個包含飲食詞條的日常委託 EXP +20%', prerequisiteItemId:'diningTable_lv3', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.food, target:'exp', valuePercent:20, dailyLimit:1 }] },
+  diningTable_lv5: { id:'diningTable_lv5', name:'暖光生活餐桌', kind:'cottageFurniture', area:'小屋', slot:'diningTable', level:5, description:'每完成3個日常委託獲得補給充能，下一個任務 EXP x2', prerequisiteItemId:'diningTable_lv4', isConsumable:false,
+    effects:[{ type:'charge', chargeName:'補給充能', gainCondition:{ completedCount:3, category:'日常委託' }, consumeEffect:{ target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // ── 小屋：床鋪 ──
+  bed_lv1: { id:'bed_lv1', name:'硬木床鋪', kind:'cottageFurniture', area:'小屋', slot:'bed', level:1, description:'包含睡前詞條的日常委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.sleepPrep, target:'exp', valuePercent:2 }] },
+  bed_lv2: { id:'bed_lv2', name:'乾淨單人床', kind:'cottageFurniture', area:'小屋', slot:'bed', level:2, description:'包含睡前詞條的日常委託 EXP +5%', prerequisiteItemId:'bed_lv1', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.sleepPrep, target:'exp', valuePercent:5 }] },
+  bed_lv3: { id:'bed_lv3', name:'暖被床鋪', kind:'cottageFurniture', area:'小屋', slot:'bed', level:3, description:'晚上完成日常委託時，EXP +5%', prerequisiteItemId:'bed_lv2', isConsumable:false,
+    effects:[{ type:'timeBonus', category:'日常委託', timeRange:'晚上', target:'exp', valuePercent:5 }] },
+  bed_lv4: { id:'bed_lv4', name:'防霧安眠床', kind:'cottageFurniture', area:'小屋', slot:'bed', level:4, description:'包含睡前詞條的日常委託額外+5碎片，每日1次', prerequisiteItemId:'bed_lv3', isConsumable:false,
+    effects:[{ type:'keywordBonus', category:'日常委託', keywords:keywordGroups.daily.sleepPrep, target:'fragment', amount:5, dailyLimit:1 }] },
+  bed_lv5: { id:'bed_lv5', name:'藍晶安眠床', kind:'cottageFurniture', area:'小屋', slot:'bed', level:5, description:'若今日完成含睡前詞條的日常委託，隔天第一個任務 EXP +20%', prerequisiteItemId:'bed_lv4', isConsumable:false,
+    effects:[{ type:'nextDayBonus', triggerKeywords:keywordGroups.daily.sleepPrep, nextDayEffect:{ target:'exp', valuePercent:20 } }] },
+
+  // ── 小屋：暖爐 ──
+  fireplace_lv1: { id:'fireplace_lv1', name:'小火盆', kind:'cottageFurniture', area:'小屋', slot:'fireplace', level:1, description:'日常委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:2 }] },
+  fireplace_lv2: { id:'fireplace_lv2', name:'蒸汽暖爐', kind:'cottageFurniture', area:'小屋', slot:'fireplace', level:2, description:'日常委託 EXP +5%', prerequisiteItemId:'fireplace_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:5 }] },
+  fireplace_lv3: { id:'fireplace_lv3', name:'修補暖爐', kind:'cottageFurniture', area:'小屋', slot:'fireplace', level:3, description:'若昨天沒有完成任務，今日第一個日常委託 EXP +20%', prerequisiteItemId:'fireplace_lv2', isConsumable:false,
+    effects:[{ type:'streakRecoveryBonus', category:'日常委託', target:'exp', valuePercent:20 }] },
+  fireplace_lv4: { id:'fireplace_lv4', name:'藍晶暖爐', kind:'cottageFurniture', area:'小屋', slot:'fireplace', level:4, description:'若昨天沒有完成任務，今日第一個任務 EXP +30%', prerequisiteItemId:'fireplace_lv3', isConsumable:false,
+    effects:[{ type:'streakRecoveryBonus', category:null, target:'exp', valuePercent:30 }] },
+  fireplace_lv5: { id:'fireplace_lv5', name:'重啟核心暖爐', kind:'cottageFurniture', area:'小屋', slot:'fireplace', level:5, description:'若昨天沒有完成任務，今日完成任意3個任務後額外獲得小寶箱', prerequisiteItemId:'fireplace_lv4', isConsumable:false,
+    effects:[{ type:'streakRecoveryChest', requiredCount:3, reward:{ target:'chest', chestType:'small' } }] },
+
+  // ── 小屋：寵物窩 ──
+  petBed_lv1: { id:'petBed_lv1', name:'破布寵物窩', kind:'cottageFurniture', area:'小屋', slot:'petBed', level:1, description:'完成日常委託時有2%機率額外+5金幣', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'criticalBonus', category:'日常委託', chancePercent:2, reward:{ target:'gold', amount:5 } }] },
+  petBed_lv2: { id:'petBed_lv2', name:'軟墊寵物窩', kind:'cottageFurniture', area:'小屋', slot:'petBed', level:2, description:'完成日常委託時有5%機率額外+5金幣', prerequisiteItemId:'petBed_lv1', isConsumable:false,
+    effects:[{ type:'criticalBonus', category:'日常委託', chancePercent:5, reward:{ target:'gold', amount:5 } }] },
+  petBed_lv3: { id:'petBed_lv3', name:'鏽斑專屬窩', kind:'cottageFurniture', area:'小屋', slot:'petBed', level:3, description:'包含整理詞條的日常委託時有5%機率+5碎片', prerequisiteItemId:'petBed_lv2', isConsumable:false,
+    effects:[{ type:'criticalBonus', category:'日常委託', keywords:keywordGroups.daily.organize, chancePercent:5, reward:{ target:'fragment', amount:5 } }] },
+  petBed_lv4: { id:'petBed_lv4', name:'暖晶寵物窩', kind:'cottageFurniture', area:'小屋', slot:'petBed', level:4, description:'完成任意任務時有5%機率獲得+5金幣或+5碎片', prerequisiteItemId:'petBed_lv3', isConsumable:false,
+    effects:[{ type:'criticalBonus', category:null, chancePercent:5, reward:{ target:'random_gold_or_fragment', amount:5 } }] },
+  petBed_lv5: { id:'petBed_lv5', name:'靈石寵物高台', kind:'cottageFurniture', area:'小屋', slot:'petBed', level:5, description:'完成任意任務時有7%機率獲得+10金幣或+10碎片；每日1次', prerequisiteItemId:'petBed_lv4', isConsumable:false,
+    effects:[{ type:'criticalBonus', category:null, chancePercent:7, reward:{ target:'random_gold_or_fragment', amount:10 }, dailyLimit:1 }] }
+};
+
+// ─── FURNITURE STATE ──────────────────────────────────
+let equippedFurniture = {}; // { slot: item_id }
+let furnitureChangedToday = false;
+
+function canObtainFurniture(itemId) {
+  const item = FURNITURE_DATA[itemId];
+  if (!item) return false;
+  if (inventory.some(i => i.item_id === itemId)) return false;
+  if (!item.prerequisiteItemId) return true;
+  return inventory.some(i => i.item_id === item.prerequisiteItemId);
+}
+
+function getDuplicateFurnitureCompensation(level) {
+  return [0, 5, 10, 20, 30, 40][level] || 5;
+}
+
+async function obtainFurniture(itemId) {
+  const item = FURNITURE_DATA[itemId];
+  if (!item) return { success: false };
+  if (inventory.some(i => i.item_id === itemId)) {
+    const frags = getDuplicateFurnitureCompensation(item.level);
+    await addFragments(frags);
+    return { success: true, converted: true, fragments: frags };
+  }
+  if (!canObtainFurniture(itemId)) {
+    await addFragments(5);
+    return { success: false, fragments: 5 };
+  }
+  const record = { item_id: itemId, item_kind: item.kind };
+  await sb('inventory', 'POST', record);
+  inventory.push(record);
+  notify(`✦ 獲得家具：${item.name}`, 'gold');
+  return { success: true };
+}
+
+function canChangeFurnitureToday() {
+  const today = getDateKey();
+  const used = parseInt(localStorage.getItem('chiwu_furniture_changes_' + today) || '0');
+  return used < 3;
+}
+
+function getFurnitureChangesLeft() {
+  const today = getDateKey();
+  const used = parseInt(localStorage.getItem('chiwu_furniture_changes_' + today) || '0');
+  return 3 - used;
+}
+
+async function equipFurniture(itemId) {
+  if (!canChangeFurnitureToday()) {
+    notify('今日家具更換次數已用完（每日3次），明日5:00重置', 'red');
+    return false;
+  }
+  const item = FURNITURE_DATA[itemId];
+  if (!item) return false;
+  equippedFurniture[item.slot] = itemId;
+  const today2 = getDateKey();
+  const used2 = parseInt(localStorage.getItem('chiwu_furniture_changes_' + today2) || '0');
+  localStorage.setItem('chiwu_furniture_changes_' + today2, used2 + 1);
+  await sb('equipped', 'POST', { slot: 'furniture_' + item.slot, item_id: itemId });
+  notify(`✦ 裝置家具：${item.name}`, 'gold');
+  return true;
+}
+
+function getEquippedFurnitureEffects() {
+  const effects = [];
+  Object.values(equippedFurniture).forEach(itemId => {
+    const item = FURNITURE_DATA[itemId];
+    if (item) effects.push(...item.effects);
+  });
+  return effects;
+}
+
+// Check if yesterday had no tasks completed (for streakRecovery)
+function yesterdayHadNoTasks() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const key = 'tasksCompletedOn_' + yesterday.toDateString();
+  return !localStorage.getItem(key);
+}
+
+// Mark today as having completed a task
+function markTaskCompletedToday() {
+  localStorage.setItem('tasksCompletedOn_' + new Date().toDateString(), '1');
+}
+
+// Apply furniture effects (called alongside equipment effects)
+function applyFurnitureEffects(baseExp, baseCoins, task) {
+  const effects = getEquippedFurnitureEffects();
+  const cat = task.category;
+  const timeRange = getTimeRange();
+  const today = new Date().toDateString();
+  let expBonus = 0, coinBonus = 0;
+  const MAX_BONUS = 1.0;
+
+  effects.forEach(ef => {
+    if (ef.type === 'categoryBonus') {
+      const matches = ef.category === 'all' || ef.category === cat;
+      if (matches) {
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent/100, MAX_BONUS);
+        else coinBonus = Math.min(coinBonus + ef.valuePercent/100, MAX_BONUS);
+      }
+    }
+    if (ef.type === 'keywordBonus' && ef.category === cat) {
+      if (taskMatchesKeywords(task, ef.keywords)) {
+        if (ef.valuePercent) {
+          if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent/100, MAX_BONUS);
+          else if (ef.target === 'gold') coinBonus = Math.min(coinBonus + ef.valuePercent/100, MAX_BONUS);
+        }
+        if (ef.amount) {
+          const limitKey = `kw_${ef.target}_${JSON.stringify(ef.keywords).slice(0,20)}_${today}`;
+          const used = parseInt(localStorage.getItem(limitKey) || '0');
+          const limit = ef.dailyLimit || 99;
+          if (used < limit) {
+            localStorage.setItem(limitKey, used + 1);
+            setTimeout(async () => {
+              if (ef.target === 'gold') {
+                await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + ef.amount });
+                player.coins += ef.amount;
+                notify(`✦ 家具加成：+${ef.amount} 金幣`, 'gold');
+              } else if (ef.target === 'fragment') {
+                await addFragments(ef.amount);
+                notify(`✦ 家具加成：+${ef.amount} 碎片`, 'exp');
+              }
+            }, 400);
+          }
+        }
+      }
+    }
+    if (ef.type === 'dailyFirstTaskBonus' && (!ef.category || ef.category === cat)) {
+      const key = `fur_dailyFirst_${ef.category||'any'}_${ef.target}_${today}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, '1');
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent/100, MAX_BONUS);
+        else if (ef.target === 'gold') coinBonus = Math.min(coinBonus + ef.valuePercent/100, MAX_BONUS);
+        else if (ef.target === 'fragment' && ef.flatAmount) {
+          setTimeout(() => { addFragments(ef.flatAmount); notify(`✦ 家具加成：+${ef.flatAmount} 碎片`, 'exp'); }, 400);
+        }
+      }
+    }
+    if (ef.type === 'timeBonus' && (!ef.category || ef.category === cat) && ef.timeRange === timeRange) {
+      if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent/100, MAX_BONUS);
+      else coinBonus = Math.min(coinBonus + ef.valuePercent/100, MAX_BONUS);
+    }
+    if (ef.type === 'streakRecoveryBonus' && (!ef.category || ef.category === cat)) {
+      if (yesterdayHadNoTasks()) {
+        const key = `streakRecovery_${today}`;
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, '1');
+          if (ef.valuePercent && ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent/100, MAX_BONUS);
+          else if (ef.flatAmount && ef.target === 'fragment') {
+            setTimeout(() => { addFragments(ef.flatAmount); notify(`✦ 重啟加成：+${ef.flatAmount} 碎片`, 'exp'); }, 400);
+          }
+        }
+      }
+    }
+    if (ef.type === 'criticalBonus' && (!ef.category || ef.category === cat || ef.category === 'all')) {
+      const limitKey = ef.dailyLimit ? `crit_fur_${ef.chancePercent}_${today}` : null;
+      const used = limitKey ? parseInt(localStorage.getItem(limitKey) || '0') : 0;
+      if (!ef.dailyLimit || used < ef.dailyLimit) {
+        if (ef.keywords && !taskMatchesKeywords(task, ef.keywords)) return;
+        if (Math.random() * 100 < ef.chancePercent) {
+          if (limitKey) localStorage.setItem(limitKey, used + 1);
+          setTimeout(async () => {
+            const r = ef.reward;
+            if (r.target === 'gold') {
+              await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + r.amount });
+              player.coins += r.amount;
+              notify(`🐾 寵物叼來小物：+${r.amount} 金幣`, 'gold');
+            } else if (r.target === 'fragment') {
+              await addFragments(r.amount);
+              notify(`🐾 寵物叼來小物：+${r.amount} 碎片`, 'exp');
+            } else if (r.target === 'random_gold_or_fragment') {
+              if (Math.random() > 0.5) {
+                await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + r.amount });
+                player.coins += r.amount;
+                notify(`🐾 寵物叼來小物：+${r.amount} 金幣`, 'gold');
+              } else {
+                await addFragments(r.amount);
+                notify(`🐾 寵物叼來小物：+${r.amount} 碎片`, 'exp');
+              }
+            }
+          }, 600);
+        }
+      }
+    }
+    if (ef.type === 'nextDayBonus' && taskMatchesKeywords(task, ef.triggerKeywords)) {
+      localStorage.setItem('nextDayBonus_' + today, JSON.stringify(ef.nextDayEffect));
+      notify('✦ 睡前任務完成，明日第一個任務有加成！', 'exp');
+    }
+  });
+
+  markTaskCompletedToday();
+  return {
+    exp: Math.ceil(baseExp * (1 + expBonus)),
+    coins: Math.ceil(baseCoins * (1 + coinBonus))
+  };
+}
+
 // ─── ITEM SYSTEM DATA ────────────────────────────────
 const EQUIPMENT_DATA = {
   // 頭部
@@ -2906,7 +3360,15 @@ async function loadItemState() {
     inventory = inv || [];
     const eq = await sb('equipped?select=*');
     equippedSlots = {};
-    (eq || []).forEach(e => { if (e.item_id) equippedSlots[e.slot] = e.item_id; });
+    equippedFurniture = {};
+    (eq || []).forEach(e => {
+      if (!e.item_id) return;
+      if (e.slot.startsWith('furniture_')) {
+        equippedFurniture[e.slot.replace('furniture_','')] = e.item_id;
+      } else {
+        equippedSlots[e.slot] = e.item_id;
+      }
+    });
     const cs = await sb('chest_state?select=*&limit=1');
     if (cs && cs[0]) chestState = cs[0];
     const charges = await sb('charge_state?select=*');
@@ -2922,6 +3384,7 @@ function hasItem(itemId) {
 }
 
 function canObtainItem(itemId) {
+  if (FURNITURE_DATA[itemId]) return canObtainFurniture(itemId);
   const item = EQUIPMENT_DATA[itemId] || CONSUMABLE_DATA[itemId];
   if (!item) return false;
   if (item.isConsumable) return true;
@@ -2931,6 +3394,8 @@ function canObtainItem(itemId) {
 }
 
 async function obtainItem(itemId) {
+  // Check furniture first
+  if (FURNITURE_DATA[itemId]) return await obtainFurniture(itemId);
   const item = EQUIPMENT_DATA[itemId] || CONSUMABLE_DATA[itemId];
   if (!item) return { success: false, reason: '道具不存在' };
   if (!item.isConsumable && hasItem(itemId)) {
@@ -3194,8 +3659,9 @@ async function generateLevelUpChoices(level) {
     pool = [...lv1equip, ...consumables];
   } else {
     const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
+    const furnitures = Object.keys(FURNITURE_DATA).filter(id => canObtainFurniture(id));
     const consumables = Object.keys(CONSUMABLE_DATA);
-    pool = [...available, ...consumables];
+    pool = [...available, ...furnitures, ...consumables];
   }
 
   // All obtained — fallback to gold/fragments
@@ -3318,7 +3784,7 @@ async function openFragmentShop() {
 
   const itemsHtml = items.map(si => {
     const purchased = purchases.includes(si.id);
-    const item = EQUIPMENT_DATA[si.id] || CONSUMABLE_DATA[si.id];
+    const item = EQUIPMENT_DATA[si.id] || FURNITURE_DATA[si.id] || CONSUMABLE_DATA[si.id];
     if (!item) return '';
     const canAfford = fragments >= si.price;
     return `<div style="background:var(--bg2);border:1px solid var(--border);padding:12px;margin-bottom:8px;${purchased?'opacity:0.5':''}">
@@ -3348,8 +3814,9 @@ async function openFragmentShop() {
 
 function generateShopItems() {
   const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
+  const furnitures = Object.keys(FURNITURE_DATA).filter(id => canObtainFurniture(id));
   const consumables = Object.keys(CONSUMABLE_DATA);
-  const pool = [...available.slice(0,3), ...consumables.slice(0,2)].sort(() => Math.random()-0.5).slice(0,4);
+  const pool = [...available.slice(0,2), ...furnitures.slice(0,2), ...consumables.slice(0,2)].sort(() => Math.random()-0.5).slice(0,4);
   return pool.map(id => ({
     id,
     price: CONSUMABLE_DATA[id] ? 30 : 100
@@ -3848,12 +4315,17 @@ async function completeTask(id) {
       let expGain = cd.half ? Math.ceil(task.exp_reward * 0.5) : task.exp_reward;
       let coinGain = cd.half ? Math.ceil(task.coin_reward * 0.5) : task.coin_reward;
 
-      // 1. Apply equipment effects (before weather, so weather stacks on top)
+      // 1. Apply equipment effects
       const equipBonus = applyEquipmentEffects(expGain, coinGain, task);
       const expFromEquip = equipBonus.exp - expGain;
       const coinFromEquip = equipBonus.coins - coinGain;
       expGain = equipBonus.exp;
       coinGain = equipBonus.coins;
+
+      // 1b. Apply furniture effects
+      const furBonus = applyFurnitureEffects(expGain, coinGain, task);
+      expGain = furBonus.exp;
+      coinGain = furBonus.coins;
 
       // 2. Apply consumable pending effects
       pendingEffects = pendingEffects.filter(pe => {
@@ -4367,15 +4839,16 @@ function renderEquipGrid() {
 function renderInventoryGrid() {
   const grid = document.getElementById('inventoryGrid');
   if (!grid) return;
-  if (inventory.length === 0) {
-    grid.innerHTML = '<div class="empty-state">背包是空的。完成任務、開寶箱或升級可以獲得道具。</div>';
+  const consumables = inventory.filter(inv => CONSUMABLE_DATA[inv.item_id]);
+  if (consumables.length === 0) {
+    grid.innerHTML = '<div class="empty-state">目前沒有消耗品。開寶箱或升級可以獲得。</div>';
     return;
   }
   grid.innerHTML = '';
-  inventory.forEach(inv => {
-    const item = EQUIPMENT_DATA[inv.item_id] || CONSUMABLE_DATA[inv.item_id];
+  consumables.forEach(inv => {
+    const item = CONSUMABLE_DATA[inv.item_id];
     if (!item) return;
-    const isEquipped = item.slot && equippedSlots[item.slot] === inv.item_id;
+    const isEquipped = false;
     const div = document.createElement('div');
     div.className = 'inv-item ' + (item.isConsumable ? 'consumable' : 'equipment');
     div.innerHTML = `
@@ -4383,11 +4856,7 @@ function renderInventoryGrid() {
       ${item.slot ? `<div class="inv-item-slot">${SLOT_LABELS[item.slot] || item.slot}</div>` : ''}
       <div class="inv-item-desc">${item.description}</div>
       ${isEquipped ? '<div class="inv-item-equipped">✓ 已裝備</div>' : ''}
-      ${item.isConsumable
-        ? `<button class="btn btn-cyan" style="font-size:10px;padding:4px 10px;width:100%" onclick="useConsumable('${item.id}')">使用</button>`
-        : (!isEquipped && item.slot
-          ? `<button class="btn btn-gold" style="font-size:10px;padding:4px 10px;width:100%" onclick="equipItem('${item.id}')">裝備</button>`
-          : (isEquipped ? `<button class="btn btn-ghost" style="font-size:10px;padding:4px 10px;width:100%" onclick="unequipItem('${item.slot}')">卸下</button>` : ''))}
+      <button class="btn btn-cyan" style="font-size:10px;padding:4px 10px;width:100%" onclick="useConsumable('${item.id}')">使用</button>
     `;
     grid.appendChild(div);
   });
@@ -4491,6 +4960,7 @@ const SCENES = {
       { id: 'desk',  name: '書桌', top: '55.05%', left: '30.86%', width: '35.35%', height: '28.59%' },
       { id: 'chair', name: '椅子', top: '38.36%', left: '41.57%', width: '12.80%', height: '30.82%' },
       { id: 'lamp',  name: '桌燈', top: '45.59%', left: '29.31%', width: '8.91%',  height: '17.53%' },
+      { id: 'ink',   name: '墨水瓶', top: '52.82%', left: '58.61%', width: '4.43%', height: '9.14%' },
     ]
   },
   storehouse: {
@@ -4549,23 +5019,70 @@ function renderScene() {
   });
 }
 
+// Map scene+slot to furniture slot id
+const SCENE_SLOT_MAP = {
+  entrance: { sign:'signboard', doorbell:'doorbell', carpet:'entranceMat' },
+  reception: { board:'questBoard', counter:'counter', book:'ledger', chair:'chair' },
+  work: { desk:'desk', chair:'chair', lamp:'deskLamp', ink:'inkBottle' },
+  storehouse: { cabinet:'storageCabinet', shelf:'shelf', filebox:'fileCabinet' },
+  home: { fireplace:'fireplace', sofa:'sofa', table:'diningTable', bed:'bed', petbed:'petBed' }
+};
+
 function openSlotInfo(sceneId, slot) {
-  // If equip scene, open equip modal directly
-  if (sceneId === 'equip') {
-    const slotMap = {
-      head:'head', neck:'neck', bracelet:'bracelet', body:'upperBody',
-      gloves:'gloves', pants:'lowerBody', boots:'shoes', bag:'backpack'
-    };
-    const mappedSlot = slotMap[slot.id];
-    if (mappedSlot) { openEquipModal(mappedSlot); return; }
-  }
-  const key = sceneId + '_' + slot.id;
-  const equipped = equippedItems[key];
+  const furSlot = SCENE_SLOT_MAP[sceneId]?.[slot.id];
+  if (furSlot) { openFurnitureModal(furSlot, slot.name); return; }
   document.getElementById('slotInfoName').textContent = slot.name;
-  document.getElementById('slotInfoCurrent').textContent = equipped
-    ? `目前裝備：${equipped}`
-    : '目前空置';
+  document.getElementById('slotInfoCurrent').textContent = '目前空置';
   document.getElementById('slotInfoPanel').style.display = '';
+}
+
+function openFurnitureModal(slot, slotLabel) {
+  const existing = document.getElementById('furnitureModalOverlay');
+  if (existing) existing.remove();
+
+  const currentId = equippedFurniture[slot];
+  const currentItem = currentId ? FURNITURE_DATA[currentId] : null;
+  const available = inventory
+    .map(i => FURNITURE_DATA[i.item_id])
+    .filter(i => i && i.slot === slot);
+
+  const canChange = canChangeFurnitureToday();
+  const changesLeft = getFurnitureChangesLeft();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'furnitureModalOverlay';
+  overlay.className = 'equip-modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+  const itemsHtml = available.length === 0
+    ? '<div style="color:var(--text3);text-align:center;padding:20px;font-size:13px">尚無此部位的家具</div>'
+    : available.map(item => {
+        const isOn = equippedFurniture[slot] === item.id;
+        return `<div style="background:var(--bg2);border:1px solid ${isOn?'var(--gold)':'var(--border)'};padding:12px;margin-bottom:8px">
+          <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:2px">${item.name} ${isOn?'<span style=\"color:var(--green);font-size:11px\">✓ 已裝置</span>':''}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px">Lv.${item.level} · ${item.area}</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${item.description}</div>
+          ${isOn
+            ? ''
+            : canChange
+              ? `<button class="btn btn-gold" style="font-size:11px;padding:5px 12px" onclick="equipFurniture('${item.id}').then(()=>{document.getElementById('furnitureModalOverlay').remove();renderStatusPanel();})">裝置</button>`
+              : `<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red)">今日已更換過家具</span>`}
+        </div>`;
+      }).join('');
+
+  overlay.innerHTML = `
+    <div class="equip-modal">
+      <div class="equip-modal-header">
+        <div class="equip-modal-title">🏠 ${slotLabel}</div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="this.closest('.equip-modal-overlay').remove()">✕</span>
+      </div>
+      <div style="padding:16px">
+        ${!canChange ? '<div style="background:var(--red-dim);border:1px solid rgba(240,112,112,0.3);padding:8px 12px;margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red)">今日家具更換次數已用完（每日3次），明日5:00重置</div>' : ''}
+        ${currentItem ? `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前裝置：${currentItem.name}</div>` : '<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前空置</div>'}
+        ${itemsHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
 }
 
 function closeSlotInfo() {
