@@ -4315,7 +4315,7 @@ function renderMissedRewardBtns() {
   const missed = allRewardLevels.filter(l => !claimed.includes(l));
 
   if (missed.length === 0) {
-    container.innerHTML = '<span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green)">✓ 所有升級獎勵已領取</span>';
+    container.innerHTML = "<span style=\"font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green)\">✓ 所有升級獎勵已領取</span>";
     return;
   }
   container.innerHTML = missed.map(l =>
