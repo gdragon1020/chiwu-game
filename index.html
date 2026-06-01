@@ -1112,9 +1112,9 @@
 <div class="app">
   <!-- Header -->
   <div class="header">
-    <div class="header-title">
+    <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
       鑄霧城日誌
-      <span>IRONMIST CITY CHRONICLE</span>
+      <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
       <div class="stat-pill exp"><span class="icon">⚡</span> <span id="headerExp">0</span> EXP</div>
@@ -1633,6 +1633,596 @@ async function applyWeatherBonus(task, expGain, coinGain) {
   return { expGain: expGain + bonusExp, coinGain: coinGain + bonusCoin };
 }
 
+
+const LEVEL_STORIES = {
+  1: {
+    level: 1,
+    title: "霧城第一夜",
+    chapter: "第一章：外鄉人",
+    npc: ["葛莉達・鐵心"],
+    moodTags: ["初抵", "陌生", "疲憊", "溫暖"],
+    spoilerFreePreview: "鑄霧城的夜晚比你想像的更冷。",
+    fullStory: `鑄霧城的蒸汽比你在霧源村聽說的還要濃。
+
+你拖著行李走進公寓的時候，已經是傍晚了。走廊的水晶燈只有一盞還亮著，另外兩盞早就暗了。你找到房間號碼，還沒來得及敲門，門就從裡面開了。
+
+葛莉達站在門口。她比你想像的矮，但金屬義肢在燈光下映著冷光，看起來一點也不好惹。她上下打量你一眼，沒說歡迎。
+
+「房租每個月初繳。走廊的燈你負責換。熱水只到晚上十點。」
+
+她把鑰匙放到你手上，就要轉身離開。
+
+你看著這間比你想像中小三倍的房間，窗外是鑄霧城的夜景——管線、水晶燈、遠處工廠的蒸汽柱。有一隻橘貓坐在走廊盡頭，瞪著你。
+
+「那隻貓是妳的？」你脫口而出。
+
+葛莉達停下腳步，但沒有回頭。
+
+「是鏽斑。牠不喜歡新來的。」
+
+然後她就走了。
+
+你站在房門口，第一次覺得鑄霧城真的存在了。`,
+    choices: [
+      {
+        id: "lv1_a",
+        label: "把行李收好，先把房間整理一下再說",
+        hiddenEffects: { routeA: 1, npcTrust: { greta: 1 }, merchantReputation: 1 }
+      },
+      {
+        id: "lv1_b",
+        label: "走到走廊盡頭，試著跟鏽斑打招呼",
+        hiddenEffects: { routeB: 1, npcTrust: { greta: 2 }, cityAwareness: 1 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  2: {
+    level: 2,
+    title: "鏽斑與走廊的燈",
+    chapter: "第一章：外鄉人",
+    npc: ["葛莉達・鐵心", "鏽斑"],
+    moodTags: ["日常", "觀察", "貓", "小事"],
+    spoilerFreePreview: "你換好了走廊的燈。鏽斑坐在你腳邊看著你。",
+    fullStory: `你在鑄霧城的第三天，終於把走廊那盞壞掉的燈換好了。
+
+這不是一件簡單的事。燈座是舊式魔法水晶規格，你跑了兩家雜貨鋪才找到對的型號。換的時候，梯子搖搖晃晃，走廊又窄，你差點踩空。
+
+但你換好了。
+
+燈亮起來的瞬間，你聽見走廊另一頭有動靜。是鏽斑。牠走過來，在你腳邊繞了一圈，聞了聞你的鞋，然後坐下來，抬頭看你。
+
+那個眼神你不太確定是什麼意思。
+
+你正在想，葛莉達從樓梯口走上來，看了看走廊的燈，又看了看你。她沒有說謝謝，但停了一下。
+
+「鏽斑不讓人摸。」她說。
+
+然後她看了看貓。
+
+「牠讓你站在旁邊，已經算不賴了。」
+
+她拎著一袋工具走回房間，門關上了。
+
+鏽斑繼續坐在你腳邊，像是在等什麼。`,
+    choices: [
+      {
+        id: "lv2_a",
+        label: "蹲下來，靜靜地陪鏽斑坐一會兒",
+        hiddenEffects: { routeB: 1, npcTrust: { greta: 2 }, cityAwareness: 1 }
+      },
+      {
+        id: "lv2_b",
+        label: "回房間，記下走廊燈的型號備用",
+        hiddenEffects: { routeA: 1, merchantReputation: 1, npcTrust: { greta: 1 } }
+      },
+      {
+        id: "lv2_c",
+        label: "敲葛莉達的門，問她其他需要修的地方",
+        hiddenEffects: { routeC: 1, npcTrust: { greta: 3 }, guildPressure: 0 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  3: {
+    level: 3,
+    title: "霧中燈的第一杯咖啡",
+    chapter: "第一章：外鄉人",
+    npc: ["席爾・煙霧"],
+    moodTags: ["安靜", "初遇", "咖啡", "下城氣氛"],
+    spoilerFreePreview: "街角那間咖啡館，你終於走進去了。",
+    fullStory: `你在下城走了一個禮拜，才終於注意到那間叫「霧中燈」的咖啡館。
+
+不是因為它不顯眼，而是因為它太安靜了。下城什麼都吵，蒸汽管的噪音、市場的叫賣、偶爾從上城飄下來的機械聲。但霧中燈的門一關上，所有聲音就小了一半。
+
+裡面只有幾張桌子。角落放著一排草藥罐，你聞得到某種說不清楚的香氣。
+
+老闆是個看起來比你大幾歲的男人，耳朵尖一點，眼睛的顏色有點不太對，像是混了兩種色素。他在吧台後面擦杯子，看你進來，沒有說歡迎，只抬了一下下巴。
+
+你說你想要咖啡。
+
+他問了你一個問題：「你今天做了什麼？」
+
+你愣了一下。他解釋說，他這裡的咖啡不是固定配方，會根據你說的事情調整。你覺得這有點奇怪，但他等著你回答，神情很平靜。
+
+你那天剛好送完一個小委託回來，有點累，有點滿足。
+
+他聽完，轉身開始動作。
+
+咖啡端來的時候，你喝了一口，說不出那是什麼味道，但你覺得整個人安靜了一點。`,
+    choices: [
+      {
+        id: "lv3_a",
+        label: "問他放了什麼在裡面",
+        hiddenEffects: { routeB: 1, npcTrust: { sear: 2 }, cityAwareness: 2 }
+      },
+      {
+        id: "lv3_b",
+        label: "什麼都不問，靜靜把咖啡喝完",
+        hiddenEffects: { routeA: 1, npcTrust: { sear: 3 }, merchantReputation: 1 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  4: {
+    level: 4,
+    title: "市場裡的南方香料",
+    chapter: "第一章：外鄉人",
+    npc: ["娜娜"],
+    moodTags: ["活潑", "市場", "外鄉人相遇", "跑腿"],
+    spoilerFreePreview: "市場裡有個女生跟你一樣是外鄉人。",
+    fullStory: `你在下城市場迷路了。
+
+這不是第一次，但這次你繞了比較久。下城的巷子沒有規律，不是棋盤格，是像有人把積木隨便推倒之後，另一個人在縫隙中間蓋了更多房子。
+
+你拿著一張委託紙，要找某種香料，上面寫的名字你完全看不懂。
+
+「你在找什麼？」
+
+聲音很大，你嚇了一跳。是個女生，頭髮有點亂，手上拿著一把草，站在一個攤子後面，笑著看你。
+
+她說她叫娜娜，從赤沙城來的，在這裡賣香料和草藥已經半年了。你把委託紙給她看，她眼睛一亮，直接從攤子後面抽出一個紙包遞給你。
+
+「這是我家鄉的東西欸！你要幫誰買的？」
+
+你還沒回答，她已經在說，說她剛來的時候也到處迷路，說她現在已經熟到可以幫人送東西，說她聽說最近行會那邊有一個新的公告，說上個月有個外鄉人在下城開了一間小舖子結果很快就關了。
+
+你站在攤子前，覺得自己還沒說幾個字。
+
+但娜娜說話的方式讓你覺得，你們好像認識很久了。`,
+    choices: [
+      {
+        id: "lv4_a",
+        label: "跟她多聊幾句，問她下城還有什麼要注意的",
+        hiddenEffects: { routeB: 1, npcTrust: { nana: 3 }, cityAwareness: 2 }
+      },
+      {
+        id: "lv4_b",
+        label: "買完東西道謝，把委託先送完再說",
+        hiddenEffects: { routeA: 1, npcTrust: { nana: 1 }, merchantReputation: 2 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  5: {
+    level: 5,
+    title: "行會門口的少年",
+    chapter: "第一章：外鄉人",
+    npc: ["托比"],
+    moodTags: ["行會", "少年", "崇拜", "第一次接觸"],
+    spoilerFreePreview: "行會的門口有個少年，他一直在等著什麼。",
+    fullStory: `你是在繞路的時候看到行會大門的。
+
+那棟建築在下城算高，外牆貼著金屬板，門口有兩根銅製的燈柱，裡面的水晶比走廊那種亮很多。你站在對面看了一會兒，不確定自己能不能走進去。
+
+「你是要進去嗎？」
+
+門口台階上坐著一個少年，看起來比你小幾歲，制服有點大，肩上掛著一個佈告袋。他站起來，表情很認真，但眼睛在閃閃發光。
+
+「我叫托比，我在這裡負責送文件和帶路。如果你是要洽談委託的話，今天不行，因為裡面的人在開會，但你可以留名字。」
+
+他說完就掏出一個破破爛爛的小本子和一支鉛筆，準備幫你記。
+
+你問他，行會的委託難接嗎。
+
+他想了一下，壓低聲音說：「普通委託還好，但有一種是……」他停了一下，又恢復正常音量，「沒什麼。反正你先留名字，他們看到新人都會評估一下的。」
+
+你留了名字。他認真地寫下去，然後抬頭看你，像是有點羨慕，又有點想說什麼。
+
+最後他什麼都沒說，把本子收起來，又坐回台階上。`,
+    choices: [
+      {
+        id: "lv5_a",
+        label: "問他剛才沒說完的那句話是什麼",
+        hiddenEffects: { routeC: 2, npcTrust: { toby: 3 }, guildPressure: 1, cityAwareness: 1 }
+      },
+      {
+        id: "lv5_b",
+        label: "道謝離開，覺得留名就夠了",
+        hiddenEffects: { routeA: 1, npcTrust: { toby: 1 }, merchantReputation: 1 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  6: {
+    level: 6,
+    title: "委託板的第一張紙",
+    chapter: "第一章：外鄉人",
+    npc: ["托比", "席爾・煙霧"],
+    moodTags: ["任務板", "機會", "猶豫", "決定"],
+    spoilerFreePreview: "行會的委託板你終於湊近看了。",
+    fullStory: `托比在某個早上來敲你的門。
+
+你開門的時候，他站在走廊，手上拿著一個信封，表情比平常正式。他說，行會那邊幫你評估完了，你可以接一般委託了。
+
+信封裡是一張通行卡和一份說明單。你看了一遍，大概明白了規則：委託分等級，新人只能接最低的，但只要完成夠多，可以往上升。
+
+你謝謝他，他點點頭，然後站著沒動。
+
+「你今天有要去霧中燈嗎？」他問，聲音小了一點，「席爾說他有東西要給你看，但他叫我轉告，不叫我說是什麼。」
+
+你下午去了霧中燈。席爾在吧台後面，看你進來，從抽屜裡拿出一張折起來的紙，推到你面前。
+
+是一份舊的下城委託記錄，很多年前的。上面有幾個名字，都是外鄉人，後來都在下城做了一些事情。
+
+「你看一下，不用急著說什麼。」席爾說，轉身繼續做事。
+
+你坐在那裡，把那張紙看完了。`,
+    choices: [
+      {
+        id: "lv6_a",
+        label: "把那張紙還給席爾，問他為什麼給你看",
+        hiddenEffects: { routeB: 2, npcTrust: { sear: 3 }, cityAwareness: 2 }
+      },
+      {
+        id: "lv6_b",
+        label: "問可不可以把那張紙帶走",
+        hiddenEffects: { routeC: 1, routeA: 1, npcTrust: { sear: 1 }, merchantReputation: 1 }
+      },
+      {
+        id: "lv6_c",
+        label: "什麼都不問，點頭道謝就離開",
+        hiddenEffects: { routeA: 2, npcTrust: { sear: 2 }, guildPressure: 0 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  7: {
+    level: 7,
+    title: "第一次說出口",
+    chapter: "第一章：外鄉人",
+    npc: ["席爾・煙霧", "娜娜"],
+    moodTags: ["夢想", "說出口", "下城", "商會雛形"],
+    spoilerFreePreview: "你第一次跟人說，你想在這裡做點什麼。",
+    fullStory: `那天娜娜拉著你去霧中燈，說是她帶你認識席爾，但席爾顯然早就認識你了，只是沒說。
+
+三個人坐在角落的桌子，娜娜一直在說話，說市場最近有個攤位要出租，說有個客人問她有沒有辦法幫忙找某種很難找的道具，說她覺得下城需要一個可以統一接單的地方。
+
+「就像一個小商會那樣，」她說，「不是行會那種，是給我們這種外鄉人用的。」
+
+你聽著，心裡有什麼東西動了一下。
+
+席爾沒有說話，但他在聽。
+
+娜娜突然看著你：「你怎麼想？你不是也在接委託嗎？你難道沒有想過要做大一點？」
+
+你想了一秒鐘，然後你說出來了。你說你來鑄霧城，不只是想接委託，你想做一件有點大的事。你說得不清楚，但你說出來了。
+
+席爾轉過來看你，他的表情很平靜，但你覺得他在認真聽。
+
+「說出來之後，就不一樣了，」他說，「你知道嗎。」`,
+    choices: [
+      {
+        id: "lv7_a",
+        label: "繼續說，告訴他們你的想法",
+        hiddenEffects: { routeB: 2, routeA: 1, npcTrust: { sear: 2, nana: 2 }, merchantReputation: 2 }
+      },
+      {
+        id: "lv7_b",
+        label: "說完就停下來，等他們的反應",
+        hiddenEffects: { routeA: 2, npcTrust: { sear: 3 }, cityAwareness: 1 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  8: {
+    level: 8,
+    title: "葛莉達的那個早晨",
+    chapter: "第一章：外鄉人",
+    npc: ["娜娜", "葛莉達・鐵心"],
+    moodTags: ["穩定", "日常", "葛莉達", "小事裡的溫暖"],
+    spoilerFreePreview: "你開始習慣下城的節奏了，但有一件小事讓你多想了一下。",
+    fullStory: `你最近開始習慣鑄霧城的早晨了。
+
+蒸汽管在天亮前會嗡一聲，那是熱水系統啟動的聲音。然後水晶燈慢慢亮起來，走廊的光從門縫底下透進來。你現在聽到那個聲音就會自然醒。
+
+那天早上你在廚房遇到葛莉達。她在煮什麼，鍋子裡有東西在滾，鏽斑坐在她旁邊，一臉期待。
+
+你說早安，她點個頭。
+
+然後她多盛了一碗，放在灶台上，沒有說什麼，轉身走了。
+
+你站在那裡，看著那碗東西，是某種下城常見的麥粥，上面有幾片醃菜。
+
+娜娜下午來找你，說要幫你一起去接一個跑腿委託，路上你說起了那件事。娜娜聽完，笑了。
+
+「葛莉達對你好多了，」她說，「她之前住過一個人，住了兩個月，她一次都沒給人家加過碗。」
+
+你想了一下那碗麥粥。`,
+    choices: [
+      {
+        id: "lv8_a",
+        label: "晚上回來，在走廊跟葛莉達說謝謝",
+        hiddenEffects: { routeB: 1, npcTrust: { greta: 3 }, cityAwareness: 1 }
+      },
+      {
+        id: "lv8_b",
+        label: "記在心裡，之後找機會回報",
+        hiddenEffects: { routeA: 2, npcTrust: { greta: 2 }, merchantReputation: 1 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  9: {
+    level: 9,
+    title: "碎光工坊的門",
+    chapter: "第一章：外鄉人",
+    npc: ["伊萊・碎晶"],
+    moodTags: ["工坊", "初遇", "道具", "舊東西的氣味"],
+    spoilerFreePreview: "下城有一間工坊，你之前從來沒注意到。",
+    fullStory: `你是為了一個委託才走進碎光工坊的。
+
+委託要你找一個可以修靈石燈的人，娜娜說試試看那間，在下城第七巷轉角，有個手寫的招牌，字很小。
+
+工坊比你想像的小很多，但裡面的東西很多。到處都是半壞的器具，有些擱在架子上，有些直接堆在地上，有一個燈罩掛在天花板上，裡面的水晶已經裂了，但還發著微弱的光。
+
+一個男人從裡面走出來。他右眼的顏色不太對，像是嵌了什麼東西，在光線下有一點藍色的反光。他看你一眼，沒有問你要什麼，直接問：「你帶來的東西呢？」
+
+你解釋說你是來問價錢的，不是來修東西的。
+
+他停了一下，然後說：「坐。」
+
+你坐下來，他拿出一個壞掉的靈石燈，邊檢查邊說話，說靈石這東西行會現在管得很嚴，說舊式修法已經快消失了，說大部分人寧願買新的也不願意修。
+
+然後他停下來，看你。
+
+「你留個名字，你下次帶什麼來我就知道你是誰。」`,
+    choices: [
+      {
+        id: "lv9_a",
+        label: "問他為什麼自己出來開店，不繼續在行會",
+        hiddenEffects: { routeC: 2, npcTrust: { eli: 3 }, guildPressure: 1, cityAwareness: 2 }
+      },
+      {
+        id: "lv9_b",
+        label: "留下名字，下次再多聊",
+        hiddenEffects: { routeA: 1, npcTrust: { eli: 2 }, merchantReputation: 1 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  },
+  10: {
+    level: 10,
+    title: "你的名字在下城傳開了",
+    chapter: "第一章：外鄉人",
+    npc: ["葛莉達・鐵心", "席爾・煙霧", "娜娜", "托比"],
+    moodTags: ["里程碑", "被記住", "小小成就", "期待"],
+    spoilerFreePreview: "在鑄霧城待了一段時間後，你發現有些事情悄悄不一樣了。",
+    fullStory: `某個下午，你在霧中燈坐著，席爾說了一句你沒料到的話。
+
+「最近有人來問你。」
+
+你問是誰。他說，是市場那邊的人，說聽娜娜提過你，說你接委託接得還算靠得住，想問你有沒有時間幫忙一個比較複雜的跑腿。
+
+你還沒說話，托比剛好推門進來，手上拿著他那個破本子，說行會那邊有個低階委託點名找你，說你上次接的那個評價不錯。
+
+你坐在那裡，有點說不出話。
+
+回到公寓的時候，葛莉達在一樓走廊修管線。她看你回來，沒有說話。但鏽斑從她旁邊走過來，在你腳邊蹭了一下，然後走掉了。
+
+你站在走廊裡，想起來你剛來的那個晚上，那盞只剩一顆亮著的燈，葛莉達把鑰匙放到你手上，什麼都沒說。
+
+你在鑄霧城的名字，開始有人知道了。
+
+但你也開始感覺到，這座城市的某些地方，比表面上看起來的要複雜一些。你還說不清楚是什麼，只是偶爾會有那麼一個瞬間，覺得有什麼東西你還沒看到。`,
+    choices: [
+      {
+        id: "lv10_a",
+        label: "決定先把現在手上的事情做好，其他的以後再說",
+        hiddenEffects: { routeA: 2, npcTrust: { greta: 1, sear: 1, nana: 1, toby: 1 }, merchantReputation: 2 }
+      },
+      {
+        id: "lv10_b",
+        label: "開始留意那些感覺說不清楚的細節",
+        hiddenEffects: { routeC: 2, routeB: 1, cityAwareness: 3, guildPressure: 1 }
+      },
+      {
+        id: "lv10_c",
+        label: "找席爾說說你這段時間的感覺",
+        hiddenEffects: { routeB: 2, npcTrust: { sear: 3 }, cityAwareness: 2 }
+      }
+    ],
+    unlocked: false,
+    selectedChoiceId: null,
+    readAt: null
+  }
+};
+
+// ─── STORY SYSTEM ─────────────────────────────────
+let storyState = {
+  routeA: 0, routeB: 0, routeC: 0,
+  npcTrust: { greta: 0, sear: 0, nana: 0, toby: 0, eli: 0 },
+  cityAwareness: 0,
+  guildPressure: 0,
+  merchantReputation: 0,
+  choicesMade: {}
+};
+
+function loadStoryState() {
+  const saved = localStorage.getItem('chiwu_story_state');
+  if (saved) storyState = JSON.parse(saved);
+  const choices = localStorage.getItem('chiwu_story_choices');
+  if (choices) {
+    const parsed = JSON.parse(choices);
+    Object.keys(parsed).forEach(level => {
+      if (LEVEL_STORIES[level]) {
+        LEVEL_STORIES[level].selectedChoiceId = parsed[level];
+        LEVEL_STORIES[level].unlocked = true;
+      }
+    });
+  }
+}
+
+function saveStoryState() {
+  localStorage.setItem('chiwu_story_state', JSON.stringify(storyState));
+  const choices = {};
+  Object.keys(LEVEL_STORIES).forEach(level => {
+    if (LEVEL_STORIES[level].selectedChoiceId) {
+      choices[level] = LEVEL_STORIES[level].selectedChoiceId;
+    }
+  });
+  localStorage.setItem('chiwu_story_choices', JSON.stringify(choices));
+}
+
+function applyChoiceEffects(effects) {
+  if (!effects) return;
+  if (effects.routeA) storyState.routeA += effects.routeA;
+  if (effects.routeB) storyState.routeB += effects.routeB;
+  if (effects.routeC) storyState.routeC += effects.routeC;
+  if (effects.cityAwareness) storyState.cityAwareness += effects.cityAwareness;
+  if (effects.guildPressure) storyState.guildPressure += effects.guildPressure;
+  if (effects.merchantReputation) storyState.merchantReputation += effects.merchantReputation;
+  if (effects.npcTrust) {
+    Object.keys(effects.npcTrust).forEach(npc => {
+      storyState.npcTrust[npc] = (storyState.npcTrust[npc] || 0) + effects.npcTrust[npc];
+    });
+  }
+  saveStoryState();
+}
+
+function checkAndShowStory(newLevel) {
+  const story = LEVEL_STORIES[newLevel];
+  if (!story || story.unlocked) return;
+  story.unlocked = true;
+  showStoryModal(story);
+}
+
+function showStoryModal(story) {
+  const existing = document.getElementById('storyModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'storyModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  `;
+
+  const hasChosen = !!story.selectedChoiceId;
+  const choicesHtml = hasChosen
+    ? `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green);padding:12px;background:rgba(110,208,110,0.1);border:1px solid rgba(110,208,110,0.3)">✓ 你已選擇：${story.choices.find(c=>c.id===story.selectedChoiceId)?.label || ''}</div>`
+    : story.choices.map(c => `
+        <button onclick="makeStoryChoice(${story.level}, '${c.id}')" style="
+          display:block;width:100%;text-align:left;
+          background:var(--bg2);border:1px solid var(--border2);
+          color:var(--text);padding:10px 14px;margin-bottom:8px;
+          font-family:'Noto Serif TC',serif;font-size:13px;cursor:pointer;
+          transition:all 0.2s;line-height:1.5;
+        " onmouseover="this.style.borderColor='var(--gold)';this.style.background='var(--gold-dim)'"
+           onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--bg2)'">
+          ${c.label}
+        </button>
+      `).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:580px;width:100%;max-height:85vh;overflow-y:auto;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px">LV.${story.level} · ${story.chapter}</div>
+          <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);margin-top:4px">${story.title}</div>
+        </div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="closeStoryModal()">✕</span>
+      </div>
+      <div style="padding:20px;font-size:14px;color:var(--text);line-height:2;white-space:pre-line">${story.fullStory}</div>
+      <div style="padding:16px 20px;border-top:1px solid var(--border2)">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:1px">${hasChosen ? '已選擇' : '你會怎麼做？'}</div>
+        ${choicesHtml}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function makeStoryChoice(level, choiceId) {
+  const story = LEVEL_STORIES[level];
+  if (!story || story.selectedChoiceId) return;
+  const choice = story.choices.find(c => c.id === choiceId);
+  if (!choice) return;
+  story.selectedChoiceId = choiceId;
+  applyChoiceEffects(choice.hiddenEffects);
+  showStoryModal(story);
+  notify(`選擇已記錄：${choice.label}`, 'gold');
+}
+
+function closeStoryModal() {
+  const modal = document.getElementById('storyModal');
+  if (modal) modal.remove();
+}
+
+function openStoryLog() {
+  const lv = getLevel(player?.exp || 0);
+  const unlockedStories = Object.values(LEVEL_STORIES).filter(s => s.unlocked || s.level <= lv);
+  if (unlockedStories.length === 0) { notify('尚無可閱讀的劇情', 'gold'); return; }
+
+  const existing = document.getElementById('storyLogModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'storyLogModal';
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;`;
+
+  const listHtml = Array.from({length: 100}, (_, i) => i + 1).map(lvl => {
+    const story = LEVEL_STORIES[lvl];
+    const isUnlocked = story && (story.unlocked || lvl <= lv);
+    if (!story) return '';
+    if (!isUnlocked) return `<div style="padding:8px 12px;color:var(--text3);font-family:'Share Tech Mono',monospace;font-size:11px;border-bottom:1px solid var(--border)">Lv.${lvl} ｜ ？？？ <span style="font-size:10px">尚未解鎖</span></div>`;
+    return `<div onclick="showStoryModal(LEVEL_STORIES[${lvl}])" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">Lv.${lvl}</span>
+      <span style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-left:10px">${story.title}</span>
+      ${story.selectedChoiceId ? '<span style="font-size:10px;color:var(--green);margin-left:8px">✓</span>' : '<span style="font-size:10px;color:var(--cyan);margin-left:8px">●</span>'}
+    </div>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold)">鑄霧城日誌</div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="document.getElementById('storyLogModal').remove()">✕</span>
+      </div>
+      <div style="overflow-y:auto;flex:1">${listHtml}</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
 // ─── INIT ───────────────────────────────────────────
 async function init() {
   try {
@@ -1653,6 +2243,7 @@ async function init() {
     });
 
     await loadCooldownLog();
+    loadStoryState();
     renderAll();
     initWeather();
     setTimeout(() => {
@@ -1996,9 +2587,12 @@ async function completeTask(id) {
       player.coins = newCoins;
       player.debt = newDebt;
 
-      const oldLv = getLevel(player.exp - task.exp_reward);
+      const oldLv = getLevel(player.exp - expGain);
       const newLv = getLevel(player.exp);
-      if (newLv > oldLv) notify(`🎉 升級！LV.${newLv}`, 'gold');
+      if (newLv > oldLv) {
+        notify(`🎉 升級！LV.${newLv}`, 'gold');
+        setTimeout(() => checkAndShowStory(newLv), 800);
+      }
 
       tasks = tasks.filter(t => t.id !== id);
       completedTasks.unshift({ ...task, status: 'completed', completed_at: new Date().toISOString() });
