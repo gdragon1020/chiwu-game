@@ -2063,7 +2063,327 @@ const LEVEL_STORIES = {
     unlocked: false,
     selectedChoiceId: null,
     readAt: null
+  },
+
+  11: {
+    level: 11,
+    title: "固定的面孔",
+    chapter: "第一部：下城商會雛形",
+    npc: ["娜娜", "葛莉達・鐵心"],
+    moodTags: ["被記住", "固定委託", "下城人情", "穩定感"],
+    spoilerFreePreview: "你開始有固定委託了。下城的人記住你了。",
+    fullStory: `你發現有些人開始在固定的時間找你。
+
+市場西側有個賣舊書的老人，每隔幾天就會讓你幫他跑一趟，送一批書給某個地址，有時候帶回一些零錢，有時候帶回一張紙條。你沒有問那些紙條上寫什麼，他也沒說。
+
+還有個住在公寓二樓的女人，做針線活的，有時候叫你幫她去布料舖拿貨，因為她不想讓布料舖的老闆看到她親自來。你也沒問為什麼。
+
+娜娜說這是好事，說下城的委託就是這樣，先是跑腿，然後是信任，然後才是真的合作。她說得很快，邊說邊整理攤子。
+
+「但你要小心，」她說，「下城有些固定委託，來源沒那麼單純。」
+
+她說完就去招呼客人了，你也沒機會問她是什麼意思。
+
+那天晚上回到公寓，葛莉達在門口，手上拿著一個工具箱。她看你進來，說一樓的鎖有點鬆，要你晚上留意一點。
+
+你說好。她點點頭，轉身。
+
+走到樓梯口，她停了一下，沒有回頭：「你現在接的那些委託，記得挑。不是所有事情都值得接。」
+
+然後她就上樓了。`,
+    choices: [
+      { id: "lv11_a", label: "把那幾個固定委託的細節記在本子上", hiddenEffects: { routeA: 1, merchantReputation: 2, cityAwareness: 1 } },
+      { id: "lv11_b", label: "下次見到娜娜，追問她說的「來源不單純」是什麼意思", hiddenEffects: { routeB: 2, npcTrust: { nana: 2 }, cityAwareness: 2 } },
+      { id: "lv11_c", label: "繼續接，但開始注意那些委託有沒有什麼異常", hiddenEffects: { routeC: 1, routeA: 1, cityAwareness: 2, merchantReputation: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  12: {
+    level: 12,
+    title: "霧中燈的角落桌",
+    chapter: "第一部：下城商會雛形",
+    npc: ["席爾・煙霧"],
+    moodTags: ["委託整理", "策略", "咖啡館", "安靜的建議"],
+    spoilerFreePreview: "席爾問你，你有沒有想過把委託整理得更清楚一點。",
+    fullStory: `那天你帶了一疊紙去霧中燈，攤在角落桌上，想弄清楚自己手上到底有多少事情。
+
+紙上密密麻麻，有些是委託內容，有些是你自己記的備注，有些是娜娜幫你抄下來的市場行情。你看了半天，覺得自己的頭比那疊紙還亂。
+
+席爾走過來，看了一眼，沒說話，轉身去拿了兩個空杯子，又去倒了咖啡，放在你面前，然後搬了張椅子坐下來。
+
+「你現在的問題不是太少，」他說，「是太散。」
+
+他把你的紙整理了一下，不是全部，只是把幾張放在一起，說：「這幾個是同一個性質的，這幾個是同一個來源的，這個放這裡。」
+
+你看著他整理，突然覺得清楚很多。
+
+「你有沒有想過用一張任務板？」他說，「不用很正式，就是一個地方，讓你知道自己在做什麼。」
+
+你問他，霧中燈可以借嗎。
+
+他想了一下，說：「你先整理好，再說。」
+
+但他沒有說不行。`,
+    choices: [
+      { id: "lv12_a", label: "回去之後認真做了一張任務板，掛在房間裡", hiddenEffects: { routeA: 2, merchantReputation: 2, npcTrust: { sear: 1 } } },
+      { id: "lv12_b", label: "再去找席爾，問他覺得任務板應該放在哪裡比較合適", hiddenEffects: { routeB: 1, npcTrust: { sear: 3 }, merchantReputation: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  13: {
+    level: 13,
+    title: "價格這件事",
+    chapter: "第一部：下城商會雛形",
+    npc: ["娜娜"],
+    moodTags: ["交易", "市場", "人情", "定價"],
+    spoilerFreePreview: "娜娜說你收費太低了。",
+    fullStory: `「你知道你現在賺多少嗎？」
+
+娜娜把一個算盤推到你面前，讓你自己算。你算了半天，發現她說得對，你跑了很多委託，但實際賺到手的比你想的少很多。
+
+她說這是因為你不會定價。她說下城的人會試探你，看你要多少，如果你要太少，他們不會覺得你厚道，他們只會覺得你不在行。
+
+「但如果我要太多，他們就不找我了，」你說。
+
+「那是你不了解下城，」她說，「下城的人不怕貴，他們怕你隨便。隨便定價的人，他們不信任。」
+
+她教了你一些基本的定價邏輯，說哪種委託應該算什麼費，哪種要看對象，哪種可以用物品代替金幣。
+
+然後她說：「還有一件事你要記住。有些委託，你不管對方出多少錢，都不要接。」
+
+你問是哪種。
+
+她把攤子上的東西整理了一下，說：「你以後會知道的。但如果你遇到了，你第一個感覺就會是不對，你就不要去分析，直接拒絕。」`,
+    choices: [
+      { id: "lv13_a", label: "照娜娜說的，重新整理了自己的委託費率", hiddenEffects: { routeA: 1, merchantReputation: 3, npcTrust: { nana: 2 } } },
+      { id: "lv13_b", label: "問她之前說的「不要接的委託」是什麼樣子", hiddenEffects: { routeC: 1, routeB: 1, npcTrust: { nana: 3 }, cityAwareness: 2 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  14: {
+    level: 14,
+    title: "行會的那個信封",
+    chapter: "第一部：下城商會雛形",
+    npc: ["托比"],
+    moodTags: ["行會", "不尋常", "托比說漏嘴", "壓力浮現"],
+    spoilerFreePreview: "托比帶來了一個信封，然後說了一句他馬上後悔的話。",
+    fullStory: `托比跑來找你，手上拿著一個信封，臉色有點不對。
+
+他說是行會讓他送的，說裡面是一個新的低階委託，說你有優先接取的資格，說截止日期是這個月底。
+
+你拆開來看，是一個普通的跑腿委託，但金額比一般的高一倍，而且備注寫著：不需要說明來源。
+
+你抬頭看托比。他的眼神有點飄。
+
+「這種委託，行會常有嗎？」你問。
+
+「有……有時候有，」他說，「就是有些，有些委託人不想讓太多人知道，所以……」他停了一下，「其實我不太清楚，我只是送信的。」
+
+然後他突然說：「對了，我上個月有看到一個人，也是接了這種委託，然後就……」他停下來，表情像是咬到了舌頭，「沒事，沒事，我說錯了，就是普通委託。」
+
+他說話的速度開始很快，說他還有別的信要送，說他下次再來，說他最近很忙。
+
+然後他就走了，比來的時候快很多。`,
+    choices: [
+      { id: "lv14_a", label: "把信封放著，先去查查看這種委託通常是什麼情況", hiddenEffects: { routeC: 2, cityAwareness: 2, guildPressure: 1 } },
+      { id: "lv14_b", label: "去找托比，讓他說完那句沒說完的話", hiddenEffects: { routeB: 2, npcTrust: { toby: 3 }, guildPressure: 2, cityAwareness: 1 } },
+      { id: "lv14_c", label: "直接拒絕這個委託，退回信封", hiddenEffects: { routeA: 2, guildPressure: 1, merchantReputation: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  15: {
+    level: 15,
+    title: "第一次搞砸的委託",
+    chapter: "第一部：下城商會雛形",
+    npc: ["娜娜", "葛莉達・鐵心"],
+    moodTags: ["失誤", "危機", "選擇", "怎麼收場"],
+    spoilerFreePreview: "有一個委託出了問題，你必須決定怎麼處理。",
+    fullStory: `你把一批貨送到了錯誤的地點。
+
+不是完全的錯，是地址有一個字你看錯了，結果你把東西送到了同一條巷子的另一家，對方收了貨，你才發現不對，再回頭去，那家已經不承認了。
+
+你站在巷口，手上只有一張委託單和一個空袋子。
+
+娜娜剛好路過，你攔下她說了這件事。她聽完，皺了皺眉，說：「先去跟委託人說，然後看他的反應，再決定怎麼補。」
+
+她說這是下城的規矩，出了事不要躲，躲了才是真的砸掉信用。
+
+委託人沒有罵你，但他的臉色不好，他說下次小心，然後就讓你走了。你回到公寓，心裡不太好受。
+
+葛莉達在樓梯口遇到你，她看了你一眼：「出事了？」
+
+你說了，她聽完，義肢的指頭敲了一下牆壁。
+
+「你沒躲，這樣就對了，」她說，「但你要找到那個收了你貨的人，把東西要回來，不然這件事沒結束。」`,
+    choices: [
+      { id: "lv15_a", label: "去找那家人要求把貨還回來，就算鬧點不愉快也要處理乾淨", hiddenEffects: { routeA: 2, merchantReputation: 3, npcTrust: { greta: 2 } } },
+      { id: "lv15_b", label: "先問娜娜那家人的背景，再決定怎麼應對", hiddenEffects: { routeB: 1, npcTrust: { nana: 2 }, cityAwareness: 1, merchantReputation: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  16: {
+    level: 16,
+    title: "碎晶的用途",
+    chapter: "第一部：下城商會雛形",
+    npc: ["伊萊・碎晶"],
+    moodTags: ["工坊", "裝備", "碎片", "舊東西的秘密"],
+    spoilerFreePreview: "伊萊給你看了一樣東西，說你或許用得到。",
+    fullStory: `你去碎光工坊是為了修一個壞掉的計時器，那是委託的一部份。
+
+伊萊收下計時器，看了一眼說三天，然後停了一下，說：「你等一下。」
+
+他從後面的架子上拿出一個小盒子，打開來，裡面是幾塊碎晶，大小不一，顏色微微發光，像是靈石被敲碎之後留下的零件。
+
+「你最近在接的委託，有沒有涉及到舊器具？」他問。
+
+你說有幾個，是去收舊燈的，還有一個是清理一間廢棄倉庫。
+
+他把盒子推過來讓你看：「這些是靈石碎片，你清倉庫的時候如果有看到，先別丟，帶來給我。行會那邊規定說這些要上繳，但下城的人大部分不知道，所以如果你看到了，你可以選擇怎麼做。」
+
+他說得很平靜，像是在說一件普通的事。
+
+你看著那些碎晶，想起行會信封上寫的「不需要說明來源」。
+
+伊萊把盒子收回去，說：「你自己決定，我只是讓你知道。」`,
+    choices: [
+      { id: "lv16_a", label: "問他這樣做有什麼風險", hiddenEffects: { routeC: 2, npcTrust: { eli: 3 }, guildPressure: 1, cityAwareness: 2 } },
+      { id: "lv16_b", label: "說你先記著，之後再說", hiddenEffects: { routeA: 1, routeB: 1, npcTrust: { eli: 2 }, cityAwareness: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  17: {
+    level: 17,
+    title: "葛莉達說的那句話",
+    chapter: "第一部：下城商會雛形",
+    npc: ["葛莉達・鐵心", "席爾・煙霧"],
+    moodTags: ["提醒", "下城智慧", "保護", "行會暗流"],
+    spoilerFreePreview: "葛莉達說了一句話，讓你想了很久。",
+    fullStory: `那天早上你在廚房遇到葛莉達，她在看一份文件，你瞄了一眼，是公寓的某種租約更新，上面有一個行會的印章。
+
+她注意到你在看，把文件翻過去。
+
+「公寓每隔幾年要跟行會重新確認使用權，」她說，語氣很平，「下城的地，大部分是行會的，你接委託的時候記得這件事。」
+
+你說不太明白。
+
+「你幫誰做事，誰就有辦法找到你，」她說，「所以你選委託，不只是選錢，是選你想讓誰知道你在這裡。」
+
+她說完就去拿工具了，沒有繼續解釋。
+
+你一整天都在想這句話。下午你去霧中燈，跟席爾說了，想聽他的看法。
+
+席爾聽完，沉默了一會兒，說：「葛莉達以前在上城工廠做事，她懂這些。」
+
+然後他說：「她說的對。你現在做的事情，已經讓一些人注意到你了。這不是壞事，但你要知道。」`,
+    choices: [
+      { id: "lv17_a", label: "問席爾，是哪些人在注意你", hiddenEffects: { routeC: 2, npcTrust: { sear: 3 }, guildPressure: 2, cityAwareness: 2 } },
+      { id: "lv17_b", label: "說謝謝，回去之後重新想了一遍手上的委託", hiddenEffects: { routeA: 2, npcTrust: { greta: 2, sear: 1 }, merchantReputation: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  18: {
+    level: 18,
+    title: "要不要更正式一點",
+    chapter: "第一部：下城商會雛形",
+    npc: ["娜娜", "伊萊・碎晶"],
+    moodTags: ["商會", "選擇", "擴張", "保守"],
+    spoilerFreePreview: "娜娜說，你現在的規模，可以更正式了。",
+    fullStory: `娜娜說，你現在的委託量，已經不只是一個人在跑腿了。
+
+她是這樣說的：「你現在有固定的委託人，有固定的來源，有自己的定價，有跑過的地方的地圖，你知道嗎，這些加起來，就是一個商會的雛形了。」
+
+你問，那缺的是什麼。
+
+她說：「一個名字，一個固定的地方，和一個願意讓你掛名的人。」
+
+下午你去碎光工坊，跟伊萊說了這件事，他聽完，在修一個燈的零件，沒有停手。
+
+「你想要在哪裡掛牌？」他問。
+
+你說還沒想好。
+
+他說：「你可以用我這裡的地址，但你要幫我處理幾個委託。」他說得很直接，沒有多餘的客套，「不是因為我想幫你，是因為你在下城多一個正式的點，對我也有好處。」
+
+你坐在工坊的椅子上想了一會兒。這件事好像比你以為的更近了。`,
+    choices: [
+      { id: "lv18_a", label: "答應伊萊的條件，開始規劃用工坊地址掛牌", hiddenEffects: { routeA: 1, routeB: 1, npcTrust: { eli: 3, nana: 1 }, merchantReputation: 3 } },
+      { id: "lv18_b", label: "說還需要再想想，先去問問其他人的意見", hiddenEffects: { routeB: 2, npcTrust: { eli: 1 }, cityAwareness: 1, merchantReputation: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  19: {
+    level: 19,
+    title: "那個舊箱子",
+    chapter: "第一部：下城商會雛形",
+    npc: ["托比", "席爾・煙霧", "伊萊・碎晶"],
+    moodTags: ["伏筆", "舊物", "謎題", "行會暗流"],
+    spoilerFreePreview: "你在委託裡發現了一個不該出現在那裡的東西。",
+    fullStory: `那個委託是清理一間廢棄房間，業主說裡面的東西都可以處理掉，你負責打包和搬運。
+
+你做到一半，在牆角的磚縫後面發現了一個小箱子，用布包著，外面沒有標記。你打開來，裡面是幾份文件，還有兩塊靈石，不是碎片，是完整的，但上面有一個刻印，你沒見過那個符號。
+
+你把箱子原封不動帶回去，沒跟委託人說。
+
+晚上你去找席爾，讓他看那個刻印。他看了很久，臉色沒什麼變化，但你感覺到他停頓了一下，比平常久一點。
+
+「你在哪裡找到的？」他問。
+
+你告訴他。他說：「先不要讓其他人知道。」
+
+第二天你去碎光工坊，問伊萊那個符號。他用義眼盯著你看了幾秒，說：「你從哪裡弄來的？」
+
+你告訴他。他把那塊靈石放下，說：「這個東西，你要放好，也要想清楚，你要不要繼續追這件事。」
+
+托比那天剛好路過，你沒有讓他看那個符號，但他說他看到你去過碎光工坊兩次，問你最近在研究什麼。
+
+你說沒什麼。他點了點頭，但眼神裡有一點他自己也沒注意到的東西。`,
+    choices: [
+      { id: "lv19_a", label: "繼續追，去查那個符號的來源", hiddenEffects: { routeC: 3, cityAwareness: 3, guildPressure: 2, npcTrust: { sear: 1, eli: 1 } } },
+      { id: "lv19_b", label: "把箱子交給席爾保管，暫時不動", hiddenEffects: { routeB: 2, npcTrust: { sear: 3 }, cityAwareness: 1 } },
+      { id: "lv19_c", label: "把東西放回原處，當作沒發現", hiddenEffects: { routeA: 2, guildPressure: 0, merchantReputation: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+  20: {
+    level: 20,
+    title: "下城知道你了",
+    chapter: "第一部：下城商會雛形",
+    npc: ["葛莉達・鐵心", "席爾・煙霧", "娜娜", "托比"],
+    moodTags: ["里程碑", "被承認", "商會雛形", "新的壓力"],
+    spoilerFreePreview: "有件事靜靜地發生了，你幾乎是最後一個知道的。",
+    fullStory: `你是從娜娜那裡聽說的。
+
+她說，最近下城有幾個人在聊你，說有個外鄉人在跑委託跑得不錯，說有人找他幫忙大部分都有結果，說他的價格合理，說他知道什麼不能做。
+
+「他們說的是你，」娜娜說，語氣很平，像是在說一個事實，「下城在流傳你的名字，這是好事，但你要知道，這不只是好事。」
+
+你去霧中燈，席爾在吧台後面，沒有等你問，就說：「你最近做得不錯。」
+
+然後他補了一句：「有人問過我你是什麼來路。」
+
+你問是誰。
+
+他沒有正面回答，只是說：「不是下城的人。」
+
+回到公寓，葛莉達在走廊，她看你進來，義肢的手指敲了一下管線，說：「鏽斑今天跟著你出去了。」
+
+你說你沒注意到。
+
+她說：「牠不常跟人，你知道嗎。」
+
+那天晚上，托比突然傳了一張紙條來，上面只有一句話：「行會的人今天問我你最近在做什麼，我說不知道，但你要小心一點。」
+
+你坐在房間裡，看著那張紙條。
+
+你在鑄霧城的位置，已經和剛來的時候不一樣了。這是你想要的，但也有什麼東西跟著來了，你還說不清楚是什麼。`,
+    choices: [
+      { id: "lv20_a", label: "先把商會的事情確定下來，讓自己有更穩的立足點", hiddenEffects: { routeA: 2, merchantReputation: 3, npcTrust: { greta: 1, nana: 1 } } },
+      { id: "lv20_b", label: "去找席爾，讓他說說「不是下城的人」是什麼意思", hiddenEffects: { routeC: 2, routeB: 1, npcTrust: { sear: 3 }, guildPressure: 2, cityAwareness: 2 } },
+      { id: "lv20_c", label: "先什麼都不做，觀察接下來會發生什麼", hiddenEffects: { routeB: 2, cityAwareness: 3, guildPressure: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
   }
+
 };
 
 // ─── STORY SYSTEM ─────────────────────────────────
