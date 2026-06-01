@@ -1082,6 +1082,108 @@
     letter-spacing: 1px;
   }
 
+
+  /* ── BAG & EQUIP ── */
+  .bag-section { }
+
+  .equip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .equip-slot {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 10px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .equip-slot:hover { border-color: var(--gold); background: var(--gold-dim); }
+  .equip-slot.has-item { border-color: rgba(201,168,76,0.5); }
+  .equip-slot-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .equip-slot-icon { font-size: 20px; margin-bottom: 4px; }
+  .equip-slot-item {
+    font-size: 11px;
+    color: var(--gold);
+    font-family: 'Noto Serif TC', serif;
+    line-height: 1.3;
+  }
+  .equip-slot-empty { font-size: 11px; color: var(--text3); }
+
+  .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+  }
+
+  .inv-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .inv-item:hover { border-color: var(--border2); }
+  .inv-item.consumable { border-left: 2px solid var(--cyan); }
+  .inv-item.equipment { border-left: 2px solid var(--gold); }
+  .inv-item-name {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .inv-item-desc { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+  .inv-item-slot {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .inv-item-equipped {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+
+  /* Equip modal */
+  .equip-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .equip-modal {
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    max-width: 460px; width: 100%;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .equip-modal-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border2);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .equip-modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px; color: var(--gold);
+  }
+
+  @media (max-width: 600px) {
+    .equip-grid { grid-template-columns: repeat(2, 1fr); }
+    .inventory-grid { grid-template-columns: 1fr 1fr; }
+  }
+
   @media (max-width: 600px) {
     .header { flex-direction: column; gap: 10px; align-items: flex-start; }
     .shop-grid { grid-template-columns: 1fr; }
@@ -1117,6 +1219,7 @@
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
+      <div class="stat-pill" style="cursor:pointer;border-color:rgba(78,205,196,0.4);color:var(--cyan)" onclick="openFragmentShop()" title="碎片商店"><span class="icon">◈</span> <span id="headerFragments">0</span> 碎片</div>
       <div class="stat-pill exp"><span class="icon">⚡</span> <span id="headerExp">0</span> EXP</div>
       <div class="stat-pill gold"><span class="icon">◈</span> <span id="headerCoins">0</span> 金幣</div>
     </div>
@@ -1193,6 +1296,7 @@
     <div class="tab" onclick="switchTab('shop')">🏪 商店</div>
     <div class="tab" onclick="switchTab('npc')">👥 居民</div>
     <div class="tab" onclick="switchTab('decor')">🏠 裝潢</div>
+    <div class="tab" onclick="switchTab('bag')">🎒 背包</div>
     <div class="tab" onclick="switchTab('debt')">💸 帳務</div>
   </div>
 
@@ -1281,6 +1385,40 @@
       <div class="slot-info-current" id="slotInfoCurrent"></div>
       <div class="slot-info-hint">此欄位將在道具系統開放後可更換裝備</div>
     </div>
+  </div>
+
+  <!-- BAG TAB -->
+  <div class="tab-content" id="tab-bag">
+
+    <!-- Equipped display -->
+    <div class="bag-section">
+      <div class="section-label">⚔️ 目前裝備</div>
+      <div class="equip-grid" id="equipGrid"></div>
+    </div>
+
+    <!-- Inventory -->
+    <div class="bag-section" style="margin-top:16px">
+      <div class="section-label">📦 背包道具</div>
+      <div class="inventory-grid" id="inventoryGrid">
+        <div class="empty-state">背包是空的。完成任務、開寶箱或升級可以獲得道具。</div>
+      </div>
+    </div>
+
+    <!-- Fragment info -->
+    <div class="bag-section" style="margin-top:16px">
+      <div class="section-label">◈ 碎片</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--border);padding:12px 16px">
+        <div>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--cyan)" id="bagFragments">0</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text3);margin-left:8px">/ 100 可兌換</span>
+        </div>
+        <button class="btn btn-cyan" style="font-size:11px;padding:6px 14px" onclick="openFragmentShop()">碎片商店</button>
+      </div>
+      <div style="height:4px;background:var(--bg);border:1px solid var(--border);margin-top:4px;overflow:hidden">
+        <div id="fragmentBar" style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 0.5s;width:0%"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- DEBT TAB -->
@@ -2543,6 +2681,562 @@ function openStoryLog() {
   document.body.appendChild(modal);
 }
 
+
+// ─── ITEM SYSTEM DATA ────────────────────────────────
+const EQUIPMENT_DATA = {
+  // 頭部
+  head_lv1: { id:'head_lv1', name:'舊布帽', kind:'equipment', slot:'head', level:1, description:'專注委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:2 }] },
+  head_lv2: { id:'head_lv2', name:'下城報童帽', kind:'equipment', slot:'head', level:2, description:'專注委託 EXP +5%', prerequisiteItemId:'head_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:5 }] },
+  head_lv3: { id:'head_lv3', name:'防霧護目帽', kind:'equipment', slot:'head', level:3, description:'專注委託 EXP +7%；每日第一個專注委託 EXP 額外 +10%', prerequisiteItemId:'head_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'專注委託', target:'exp', valuePercent:10 }] },
+  head_lv4: { id:'head_lv4', name:'書記員軟帽', kind:'equipment', slot:'head', level:4, description:'專注委託 EXP +7%；早上完成第一個專注委託時，額外 +5% EXP', prerequisiteItemId:'head_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:7 }, { type:'timeBonus', category:'專注委託', timeRange:'早上', target:'exp', valuePercent:5 }] },
+  head_lv5: { id:'head_lv5', name:'藍晶思考冠', kind:'equipment', slot:'head', level:5, description:'專注委託 EXP +7%；每完成3個日常委託獲得清醒充能，下一個專注委託 EXP x2', prerequisiteItemId:'head_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'專注委託', target:'exp', valuePercent:7 }, { type:'charge', chargeName:'清醒充能', gainCondition:{ completedCount:3, category:'日常委託' }, consumeEffect:{ nextTaskCategory:'專注委託', target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // 頸部
+  neck_lv1: { id:'neck_lv1', name:'麻繩護符', kind:'equipment', slot:'neck', level:1, description:'社交委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:2 }] },
+  neck_lv2: { id:'neck_lv2', name:'霧燈項鍊', kind:'equipment', slot:'neck', level:2, description:'社交委託 EXP +5%', prerequisiteItemId:'neck_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:5 }] },
+  neck_lv3: { id:'neck_lv3', name:'靜音銀鏈', kind:'equipment', slot:'neck', level:3, description:'社交委託 EXP +7%；每日第一個社交委託 EXP 額外 +10%', prerequisiteItemId:'neck_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'社交委託', target:'exp', valuePercent:10 }] },
+  neck_lv4: { id:'neck_lv4', name:'情報員墜飾', kind:'equipment', slot:'neck', level:4, description:'社交委託 EXP +7%；完成社交委託時有5%機率額外+5金幣', prerequisiteItemId:'neck_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:7 }, { type:'criticalBonus', category:'社交委託', chancePercent:5, reward:{ target:'gold', amount:5 } }] },
+  neck_lv5: { id:'neck_lv5', name:'破霧誓約鏈', kind:'equipment', slot:'neck', level:5, description:'社交委託 EXP +7%；若昨天沒完成任務，今天第一個社交委託 EXP +30%', prerequisiteItemId:'neck_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'社交委託', target:'exp', valuePercent:7 }, { type:'streakRecoveryBonus', category:'社交委託', target:'exp', valuePercent:30 }] },
+
+  // 手環
+  bracelet_lv1: { id:'bracelet_lv1', name:'銅線手環', kind:'equipment', slot:'bracelet', level:1, description:'連鎖時第2個同類任務 EXP +5%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'chainBonus', chainIndex:2, target:'exp', valuePercent:5 }] },
+  bracelet_lv2: { id:'bracelet_lv2', name:'小齒輪手環', kind:'equipment', slot:'bracelet', level:2, description:'連鎖時第2個同類任務 EXP +7%', prerequisiteItemId:'bracelet_lv1', isConsumable:false,
+    effects:[{ type:'chainBonus', chainIndex:2, target:'exp', valuePercent:7 }] },
+  bracelet_lv3: { id:'bracelet_lv3', name:'鏽斑爪印手環', kind:'equipment', slot:'bracelet', level:3, description:'連鎖時第3個同類任務 EXP +10%', prerequisiteItemId:'bracelet_lv2', isConsumable:false,
+    effects:[{ type:'chainBonus', chainIndex:3, target:'exp', valuePercent:10 }] },
+  bracelet_lv4: { id:'bracelet_lv4', name:'蒸汽脈衝手環', kind:'equipment', slot:'bracelet', level:4, description:'完成同類任務時有5%機率額外+5金幣', prerequisiteItemId:'bracelet_lv3', isConsumable:false,
+    effects:[{ type:'criticalBonus', chancePercent:5, reward:{ target:'gold', amount:5 } }] },
+  bracelet_lv5: { id:'bracelet_lv5', name:'靈石迴路手環', kind:'equipment', slot:'bracelet', level:5, description:'每完成3個同類委託獲得迴路充能，下一個同類委託 EXP x2', prerequisiteItemId:'bracelet_lv4', isConsumable:false,
+    effects:[{ type:'charge', chargeName:'迴路充能', gainCondition:{ completedCount:3, sameCategory:true }, consumeEffect:{ sameCategory:true, target:'exp', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // 上身
+  body_lv1: { id:'body_lv1', name:'舊棉襯衫', kind:'equipment', slot:'upperBody', level:1, description:'全委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:null, target:'exp', valuePercent:2 }] },
+  body_lv2: { id:'body_lv2', name:'下城短外套', kind:'equipment', slot:'upperBody', level:2, description:'全委託金幣 +2%', prerequisiteItemId:'body_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:null, target:'gold', valuePercent:2 }] },
+  body_lv3: { id:'body_lv3', name:'霧行者背心', kind:'equipment', slot:'upperBody', level:3, description:'今日完成3類不同委託時，額外 EXP +5%', prerequisiteItemId:'body_lv2', isConsumable:false,
+    effects:[{ type:'balanceBonus', completedCategoryCount:3, target:'exp', valuePercent:5 }] },
+  body_lv4: { id:'body_lv4', name:'商會長外套', kind:'equipment', slot:'upperBody', level:4, description:'今日完成4類不同委託時，額外 EXP +10%', prerequisiteItemId:'body_lv3', isConsumable:false,
+    effects:[{ type:'balanceBonus', completedCategoryCount:4, target:'exp', valuePercent:10 }] },
+  body_lv5: { id:'body_lv5', name:'無印商會禮服', kind:'equipment', slot:'upperBody', level:5, description:'今日完成5類不同委託時，額外 EXP +20%；全委託金幣 +2%', prerequisiteItemId:'body_lv4', isConsumable:false,
+    effects:[{ type:'balanceBonus', completedCategoryCount:5, target:'exp', valuePercent:20 }, { type:'categoryBonus', category:null, target:'gold', valuePercent:2 }] },
+
+  // 手套
+  gloves_lv1: { id:'gloves_lv1', name:'粗布手套', kind:'equipment', slot:'gloves', level:1, description:'日常委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:2 }] },
+  gloves_lv2: { id:'gloves_lv2', name:'工人棉手套', kind:'equipment', slot:'gloves', level:2, description:'日常委託 EXP +5%', prerequisiteItemId:'gloves_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:5 }] },
+  gloves_lv3: { id:'gloves_lv3', name:'修繕手套', kind:'equipment', slot:'gloves', level:3, description:'日常委託 EXP +7%；完成整理類日常委託時額外+5金幣，每日最多2次', prerequisiteItemId:'gloves_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:7 }, { type:'flatReward', trigger:'整理類日常委託', reward:{ target:'gold', amount:5 }, dailyLimit:2 }] },
+  gloves_lv4: { id:'gloves_lv4', name:'蒸汽助力手套', kind:'equipment', slot:'gloves', level:4, description:'日常委託 EXP +7%；完成整理類日常委託時有5%機率獲得小寶箱', prerequisiteItemId:'gloves_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:7 }, { type:'criticalBonus', category:'日常委託', chancePercent:5, reward:{ target:'chest', chestType:'small' } }] },
+  gloves_lv5: { id:'gloves_lv5', name:'鐵心工坊手套', kind:'equipment', slot:'gloves', level:5, description:'日常委託 EXP +7%；每完成3個日常委託獲得整備充能，下一個任務金幣 x2', prerequisiteItemId:'gloves_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'日常委託', target:'exp', valuePercent:7 }, { type:'charge', chargeName:'整備充能', gainCondition:{ completedCount:3, category:'日常委託' }, consumeEffect:{ target:'gold', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // 下身
+  pants_lv1: { id:'pants_lv1', name:'舊工作褲', kind:'equipment', slot:'lowerBody', level:1, description:'任務委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:2 }] },
+  pants_lv2: { id:'pants_lv2', name:'多口袋長褲', kind:'equipment', slot:'lowerBody', level:2, description:'任務委託 EXP +5%', prerequisiteItemId:'pants_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:5 }] },
+  pants_lv3: { id:'pants_lv3', name:'行路工裝褲', kind:'equipment', slot:'lowerBody', level:3, description:'任務委託 EXP +7%；提早1天以上完成有期限任務時，額外 EXP +5%', prerequisiteItemId:'pants_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'deadlineBonus', target:'exp', daysEarly:1, valuePercent:5 }] },
+  pants_lv4: { id:'pants_lv4', name:'合約執行長褲', kind:'equipment', slot:'lowerBody', level:4, description:'任務委託 EXP +7%；提早1天以上完成有期限任務時，額外 EXP +10%', prerequisiteItemId:'pants_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'deadlineBonus', target:'exp', daysEarly:1, valuePercent:10 }] },
+  pants_lv5: { id:'pants_lv5', name:'破霧遠征長褲', kind:'equipment', slot:'lowerBody', level:5, description:'任務委託 EXP +7%；提早3天以上完成有期限任務時，額外 EXP +20%', prerequisiteItemId:'pants_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'exp', valuePercent:7 }, { type:'deadlineBonus', target:'exp', daysEarly:3, valuePercent:20 }] },
+
+  // 鞋子
+  shoes_lv1: { id:'shoes_lv1', name:'磨損布鞋', kind:'equipment', slot:'shoes', level:1, description:'外出委託 EXP +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:2 }] },
+  shoes_lv2: { id:'shoes_lv2', name:'下城跑腿鞋', kind:'equipment', slot:'shoes', level:2, description:'外出委託 EXP +5%', prerequisiteItemId:'shoes_lv1', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:5 }] },
+  shoes_lv3: { id:'shoes_lv3', name:'赤沙旅行靴', kind:'equipment', slot:'shoes', level:3, description:'外出委託 EXP +7%；每日第一個外出委託 EXP 額外 +10%', prerequisiteItemId:'shoes_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:7 }, { type:'dailyFirstTaskBonus', category:'外出委託', target:'exp', valuePercent:10 }] },
+  shoes_lv4: { id:'shoes_lv4', name:'防霧長靴', kind:'equipment', slot:'shoes', level:4, description:'外出委託 EXP +7%；早上完成外出委託時，額外 EXP +5%', prerequisiteItemId:'shoes_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:7 }, { type:'timeBonus', category:'外出委託', timeRange:'早上', target:'exp', valuePercent:5 }] },
+  shoes_lv5: { id:'shoes_lv5', name:'鑄霧遠行靴', kind:'equipment', slot:'shoes', level:5, description:'外出委託 EXP +7%；每完成3個外出委託獲得遠行充能，下一個外出委託金幣 x2', prerequisiteItemId:'shoes_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'exp', valuePercent:7 }, { type:'charge', chargeName:'遠行充能', gainCondition:{ completedCount:3, category:'外出委託' }, consumeEffect:{ nextTaskCategory:'外出委託', target:'gold', multiplier:2 }, dailyGainLimit:1, dailyUseLimit:1 }] },
+
+  // 背包
+  bag_lv1: { id:'bag_lv1', name:'舊布背包', kind:'equipment', slot:'backpack', level:1, description:'全委託金幣 +2%', prerequisiteItemId:null, isConsumable:false,
+    effects:[{ type:'categoryBonus', category:null, target:'gold', valuePercent:2 }] },
+  bag_lv2: { id:'bag_lv2', name:'托比的跑腿腰包', kind:'equipment', slot:'backpack', level:2, description:'每日第一次打開網站時，額外 +5 金幣', prerequisiteItemId:'bag_lv1', isConsumable:false,
+    effects:[{ type:'dailyLoginReward', reward:{ target:'gold', amount:5 } }] },
+  bag_lv3: { id:'bag_lv3', name:'娜娜的市集背包', kind:'equipment', slot:'backpack', level:3, description:'外出委託金幣 +5%；社交委託金幣 +2%', prerequisiteItemId:'bag_lv2', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'外出委託', target:'gold', valuePercent:5 }, { type:'categoryBonus', category:'社交委託', target:'gold', valuePercent:2 }] },
+  bag_lv4: { id:'bag_lv4', name:'分格合約背包', kind:'equipment', slot:'backpack', level:4, description:'任務委託金幣 +5%；使用拖延券時額外+5碎片，每週最多2次', prerequisiteItemId:'bag_lv3', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:'任務委託', target:'gold', valuePercent:5 }, { type:'flatReward', trigger:'使用拖延券', reward:{ target:'fragment', amount:5 }, weeklyLimit:2 }] },
+  bag_lv5: { id:'bag_lv5', name:'無印商會行囊', kind:'equipment', slot:'backpack', level:5, description:'全委託金幣 +5%；今日完成3類不同委託時，額外 +10 碎片', prerequisiteItemId:'bag_lv4', isConsumable:false,
+    effects:[{ type:'categoryBonus', category:null, target:'gold', valuePercent:5 }, { type:'balanceBonus', completedCategoryCount:3, target:'fragment', valuePercent:0, flatAmount:10 }] }
+};
+
+// 消耗道具
+const CONSUMABLE_DATA = {
+  delay_ticket: { id:'delay_ticket', name:'拖延券', kind:'consumable', description:'將一個任務期限延後1天，每週最多2張，不可連用，大型任務無效', isConsumable:true,
+    effects:[{ type:'delayDeadline', daysAdded:1, weeklyLimit:2 }] },
+  focus_boost: { id:'focus_boost', name:'專注藥水', kind:'consumable', description:'使用後，下一個專注委託 EXP +15%', isConsumable:true,
+    effects:[{ type:'nextTaskBonus', category:'專注委託', target:'exp', valuePercent:15 }] },
+  outing_boost: { id:'outing_boost', name:'輕裝水壺', kind:'consumable', description:'使用後，下一個外出委託金幣 +15%', isConsumable:true,
+    effects:[{ type:'nextTaskBonus', category:'外出委託', target:'gold', valuePercent:15 }] },
+  combo_boost: { id:'combo_boost', name:'混合加速符', kind:'consumable', description:'今日完成1個日常委託+1個專注委託後，額外 +20 EXP', isConsumable:true,
+    effects:[{ type:'comboBonus', requiredCategories:['日常委託','專注委託'], reward:{ target:'exp', amount:20 } }] },
+  any_boost: { id:'any_boost', name:'萬用鼓勁符', kind:'consumable', description:'使用後，下一個任務 EXP +10%', isConsumable:true,
+    effects:[{ type:'nextTaskBonus', category:null, target:'exp', valuePercent:10 }] }
+};
+
+// 家具 slots（之後填內容）
+const FURNITURE_SLOTS = {
+  guild: ['signboard','doorbell','entranceMat','counter','questBoard','ledger','desk','chair','deskLamp','storageCabinet','shelf','fileCabinet'],
+  cottage: ['sofa','diningTable','bed','fireplace','petBed']
+};
+
+// ─── ITEM SYSTEM STATE ───────────────────────────────
+let inventory = [];      // [{ item_id, item_kind, obtained_at }]
+let equippedSlots = {};  // { slot: item_id }
+let chargeState = {};    // { charge_name: { count, lastGainedDate, lastUsedDate } }
+let chestState = { tasks_since_last_chest:0, consecutive_no_equip:0, total_chests_opened:0 };
+let fragments = 0;
+let pendingEffects = []; // active consumable effects
+let dailyTaskCounts = {}; // { category: count } reset daily
+let chainTracker = { lastCategory: null, chainCount: 0 };
+let dailyLoginDone = false;
+
+async function loadItemState() {
+  try {
+    const inv = await sb('inventory?select=*');
+    inventory = inv || [];
+    const eq = await sb('equipped?select=*');
+    equippedSlots = {};
+    (eq || []).forEach(e => { if (e.item_id) equippedSlots[e.slot] = e.item_id; });
+    const cs = await sb('chest_state?select=*&limit=1');
+    if (cs && cs[0]) chestState = cs[0];
+    const charges = await sb('charge_state?select=*');
+    chargeState = {};
+    (charges || []).forEach(c => { chargeState[c.charge_name] = c; });
+    fragments = player?.fragments || 0;
+    checkDailyLogin();
+  } catch(e) { console.error('loadItemState error:', e); }
+}
+
+function hasItem(itemId) {
+  return inventory.some(i => i.item_id === itemId);
+}
+
+function canObtainItem(itemId) {
+  const item = EQUIPMENT_DATA[itemId] || CONSUMABLE_DATA[itemId];
+  if (!item) return false;
+  if (item.isConsumable) return true;
+  if (hasItem(itemId)) return false;
+  if (!item.prerequisiteItemId) return true;
+  return hasItem(item.prerequisiteItemId);
+}
+
+async function obtainItem(itemId) {
+  const item = EQUIPMENT_DATA[itemId] || CONSUMABLE_DATA[itemId];
+  if (!item) return { success: false, reason: '道具不存在' };
+  if (!item.isConsumable && hasItem(itemId)) {
+    const fragments_gained = [0,5,10,20,30,40][item.level || 1];
+    await addFragments(fragments_gained);
+    return { success: true, converted: true, fragments: fragments_gained };
+  }
+  if (!canObtainItem(itemId)) {
+    await addFragments(5);
+    return { success: false, reason: '不符合前置條件', fragments: 5 };
+  }
+  const record = { item_id: itemId, item_kind: item.kind };
+  await sb('inventory', 'POST', record);
+  inventory.push(record);
+  notify(`✦ 獲得道具：${item.name}`, 'gold');
+  return { success: true };
+}
+
+async function addFragments(amount) {
+  fragments += amount;
+  await sb(`player?id=eq.${player.id}`, 'PATCH', { fragments });
+  player.fragments = fragments;
+}
+
+// ─── CHEST SYSTEM ────────────────────────────────────
+async function openChest() {
+  const roll = Math.random() * 100;
+  let result;
+  if (roll < 40) {
+    await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + 10 });
+    player.coins += 10;
+    result = { type: 'gold', amount: 10, message: '獲得 10 金幣！' };
+  } else if (roll < 65) {
+    await addFragments(20);
+    result = { type: 'fragment', amount: 20, message: '獲得 20 碎片！' };
+  } else if (roll < 80) {
+    const consumables = Object.keys(CONSUMABLE_DATA);
+    const picked = consumables[Math.floor(Math.random() * consumables.length)];
+    await obtainItem(picked);
+    result = { type: 'consumable', itemId: picked, message: `獲得消耗道具：${CONSUMABLE_DATA[picked].name}！` };
+    chestState.consecutive_no_equip++;
+  } else if (roll < 90) {
+    const equipResult = await rollEquipment();
+    result = equipResult;
+  } else {
+    const furniResult = { type: 'furniture', message: '獲得家具！（家具系統建置中）' };
+    result = furniResult;
+  }
+
+  // Pity: 5 chests without equip/furniture
+  if (chestState.consecutive_no_equip >= 5) {
+    await addFragments(10);
+    chestState.consecutive_no_equip = 0;
+    notify('保底補償：額外獲得 10 碎片！', 'exp');
+  }
+
+  chestState.total_chests_opened++;
+  if (result.type === 'equipment') chestState.consecutive_no_equip = 0;
+  await sb(`chest_state?id=eq.${chestState.id}`, 'PATCH', {
+    tasks_since_last_chest: chestState.tasks_since_last_chest,
+    consecutive_no_equip: chestState.consecutive_no_equip,
+    total_chests_opened: chestState.total_chests_opened
+  });
+
+  showChestResult(result);
+  return result;
+}
+
+async function rollEquipment() {
+  const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
+  if (available.length === 0) {
+    await addFragments(20);
+    return { type: 'fragment', amount: 20, message: '所有裝備已取得！獲得 20 碎片補償。' };
+  }
+  const picked = available[Math.floor(Math.random() * available.length)];
+  const r = await obtainItem(picked);
+  if (r.converted) return { type: 'fragment', amount: r.fragments, message: `重複裝備轉換為 ${r.fragments} 碎片！` };
+  return { type: 'equipment', itemId: picked, message: `獲得裝備：${EQUIPMENT_DATA[picked].name}！` };
+}
+
+function showChestResult(result) {
+  notify(`🎁 寶箱：${result.message}`, 'gold');
+}
+
+// ─── EQUIPMENT EFFECTS ───────────────────────────────
+function getEquippedEffects() {
+  const effects = [];
+  Object.values(equippedSlots).forEach(itemId => {
+    const item = EQUIPMENT_DATA[itemId];
+    if (item) effects.push(...item.effects);
+  });
+  return effects;
+}
+
+function getHour() { return new Date().getHours(); }
+function getTimeRange() {
+  const h = getHour();
+  if (h >= 0 && h < 6) return '凌晨';
+  if (h >= 6 && h < 12) return '早上';
+  if (h >= 12 && h < 18) return '中午';
+  return '晚上';
+}
+
+function applyEquipmentEffects(baseExp, baseCoins, task) {
+  const effects = getEquippedEffects();
+  const cat = task.category;
+  const timeRange = getTimeRange();
+  let expBonus = 0, coinBonus = 0;
+  const MAX_BONUS = 1.0; // +100% cap
+
+  effects.forEach(ef => {
+    if (ef.type === 'categoryBonus') {
+      if (ef.category === null || ef.category === cat) {
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+        else coinBonus = Math.min(coinBonus + ef.valuePercent / 100, MAX_BONUS);
+      }
+    }
+    if (ef.type === 'dailyFirstTaskBonus' && (!ef.category || ef.category === cat)) {
+      const todayKey = new Date().toDateString();
+      const key = `dailyFirst_${ef.category || 'any'}_${todayKey}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, '1');
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+        else coinBonus = Math.min(coinBonus + ef.valuePercent / 100, MAX_BONUS);
+      }
+    }
+    if (ef.type === 'timeBonus' && (!ef.category || ef.category === cat) && ef.timeRange === timeRange) {
+      if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+      else coinBonus = Math.min(coinBonus + ef.valuePercent / 100, MAX_BONUS);
+    }
+    if (ef.type === 'deadlineBonus' && task.deadline) {
+      const daysLeft = Math.ceil((new Date(task.deadline) - new Date()) / 86400000);
+      if (daysLeft >= ef.daysEarly) {
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+      }
+    }
+    if (ef.type === 'balanceBonus') {
+      const todayKey = new Date().toDateString();
+      const doneCats = JSON.parse(localStorage.getItem('doneCatsToday_' + todayKey) || '[]');
+      if (!doneCats.includes(cat)) doneCats.push(cat);
+      localStorage.setItem('doneCatsToday_' + todayKey, JSON.stringify(doneCats));
+      if (doneCats.length >= ef.completedCategoryCount) {
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+        else if (ef.target === 'fragment' && ef.flatAmount) {
+          setTimeout(() => { addFragments(ef.flatAmount); notify(`✦ 平衡加成：+${ef.flatAmount} 碎片`, 'exp'); }, 500);
+        }
+      }
+    }
+    if (ef.type === 'criticalBonus' && (!ef.category || ef.category === cat)) {
+      if (Math.random() * 100 < ef.chancePercent) {
+        if (ef.reward.target === 'gold') {
+          setTimeout(async () => {
+            await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + ef.reward.amount });
+            player.coins += ef.reward.amount;
+            notify(`✦ 爆擊觸發！額外 +${ef.reward.amount} 金幣`, 'gold');
+          }, 300);
+        } else if (ef.reward.target === 'chest') {
+          setTimeout(() => openChest(), 500);
+        }
+      }
+    }
+    if (ef.type === 'chainBonus') {
+      if (chainTracker.lastCategory === cat) {
+        chainTracker.chainCount++;
+      } else {
+        chainTracker.lastCategory = cat;
+        chainTracker.chainCount = 1;
+      }
+      if (chainTracker.chainCount >= ef.chainIndex) {
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+      }
+    }
+  });
+
+  const finalExp = Math.ceil(baseExp * (1 + expBonus));
+  const finalCoins = Math.ceil(baseCoins * (1 + coinBonus));
+  return { exp: finalExp, coins: finalCoins };
+}
+
+// ─── CHARGE SYSTEM ───────────────────────────────────
+function getDateKey() { return new Date().toDateString(); }
+
+async function updateChargeProgress(task) {
+  const effects = getEquippedEffects().filter(e => e.type === 'charge');
+  for (const ef of effects) {
+    const state = chargeState[ef.chargeName] || { count: 0, lastGainedDate: '', lastUsedDate: '' };
+    const today = getDateKey();
+    const cond = ef.gainCondition;
+    const matches = cond.category ? task.category === cond.category : (cond.sameCategory ? task.category === chainTracker.lastCategory : true);
+    if (matches && state.lastGainedDate !== today) {
+      state.count = (state.count || 0) + 1;
+      if (state.count >= cond.completedCount) {
+        state.count = 0;
+        state.lastGainedDate = today;
+        chargeState[ef.chargeName] = state;
+        await sb('charge_state', 'POST', { charge_name: ef.chargeName, count: 0, last_gained_date: today, last_used_date: state.lastUsedDate || '' });
+        notify(`⚡ 獲得【${ef.chargeName}】！`, 'exp');
+      } else {
+        chargeState[ef.chargeName] = state;
+      }
+    }
+  }
+}
+
+function hasCharge(chargeName) {
+  const today = getDateKey();
+  const state = chargeState[chargeName];
+  return state && state.last_gained_date === today && state.last_used_date !== today;
+}
+
+async function consumeCharge(chargeName) {
+  const today = getDateKey();
+  if (!hasCharge(chargeName)) return false;
+  chargeState[chargeName].last_used_date = today;
+  await sb(`charge_state?charge_name=eq.${chargeName}`, 'PATCH', { last_used_date: today });
+  return true;
+}
+
+// ─── DAILY LOGIN ─────────────────────────────────────
+async function checkDailyLogin() {
+  const today = getDateKey();
+  const key = 'dailyLogin_' + today;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, '1');
+  const effects = getEquippedEffects().filter(e => e.type === 'dailyLoginReward');
+  for (const ef of effects) {
+    if (ef.reward.target === 'gold') {
+      await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + ef.reward.amount });
+      player.coins += ef.reward.amount;
+      notify(`🌅 每日登入：+${ef.reward.amount} 金幣`, 'gold');
+    }
+  }
+}
+
+// ─── LEVEL UP REWARDS ────────────────────────────────
+const EARLY_REWARD_LEVELS = [2, 3, 5, 7];
+const CHOICE_REWARD_LEVELS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
+
+async function generateLevelUpChoices(level) {
+  const isEarly = EARLY_REWARD_LEVELS.includes(level);
+  const isChoice = CHOICE_REWARD_LEVELS.includes(level);
+  if (!isEarly && !isChoice) return null;
+
+  const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
+  const consumables = Object.keys(CONSUMABLE_DATA);
+  const pool = [...available, ...consumables];
+
+  if (pool.length === 0) {
+    const amount = Math.floor(Math.random() * 19) + 2;
+    return [{ type: 'gold', amount }, { type: 'fragment', amount }, { type: 'gold', amount: amount * 2 }];
+  }
+
+  const shuffled = pool.sort(() => Math.random() - 0.5);
+  const choices = shuffled.slice(0, 3).map(id => {
+    const item = EQUIPMENT_DATA[id] || CONSUMABLE_DATA[id];
+    return { type: 'item', itemId: id, item };
+  });
+
+  while (choices.length < 3) {
+    choices.push({ type: 'gold', amount: Math.floor(Math.random() * 19) + 2 });
+  }
+  return choices;
+}
+
+async function showLevelUpChoices(level) {
+  const choices = await generateLevelUpChoices(level);
+  if (!choices) return;
+
+  const existing = document.getElementById('levelUpChoiceModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'levelUpChoiceModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2100;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  const choicesHtml = choices.map((c, i) => {
+    const name = c.type === 'item' ? c.item.name : (c.type === 'gold' ? `${c.amount} 金幣` : `${c.amount} 碎片`);
+    const desc = c.type === 'item' ? c.item.description : '';
+    return `<div onclick="selectLevelUpChoice(${i}, ${JSON.stringify(choices).replace(/"/g,'&quot;')})" style="
+      background:var(--bg2);border:1px solid var(--border2);padding:14px;cursor:pointer;
+      transition:all 0.2s;margin-bottom:8px;
+    " onmouseover="this.style.borderColor='var(--gold)';this.style.background='var(--gold-dim)'"
+       onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--bg2)'">
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:4px">${name}</div>
+      ${desc ? `<div style="font-size:12px;color:var(--text2)">${desc}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:480px;width:100%">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border2)">
+        <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold)">升級獎勵 · LV.${level}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;font-family:'Share Tech Mono',monospace">選擇一項獎勵</div>
+      </div>
+      <div style="padding:20px">${choicesHtml}</div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function selectLevelUpChoice(index, choices) {
+  const choice = choices[index];
+  document.getElementById('levelUpChoiceModal')?.remove();
+  if (choice.type === 'item') {
+    await obtainItem(choice.itemId);
+  } else if (choice.type === 'gold') {
+    await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + choice.amount });
+    player.coins += choice.amount;
+    notify(`✦ 升級獎勵：+${choice.amount} 金幣`, 'gold');
+  } else {
+    await addFragments(choice.amount);
+    notify(`✦ 升級獎勵：+${choice.amount} 碎片`, 'exp');
+  }
+  renderPlayer();
+}
+
+// ─── FRAGMENT SHOP ───────────────────────────────────
+async function openFragmentShop() {
+  const today = new Date().toISOString().slice(0,10);
+  let shop;
+  try {
+    const rows = await sb(`fragment_shop?date_key=eq.${today}&limit=1`);
+    if (rows && rows[0]) {
+      shop = rows[0];
+    } else {
+      const items = generateShopItems();
+      const saved = await sb('fragment_shop', 'POST', { date_key: today, items: JSON.stringify(items), purchases: JSON.stringify([]) });
+      shop = saved[0];
+      shop.items = items;
+      shop.purchases = [];
+    }
+  } catch(e) { return; }
+
+  const items = typeof shop.items === 'string' ? JSON.parse(shop.items) : shop.items;
+  const purchases = typeof shop.purchases === 'string' ? JSON.parse(shop.purchases) : shop.purchases;
+
+  const existing = document.getElementById('fragmentShopModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'fragmentShopModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2100;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  const itemsHtml = items.map(si => {
+    const purchased = purchases.includes(si.id);
+    const item = EQUIPMENT_DATA[si.id] || CONSUMABLE_DATA[si.id];
+    if (!item) return '';
+    const canAfford = fragments >= si.price;
+    return `<div style="background:var(--bg2);border:1px solid var(--border);padding:12px;margin-bottom:8px;${purchased?'opacity:0.5':''}">
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">${item.name}</div>
+      <div style="font-size:11px;color:var(--text2);margin:4px 0">${item.description}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--cyan)">◈ ${si.price} 碎片</span>
+        ${purchased ? '<span style="font-size:11px;color:var(--green)">已購買</span>'
+          : `<button onclick="buyFromShop('${si.id}',${si.price},'${shop.id}')" style="background:${canAfford?'var(--gold)':'var(--border)'};border:none;color:var(--bg);padding:4px 12px;font-size:11px;cursor:${canAfford?'pointer':'not-allowed'}" ${canAfford?'':'disabled'}>${canAfford?'兌換':'碎片不足'}</button>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--cyan);max-width:420px;width:100%">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--cyan)">碎片商店</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3)">持有碎片：${fragments} ◈ · 每日刷新</div>
+        </div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="document.getElementById('fragmentShopModal').remove()">✕</span>
+      </div>
+      <div style="padding:16px">${itemsHtml || '<div style="color:var(--text3);text-align:center;padding:20px">今日商品已售罄</div>'}</div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function generateShopItems() {
+  const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
+  const consumables = Object.keys(CONSUMABLE_DATA);
+  const pool = [...available.slice(0,3), ...consumables.slice(0,2)].sort(() => Math.random()-0.5).slice(0,4);
+  return pool.map(id => ({
+    id,
+    price: CONSUMABLE_DATA[id] ? 30 : 100
+  }));
+}
+
+async function buyFromShop(itemId, price, shopId) {
+  if (fragments < price) { notify('碎片不足！', 'red'); return; }
+  await addFragments(-price);
+  await obtainItem(itemId);
+  const rows = await sb(`fragment_shop?id=eq.${shopId}&select=purchases`);
+  const purchases = typeof rows[0].purchases === 'string' ? JSON.parse(rows[0].purchases) : rows[0].purchases;
+  purchases.push(itemId);
+  await sb(`fragment_shop?id=eq.${shopId}`, 'PATCH', { purchases: JSON.stringify(purchases) });
+  document.getElementById('fragmentShopModal')?.remove();
+  openFragmentShop();
+}
+
 // ─── INIT ───────────────────────────────────────────
 async function init() {
   try {
@@ -2564,6 +3258,7 @@ async function init() {
 
     await loadCooldownLog();
     loadStoryState();
+    await loadItemState();
     renderAll();
     initWeather();
     setTimeout(() => {
@@ -2596,6 +3291,8 @@ function renderPlayer() {
   document.getElementById('playerLevel').textContent = lv;
   document.getElementById('headerExp').textContent = player.exp;
   document.getElementById('headerCoins').textContent = player.coins;
+  const fragEl = document.getElementById('headerFragments');
+  if (fragEl) fragEl.textContent = player.fragments || 0;
   document.getElementById('expBar').style.width = pct + '%';
   document.getElementById('expLabel').textContent = `${player.exp} / ${next}`;
 
@@ -2914,6 +3611,7 @@ async function completeTask(id) {
       if (newLv > oldLv) {
         notify(`🎉 升級！LV.${newLv}`, 'gold');
         setTimeout(() => checkAndShowStory(newLv), 800);
+        setTimeout(() => showLevelUpChoices(newLv), 1800);
       }
 
       tasks = tasks.filter(t => t.id !== id);
@@ -2921,6 +3619,20 @@ async function completeTask(id) {
 
       const cdNote = cd.half ? '（冷卻中，獎勵減半）' : '';
       notify(`✓ ${task.title} 完成！+${expGain} EXP / +${coinGain} ◈ ${cdNote}`);
+      // Fragment per task
+      await addFragments(1);
+      // Chest progress
+      chestState.tasks_since_last_chest = (chestState.tasks_since_last_chest || 0) + 1;
+      if (chestState.tasks_since_last_chest >= 15 || task.size === '大任務') {
+        if (chestState.tasks_since_last_chest >= 15) chestState.tasks_since_last_chest = 0;
+        setTimeout(() => openChest(), 1000);
+      }
+      await updateChargeProgress(task);
+      // Apply equipment effects
+      const equipped_bonus = applyEquipmentEffects(expGain, coinGain, task);
+      if (equipped_bonus.exp !== expGain || equipped_bonus.coins !== coinGain) {
+        notify(`✦ 裝備加成：EXP ${equipped_bonus.exp} / 金幣 ${equipped_bonus.coins}`, 'exp');
+      }
       renderAll();
     } catch(e) {
       console.error(e);
@@ -3270,6 +3982,152 @@ function dismissQuotaBanner() {
   document.getElementById('quotaBanner').classList.remove('show');
 }
 
+
+// ─── BAG UI ──────────────────────────────────────────
+const SLOT_LABELS = {
+  head:'頭部', neck:'頸部', bracelet:'手環',
+  upperBody:'上身', gloves:'手套', lowerBody:'下身',
+  shoes:'鞋子', backpack:'背包'
+};
+const SLOT_ICONS = {
+  head:'🪖', neck:'📿', bracelet:'🔮',
+  upperBody:'🧥', gloves:'🧤', lowerBody:'👖',
+  shoes:'👟', backpack:'🎒'
+};
+
+function renderBag() {
+  renderEquipGrid();
+  renderInventoryGrid();
+  const frags = player?.fragments || 0;
+  const fragEl = document.getElementById('bagFragments');
+  if (fragEl) fragEl.textContent = frags;
+  const barEl = document.getElementById('fragmentBar');
+  if (barEl) barEl.style.width = Math.min(frags, 100) + '%';
+}
+
+function renderEquipGrid() {
+  const grid = document.getElementById('equipGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  Object.entries(SLOT_LABELS).forEach(([slot, label]) => {
+    const itemId = equippedSlots[slot];
+    const item = itemId ? EQUIPMENT_DATA[itemId] : null;
+    const div = document.createElement('div');
+    div.className = 'equip-slot' + (item ? ' has-item' : '');
+    div.onclick = () => openEquipModal(slot);
+    div.innerHTML = `
+      <div class="equip-slot-name">${label}</div>
+      <div class="equip-slot-icon">${SLOT_ICONS[slot]}</div>
+      ${item
+        ? `<div class="equip-slot-item">${item.name}</div>`
+        : `<div class="equip-slot-empty">空</div>`}
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function renderInventoryGrid() {
+  const grid = document.getElementById('inventoryGrid');
+  if (!grid) return;
+  if (inventory.length === 0) {
+    grid.innerHTML = '<div class="empty-state">背包是空的。完成任務、開寶箱或升級可以獲得道具。</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  inventory.forEach(inv => {
+    const item = EQUIPMENT_DATA[inv.item_id] || CONSUMABLE_DATA[inv.item_id];
+    if (!item) return;
+    const isEquipped = item.slot && equippedSlots[item.slot] === inv.item_id;
+    const div = document.createElement('div');
+    div.className = 'inv-item ' + (item.isConsumable ? 'consumable' : 'equipment');
+    div.innerHTML = `
+      <div class="inv-item-name">${item.name}</div>
+      ${item.slot ? `<div class="inv-item-slot">${SLOT_LABELS[item.slot] || item.slot}</div>` : ''}
+      <div class="inv-item-desc">${item.description}</div>
+      ${isEquipped ? '<div class="inv-item-equipped">✓ 已裝備</div>' : ''}
+      ${item.isConsumable
+        ? `<button class="btn btn-cyan" style="font-size:10px;padding:4px 10px;width:100%" onclick="useConsumable('${item.id}')">使用</button>`
+        : (!isEquipped && item.slot
+          ? `<button class="btn btn-gold" style="font-size:10px;padding:4px 10px;width:100%" onclick="equipItem('${item.id}')">裝備</button>`
+          : (isEquipped ? `<button class="btn btn-ghost" style="font-size:10px;padding:4px 10px;width:100%" onclick="unequipItem('${item.slot}')">卸下</button>` : ''))}
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function openEquipModal(slot) {
+  const existing = document.getElementById('equipModalOverlay');
+  if (existing) existing.remove();
+
+  const currentItemId = equippedSlots[slot];
+  const currentItem = currentItemId ? EQUIPMENT_DATA[currentItemId] : null;
+  const available = inventory
+    .map(i => EQUIPMENT_DATA[i.item_id])
+    .filter(i => i && i.slot === slot);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'equipModalOverlay';
+  overlay.className = 'equip-modal-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  const itemsHtml = available.length === 0
+    ? '<div style="color:var(--text3);text-align:center;padding:20px;font-size:13px">尚無可裝備的道具</div>'
+    : available.map(item => {
+        const isOn = equippedSlots[slot] === item.id;
+        return `<div style="background:var(--bg2);border:1px solid ${isOn?'var(--gold)':'var(--border)'};padding:12px;margin-bottom:8px">
+          <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:4px">${item.name} ${isOn?'<span style=\"color:var(--green);font-size:11px\">✓ 已裝備</span>':''}</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${item.description}</div>
+          ${isOn
+            ? `<button class="btn btn-ghost" style="font-size:11px;padding:5px 12px" onclick="unequipItem('${slot}');document.getElementById('equipModalOverlay').remove();renderBag()">卸下</button>`
+            : `<button class="btn btn-gold" style="font-size:11px;padding:5px 12px" onclick="equipItem('${item.id}');document.getElementById('equipModalOverlay').remove();renderBag()">裝備</button>`}
+        </div>`;
+      }).join('');
+
+  overlay.innerHTML = `
+    <div class="equip-modal">
+      <div class="equip-modal-header">
+        <div class="equip-modal-title">${SLOT_ICONS[slot]} ${SLOT_LABELS[slot]}</div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="this.closest('.equip-modal-overlay').remove()">✕</span>
+      </div>
+      <div style="padding:16px">
+        ${currentItem
+          ? `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前裝備：${currentItem.name}</div>`
+          : `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">目前空置</div>`}
+        ${itemsHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function equipItem(itemId) {
+  const item = EQUIPMENT_DATA[itemId];
+  if (!item || !item.slot) return;
+  equippedSlots[item.slot] = itemId;
+  await sb('equipped', 'POST', { slot: item.slot, item_id: itemId });
+  notify(`✦ 裝備：${item.name}`, 'gold');
+  renderBag();
+  renderEquipGrid();
+}
+
+async function unequipItem(slot) {
+  delete equippedSlots[slot];
+  await sb(`equipped?slot=eq.${slot}`, 'PATCH', { item_id: null });
+  notify('已卸下裝備', 'gold');
+  renderBag();
+  renderEquipGrid();
+}
+
+async function useConsumable(itemId) {
+  const item = CONSUMABLE_DATA[itemId];
+  if (!item) return;
+  pendingEffects.push({ itemId, effects: item.effects, usedAt: Date.now() });
+  // Remove from inventory
+  inventory = inventory.filter(i => i.item_id !== itemId);
+  await sb(`inventory?item_id=eq.${itemId}`, 'DELETE');
+  notify(`✦ 使用了：${item.name}`, 'cyan');
+  renderBag();
+}
+
 // ─── DECOR SYSTEM ────────────────────────────────────
 const SCENES = {
   entrance: {
@@ -3368,6 +4226,15 @@ function renderScene() {
 }
 
 function openSlotInfo(sceneId, slot) {
+  // If equip scene, open equip modal directly
+  if (sceneId === 'equip') {
+    const slotMap = {
+      head:'head', neck:'neck', bracelet:'bracelet', body:'upperBody',
+      gloves:'gloves', pants:'lowerBody', boots:'shoes', bag:'backpack'
+    };
+    const mappedSlot = slotMap[slot.id];
+    if (mappedSlot) { openEquipModal(mappedSlot); return; }
+  }
   const key = sceneId + '_' + slot.id;
   const equipped = equippedItems[key];
   document.getElementById('slotInfoName').textContent = slot.name;
@@ -3399,13 +4266,14 @@ function correctCategory(taskId, taskTitle, newCat) {
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t, i) => {
-    const names = ['tasks', 'shop', 'npc', 'decor', 'debt'];
+    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'debt'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => {
     c.classList.toggle('active', c.id === 'tab-' + name);
   });
   if (name === 'decor') renderScene();
+  if (name === 'bag') renderBag();
 }
 
 function notify(msg, type = 'green') {
