@@ -4012,7 +4012,7 @@ function renderRustyCat() {
     animation:${dailyRustyState.claimed ? 'none' : 'rustyPulse 2s ease-in-out infinite'};
     z-index:10;
   `;
-  cat.innerHTML = `<img src="character/Rust_ban.png" alt="鏽斑" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;">`;
+  cat.innerHTML = `<img src="character/Rust_ban.png" alt="鏽斑" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;mix-blend-mode:screen;">`;
   cat.title = dailyRustyState.claimed ? '鏽斑今天已經給你東西了' : dailyRustyState.moodText;
   cat.onclick = () => {
     if (dailyRustyState.claimed) {
