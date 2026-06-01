@@ -1242,6 +1242,13 @@
     50% { opacity:0.6; }
   }
 
+  @keyframes rustyPulse {
+    0%,100% { filter: drop-shadow(0 0 4px rgba(201,168,76,0.6)); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 10px rgba(201,168,76,1)); transform: scale(1.1); }
+  }
+  .rusty-cat { transition: transform 0.2s; }
+  .rusty-cat:hover { transform: scale(1.2) !important; }
+
   @media (max-width: 600px) {
     .equip-grid { grid-template-columns: repeat(2, 1fr); }
     .inventory-grid { grid-template-columns: 1fr 1fr; }
@@ -1447,6 +1454,11 @@
       <button class="scene-btn" onclick="switchScene('work')" data-scene="work">📖 工作區</button>
       <button class="scene-btn" onclick="switchScene('storehouse')" data-scene="storehouse">📦 倉儲區</button>
       <button class="scene-btn" onclick="switchScene('home')" data-scene="home">🛋 小屋</button>
+    </div>
+
+    <!-- Rusty cat hint -->
+    <div id="rustyHint" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);margin-bottom:8px;display:none">
+      🐱 鏽斑今天躲在某個場景裡，找找看！
     </div>
 
     <!-- Scene viewport -->
@@ -3835,6 +3847,204 @@ async function buyFromShop(itemId, price, shopId) {
   openFragmentShop();
 }
 
+
+// ─── 鏽斑系統 ────────────────────────────────────────
+const RUSTY_LOCATIONS = [
+  // 門面區
+  { id:'entrance_mat',    scene:'entrance',   label:'門口地毯旁',  top:'72%', left:'36%', width:'8%', height:'12%' },
+  { id:'entrance_sign',   scene:'entrance',   label:'招牌下方',    top:'32%', left:'48%', width:'7%', height:'10%' },
+  { id:'entrance_bell',   scene:'entrance',   label:'門鈴旁',      top:'50%', left:'62%', width:'6%', height:'9%'  },
+  // 接待區
+  { id:'reception_desk',  scene:'reception',  label:'櫃檯下',      top:'65%', left:'44%', width:'8%', height:'10%' },
+  { id:'reception_board', scene:'reception',  label:'委託板旁',    top:'40%', left:'22%', width:'7%', height:'10%' },
+  { id:'reception_book',  scene:'reception',  label:'帳本架旁',    top:'55%', left:'80%', width:'6%', height:'9%'  },
+  // 工作區
+  { id:'work_desk',       scene:'work',       label:'書桌旁',      top:'58%', left:'26%', width:'7%', height:'10%' },
+  { id:'work_chair',      scene:'work',       label:'椅子下',      top:'62%', left:'46%', width:'7%', height:'10%' },
+  { id:'work_ink',        scene:'work',       label:'墨水瓶旁',    top:'54%', left:'62%', width:'6%', height:'9%'  },
+  // 倉儲區
+  { id:'store_shelf',     scene:'storehouse', label:'置物架上',    top:'20%', left:'52%', width:'7%', height:'10%' },
+  { id:'store_cabinet',   scene:'storehouse', label:'收納櫃旁',    top:'55%', left:'18%', width:'7%', height:'10%' },
+  { id:'store_file',      scene:'storehouse', label:'文件櫃旁',    top:'50%', left:'68%', width:'6%', height:'9%'  },
+  // 小屋
+  { id:'home_sofa',       scene:'home',       label:'沙發上',      top:'38%', left:'22%', width:'8%', height:'10%' },
+  { id:'home_bed',        scene:'home',       label:'床邊',        top:'42%', left:'72%', width:'7%', height:'10%' },
+  { id:'home_petbed',     scene:'home',       label:'寵物窩裡',    top:'68%', left:'78%', width:'8%', height:'10%' },
+];
+
+const RUSTY_MOODS = [
+  '鏽斑窩成一團，看起來完全不想動。',
+  '鏽斑瞇起眼睛，好像在判斷你今天有沒有好好活著。',
+  '鏽斑嘴裡好像叼著什麼奇怪的小東西。',
+  '鏽斑尾巴拍了拍地板，像是在催你快點工作。',
+  '你差點沒發現牠，牠看起來很滿意。',
+  '鏽斑盯著門口，像是在等什麼人。',
+  '鏽斑用爪子扒了扒地板，然後看了你一眼。',
+];
+
+const RUSTY_REWARDS = [
+  { id:'rusty_screw',    name:'生鏽螺絲',    probability:50, description:'不知道從哪裡叼來的生鏽螺絲。伊萊可能會說它還能用。',         reward:{ type:'fragment', amount:3 } },
+  { id:'cat_hairball',   name:'貓毛球',      probability:25, description:'一團蓬鬆的橘色貓毛球。娜娜說這在市場上不值錢，但很有紀念價值。',  reward:{ type:'gold', amount:5 } },
+  { id:'strange_key',    name:'奇怪鑰匙',    probability:5,  description:'一把小小的奇怪鑰匙，不知道能打開什麼。可以拿去開個小寶箱。',      reward:{ type:'consumableChest' } },
+  { id:'shiny_fragment', name:'亮晶晶碎片',  probability:20, description:'鏽斑不知道從哪裡扒來的亮晶晶碎片，牠看起來很得意。',             reward:{ type:'fragment', amount:10 } },
+];
+
+let dailyRustyState = null;
+
+function getRustyDateKey() {
+  const now = new Date();
+  const reset = new Date(now);
+  reset.setHours(5,0,0,0);
+  if (now < reset) reset.setDate(reset.getDate()-1);
+  return reset.toISOString().slice(0,10);
+}
+
+function initRustyState() {
+  const dateKey = getRustyDateKey();
+  const saved = localStorage.getItem('chiwu_rusty_' + dateKey);
+  if (saved) {
+    dailyRustyState = JSON.parse(saved);
+    return;
+  }
+  // Pick random location and mood
+  const loc = RUSTY_LOCATIONS[Math.floor(Math.random() * RUSTY_LOCATIONS.length)];
+  const mood = RUSTY_MOODS[Math.floor(Math.random() * RUSTY_MOODS.length)];
+  dailyRustyState = { dateKey, locationId: loc.id, moodText: mood, claimed: false };
+  localStorage.setItem('chiwu_rusty_' + dateKey, JSON.stringify(dailyRustyState));
+}
+
+function saveRustyState() {
+  if (!dailyRustyState) return;
+  localStorage.setItem('chiwu_rusty_' + dailyRustyState.dateKey, JSON.stringify(dailyRustyState));
+}
+
+function rollRustyReward() {
+  const roll = Math.random() * 100;
+  let cumulative = 0;
+  for (const r of RUSTY_REWARDS) {
+    cumulative += r.probability;
+    if (roll < cumulative) return r;
+  }
+  return RUSTY_REWARDS[0];
+}
+
+async function claimRustyReward() {
+  if (!dailyRustyState || dailyRustyState.claimed) return;
+  const reward = rollRustyReward();
+  dailyRustyState.claimed = true;
+  dailyRustyState.claimedAt = Date.now();
+  dailyRustyState.rewardId = reward.id;
+  saveRustyState();
+
+  if (reward.reward.type === 'fragment') {
+    await addFragments(reward.reward.amount);
+  } else if (reward.reward.type === 'gold') {
+    await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + reward.reward.amount });
+    player.coins += reward.reward.amount;
+    renderPlayer();
+  } else if (reward.reward.type === 'consumableChest') {
+    await openConsumableChest();
+  }
+
+  showRustyClaimModal(reward);
+}
+
+async function openConsumableChest() {
+  const consumables = Object.keys(CONSUMABLE_DATA);
+  const picked = consumables[Math.floor(Math.random() * consumables.length)];
+  await obtainItem(picked);
+}
+
+function showRustyClaimModal(reward) {
+  const existing = document.getElementById('rustyModal');
+  if (existing) existing.remove();
+
+  const rewardText = reward.reward.type === 'fragment'
+    ? `碎片 +${reward.reward.amount}`
+    : reward.reward.type === 'gold'
+    ? `金幣 +${reward.reward.amount}`
+    : '獲得消耗道具小寶箱！';
+
+  const modal = document.createElement('div');
+  modal.id = 'rustyModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:2px solid var(--gold);max-width:360px;width:100%;text-align:center;padding:30px 24px">
+      <div style="font-size:40px;margin-bottom:12px">🐱</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);margin-bottom:8px">鏽斑叼來了東西</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">${reward.description}</div>
+      <div style="background:var(--bg2);border:1px solid var(--gold);padding:12px;margin-bottom:20px">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:4px">${reward.name}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan)">${rewardText}</div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:16px">鏽斑伸了個懶腰，不打算再理你了。</div>
+      <button class="btn btn-gold" onclick="document.getElementById('rustyModal').remove()" style="width:100%">收下，謝謝鏽斑</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function showRustyAlreadyClaimed() {
+  notify('鏽斑已經把今天的東西給你了，牠現在只是懶洋洋地趴著。', 'gold');
+}
+
+// Render rusty cat on current scene
+function renderRustyCat() {
+  if (!dailyRustyState) return;
+  const viewport = document.getElementById('sceneViewport');
+  if (!viewport) return;
+
+  // Remove existing rusty cat
+  viewport.querySelectorAll('.rusty-cat').forEach(el => el.remove());
+
+  const loc = RUSTY_LOCATIONS.find(l => l.id === dailyRustyState.locationId);
+  if (!loc || loc.scene !== currentScene) return;
+
+  const cat = document.createElement('div');
+  cat.className = 'rusty-cat';
+  cat.style.cssText = `
+    position:absolute;
+    top:${loc.top};left:${loc.left};
+    width:${loc.width};height:${loc.height};
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(12px,2vw,22px);
+    filter:${dailyRustyState.claimed ? 'grayscale(0.5) opacity(0.7)' : 'drop-shadow(0 0 6px rgba(201,168,76,0.8))'};
+    animation:${dailyRustyState.claimed ? 'none' : 'rustyPulse 2s ease-in-out infinite'};
+    z-index:10;
+  `;
+  cat.textContent = '🐱';
+  cat.title = dailyRustyState.claimed ? '鏽斑今天已經給你東西了' : dailyRustyState.moodText;
+  cat.onclick = () => {
+    if (dailyRustyState.claimed) {
+      showRustyAlreadyClaimed();
+    } else {
+      showRustyInteractModal();
+    }
+  };
+  viewport.appendChild(cat);
+}
+
+function showRustyInteractModal() {
+  const existing = document.getElementById('rustyInteractModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'rustyInteractModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:340px;width:100%;padding:24px;text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">🐱</div>
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:10px">找到鏽斑了</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">${dailyRustyState.moodText}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:16px">牠嘴裡好像叼著什麼東西...</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('rustyInteractModal').remove()">先不要打擾牠</button>
+        <button class="btn btn-gold" style="flex:1" onclick="document.getElementById('rustyInteractModal').remove();claimRustyReward()">收下牠帶來的東西</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
 // ─── INIT ───────────────────────────────────────────
 async function init() {
   try {
@@ -3857,6 +4067,7 @@ async function init() {
     await loadCooldownLog();
     loadStoryState();
     await loadItemState();
+    initRustyState();
     renderAll();
     initWeather();
     setTimeout(() => {
@@ -5006,6 +5217,9 @@ function renderScene() {
   // Remove old hotspots
   viewport.querySelectorAll('.hotspot').forEach(h => h.remove());
 
+  // Add rusty cat
+  setTimeout(renderRustyCat, 50);
+
   // Add hotspots
   scene.slots.forEach(slot => {
     const key = currentScene + '_' + slot.id;
@@ -5113,7 +5327,12 @@ function switchTab(name) {
   document.querySelectorAll('.tab-content').forEach(c => {
     c.classList.toggle('active', c.id === 'tab-' + name);
   });
-  if (name === 'decor') renderScene();
+  if (name === 'decor') {
+    renderScene();
+    const hint = document.getElementById('rustyHint');
+    if (hint && dailyRustyState && !dailyRustyState.claimed) hint.style.display = '';
+    else if (hint) hint.style.display = 'none';
+  }
   if (name === 'bag') renderBag();
 }
 
