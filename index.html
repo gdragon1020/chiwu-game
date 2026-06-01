@@ -1179,6 +1179,69 @@
     font-size: 15px; color: var(--gold);
   }
 
+
+  /* ── STATUS PANEL ── */
+  .status-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    margin-top: -16px;
+  }
+  .status-panel-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .status-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .status-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .status-tag.active {
+    color: var(--green);
+    border-color: rgba(110,208,110,0.4);
+    background: rgba(110,208,110,0.07);
+  }
+  .status-tag.pending {
+    color: var(--text3);
+    border-color: var(--border);
+    background: transparent;
+  }
+  .status-tag.charge {
+    color: var(--exp-color);
+    border-color: rgba(126,184,247,0.4);
+    background: rgba(126,184,247,0.07);
+    animation: chargePulse 2s ease-in-out infinite;
+  }
+  .status-tag.bonus {
+    color: var(--gold);
+    border-color: rgba(201,168,76,0.4);
+    background: var(--gold-dim);
+  }
+  .status-tag.weather-tag {
+    color: var(--cyan);
+    border-color: rgba(78,205,196,0.4);
+    background: var(--cyan-dim);
+  }
+  @keyframes chargePulse {
+    0%,100% { opacity:1; }
+    50% { opacity:0.6; }
+  }
+
   @media (max-width: 600px) {
     .equip-grid { grid-template-columns: repeat(2, 1fr); }
     .inventory-grid { grid-template-columns: 1fr 1fr; }
@@ -1286,6 +1349,14 @@
         <div class="weather-triggered" id="weatherTriggered" style="display:none"><span class="weather-effect-badge">✓ 今日效果已觸發</span></div>
       </div>
       <div class="weather-reset" id="weatherReset"></div>
+    </div>
+  </div>
+
+  <!-- Status Panel -->
+  <div class="status-panel" id="statusPanel">
+    <div class="status-panel-title">✦ 目前加成狀態</div>
+    <div class="status-tags" id="statusTags">
+      <span class="status-tag pending">載入中...</span>
     </div>
   </div>
 
@@ -3281,12 +3352,139 @@ async function init() {
 }
 
 // ─── RENDER ─────────────────────────────────────────
+function renderStatusPanel() {
+  const container = document.getElementById('statusTags');
+  if (!container) return;
+  const tags = [];
+  const today = new Date().toDateString();
+  const timeRange = getTimeRange();
+
+  if (Object.keys(equippedSlots).length === 0) {
+    container.innerHTML = '<span class="status-tag pending">尚未裝備任何道具</span>';
+    return;
+  }
+
+  const effects = getEquippedEffects();
+  const catBonuses = {};
+  const catCoinBonuses = {};
+
+  effects.forEach(ef => {
+    if (ef.type === 'categoryBonus') {
+      const cat = ef.category || '全委託';
+      if (ef.target === 'exp') catBonuses[cat] = (catBonuses[cat] || 0) + ef.valuePercent;
+      else catCoinBonuses[cat] = (catCoinBonuses[cat] || 0) + ef.valuePercent;
+    }
+  });
+
+  // Category bonuses (always active)
+  Object.entries(catBonuses).forEach(([cat, pct]) => {
+    tags.push(`<span class="status-tag active">📈 ${cat} EXP +${pct}%</span>`);
+  });
+  Object.entries(catCoinBonuses).forEach(([cat, pct]) => {
+    tags.push(`<span class="status-tag bonus">💰 ${cat} 金幣 +${pct}%</span>`);
+  });
+
+  // Daily first task bonuses
+  effects.forEach(ef => {
+    if (ef.type === 'dailyFirstTaskBonus') {
+      const cat = ef.category || '任意';
+      const key = `dailyFirst_${ef.category || 'any'}_${today}`;
+      const used = !!localStorage.getItem(key);
+      if (used) {
+        tags.push(`<span class="status-tag pending">✓ 今日第一個${cat} +${ef.valuePercent}% 已觸發</span>`);
+      } else {
+        tags.push(`<span class="status-tag active">⭐ 今日第一個${cat} EXP +${ef.valuePercent}%（未觸發）</span>`);
+      }
+    }
+  });
+
+  // Time bonuses
+  effects.forEach(ef => {
+    if (ef.type === 'timeBonus') {
+      const cat = ef.category || '任意';
+      const isNow = ef.timeRange === timeRange;
+      tags.push(`<span class="status-tag ${isNow ? 'active' : 'pending'}">${isNow ? '🕐' : '⏰'} ${ef.timeRange}完成${cat} +${ef.valuePercent}%${isNow ? '（現在有效）' : ''}</span>`);
+    }
+  });
+
+  // Chain bonuses
+  effects.forEach(ef => {
+    if (ef.type === 'chainBonus') {
+      const current = chainTracker.chainCount;
+      const active = current >= ef.chainIndex;
+      tags.push(`<span class="status-tag ${active ? 'active' : 'pending'}">🔗 連鎖第${ef.chainIndex}個任務 EXP +${ef.valuePercent}%${active ? '（已連鎖）' : `（目前${current}連）`}</span>`);
+    }
+  });
+
+  // Balance bonuses
+  effects.forEach(ef => {
+    if (ef.type === 'balanceBonus') {
+      const doneCats = JSON.parse(localStorage.getItem('doneCatsToday_' + today) || '[]');
+      const active = doneCats.length >= ef.completedCategoryCount;
+      const targetStr = ef.target === 'fragment' ? `+${ef.flatAmount || 0}碎片` : `EXP +${ef.valuePercent}%`;
+      tags.push(`<span class="status-tag ${active ? 'active' : 'pending'}">⚖️ 今日完成${ef.completedCategoryCount}類 ${targetStr}${active ? '（已達成）' : `（${doneCats.length}/${ef.completedCategoryCount}）`}</span>`);
+    }
+  });
+
+  // Charge effects
+  effects.forEach(ef => {
+    if (ef.type === 'charge') {
+      const ready = hasCharge(ef.chargeName);
+      const state = chargeState[ef.chargeName];
+      const count = state?.count || 0;
+      const needed = ef.gainCondition.completedCount;
+      if (ready) {
+        tags.push(`<span class="status-tag charge">⚡ ${ef.chargeName} 就緒！下一個任務 x${ef.consumeEffect.multiplier}</span>`);
+      } else {
+        tags.push(`<span class="status-tag pending">⚡ ${ef.chargeName} 充能中（${count}/${needed}）</span>`);
+      }
+    }
+  });
+
+  // Deadline bonuses
+  effects.forEach(ef => {
+    if (ef.type === 'deadlineBonus') {
+      tags.push(`<span class="status-tag pending">📅 提早${ef.daysEarly}天完成有期限任務 EXP +${ef.valuePercent}%</span>`);
+    }
+  });
+
+  // Daily login
+  effects.forEach(ef => {
+    if (ef.type === 'dailyLoginReward') {
+      const key = 'dailyLogin_' + today;
+      const done = !!localStorage.getItem(key);
+      tags.push(`<span class="status-tag ${done ? 'pending' : 'active'}">${done ? '✓' : '🌅'} 每日登入 +${ef.reward.amount}${ef.reward.target === 'gold' ? '金幣' : '碎片'}${done ? '（已領）' : '（待領）'}</span>`);
+    }
+  });
+
+  // Pending consumable effects
+  pendingEffects.forEach(pe => {
+    const item = CONSUMABLE_DATA[pe.itemId];
+    if (item) {
+      tags.push(`<span class="status-tag charge">🧪 ${item.name} 效果啟用中</span>`);
+    }
+  });
+
+  // Weather
+  if (weatherState && !weatherState.triggered) {
+    const ef = WEATHER_EFFECTS[weatherState.weather_type];
+    if (ef) tags.push(`<span class="status-tag weather-tag">🌤 ${ef.title}：${ef.desc}</span>`);
+  }
+
+  if (tags.length === 0) {
+    container.innerHTML = '<span class="status-tag pending">目前無特殊加成</span>';
+  } else {
+    container.innerHTML = tags.join('');
+  }
+}
+
 function renderAll() {
   renderPlayer();
   renderTasks();
   renderShop();
   renderNPCs();
   renderDebt();
+  renderStatusPanel();
 }
 
 function renderPlayer() {
@@ -3597,9 +3795,56 @@ async function completeTask(id) {
       await logCooldown(task.title);
       let expGain = cd.half ? Math.ceil(task.exp_reward * 0.5) : task.exp_reward;
       let coinGain = cd.half ? Math.ceil(task.coin_reward * 0.5) : task.coin_reward;
+
+      // 1. Apply equipment effects (before weather, so weather stacks on top)
+      const equipBonus = applyEquipmentEffects(expGain, coinGain, task);
+      const expFromEquip = equipBonus.exp - expGain;
+      const coinFromEquip = equipBonus.coins - coinGain;
+      expGain = equipBonus.exp;
+      coinGain = equipBonus.coins;
+
+      // 2. Apply consumable pending effects
+      pendingEffects = pendingEffects.filter(pe => {
+        const age = Date.now() - pe.usedAt;
+        if (age > 86400000) return false; // expire after 24h
+        let triggered = false;
+        pe.effects.forEach(ef => {
+          if (ef.type === 'nextTaskBonus') {
+            if (!ef.category || ef.category === task.category) {
+              if (ef.target === 'exp') expGain = Math.ceil(expGain * (1 + ef.valuePercent / 100));
+              else coinGain = Math.ceil(coinGain * (1 + ef.valuePercent / 100));
+              triggered = true;
+            }
+          }
+        });
+        return !triggered;
+      });
+
+      // 3. Check charge multipliers
+      const chargeEffects = getEquippedEffects().filter(e => e.type === 'charge');
+      for (const ef of chargeEffects) {
+        const applies = ef.consumeEffect.nextTaskCategory
+          ? task.category === ef.consumeEffect.nextTaskCategory
+          : (ef.consumeEffect.sameCategory ? task.category === chainTracker.lastCategory : true);
+        if (applies && hasCharge(ef.chargeName)) {
+          await consumeCharge(ef.chargeName);
+          if (ef.consumeEffect.target === 'exp') expGain = Math.ceil(expGain * ef.consumeEffect.multiplier);
+          else coinGain = Math.ceil(coinGain * ef.consumeEffect.multiplier);
+          notify(`⚡ ${ef.chargeName} 觸發！獎勵 x${ef.consumeEffect.multiplier}`, 'exp');
+        }
+      }
+
+      // 4. Weather bonus
       const weatherBonus = await applyWeatherBonus(task, expGain, coinGain);
       expGain = weatherBonus.expGain;
       coinGain = weatherBonus.coinGain;
+
+      // 5. Cap at +100% of base
+      const baseExp = cd.half ? Math.ceil(task.exp_reward * 0.5) : task.exp_reward;
+      const baseCoins = cd.half ? Math.ceil(task.coin_reward * 0.5) : task.coin_reward;
+      expGain = Math.min(expGain, baseExp * 2);
+      coinGain = Math.min(coinGain, baseCoins * 2);
+
       const newExp = player.exp + expGain;
       let newCoins = player.coins + coinGain;
       let newDebt = player.debt;
@@ -3629,22 +3874,24 @@ async function completeTask(id) {
       tasks = tasks.filter(t => t.id !== id);
       completedTasks.unshift({ ...task, status: 'completed', completed_at: new Date().toISOString() });
 
+      // Build notification with bonuses
       const cdNote = cd.half ? '（冷卻中，獎勵減半）' : '';
-      notify(`✓ ${task.title} 完成！+${expGain} EXP / +${coinGain} ◈ ${cdNote}`);
+      const equipNote = (expFromEquip > 0 || coinFromEquip > 0) ? ` ✦裝備+${expFromEquip}EXP/+${coinFromEquip}◈` : '';
+      notify(`✓ ${task.title} 完成！+${expGain} EXP / +${coinGain} ◈${cdNote}${equipNote}`);
+
       // Fragment per task
       await addFragments(1);
+
       // Chest progress
       chestState.tasks_since_last_chest = (chestState.tasks_since_last_chest || 0) + 1;
       if (chestState.tasks_since_last_chest >= 15 || task.size === '大任務') {
         if (chestState.tasks_since_last_chest >= 15) chestState.tasks_since_last_chest = 0;
         setTimeout(() => openChest(), 1000);
       }
+
+      // Update charge progress for next task
       await updateChargeProgress(task);
-      // Apply equipment effects
-      const equipped_bonus = applyEquipmentEffects(expGain, coinGain, task);
-      if (equipped_bonus.exp !== expGain || equipped_bonus.coins !== coinGain) {
-        notify(`✦ 裝備加成：EXP ${equipped_bonus.exp} / 金幣 ${equipped_bonus.coins}`, 'exp');
-      }
+
       renderAll();
     } catch(e) {
       console.error(e);
