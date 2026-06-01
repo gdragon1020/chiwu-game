@@ -1324,12 +1324,8 @@
 const SUPABASE_URL = 'https://xdgwmnpmvoalwckeamqh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkZ3dtbnBtdm9hbHdja2VhbXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MzE3NjQsImV4cCI6MjA5NTUwNzc2NH0.ht3mvrli_osiCmHl72xCqL4YWdETc9VXOMfXaZj1wX8';
 
-const LEVEL_THRESHOLDS = [0, 300, 800, 1500, 3000, 5000, 8000, 12000];
-const LEVEL_TITLES = [
-  '鑄霧城新來的外鄉人', '找到落腳地的旅人', '街坊認識的新面孔',
-  '城裡站穩腳跟的人', '行會注目的新星', '行會的正式成員',
-  '備受信任的冒險者', '鑄霧城的傳奇人物'
-];
+const LEVEL_THRESHOLDS = [0, 50, 105, 165, 230, 300, 375, 455, 540, 630, 725, 875, 1030, 1190, 1355, 1525, 1700, 1880, 2065, 2255, 2450, 2700, 2954, 3212, 3474, 3740, 4010, 4284, 4562, 4844, 5130, 5420, 5714, 6012, 6314, 6620, 6970, 7324, 7682, 8044, 8410, 8780, 9154, 9532, 9914, 10300, 10690, 11084, 11482, 11884, 12290, 12740, 13194, 13652, 14114, 14580, 15050, 15524, 16002, 16484, 16970, 17460, 17954, 18452, 18954, 19460, 20010, 20564, 21122, 21684, 22250, 22820, 23394, 23972, 24554, 25140, 25730, 26324, 26922, 27524, 28130, 28780, 29438, 30104, 30778, 31460, 32150, 32848, 33554, 34268, 34990, 35720, 36458, 37204, 37958, 38720, 39490, 40268, 41054, 41848, 42650];
+const LEVEL_TITLES = ['初來乍到的外鄉人', '找到落腳地的旅人', '開始認識街坊的新面孔', '在下城站穩第一步的人', '開始被人記住名字的外鄉人', '漸漸融入下城生活的旅人', '開始在鑄霧城留下足跡的人', '下城居民口中的熟面孔', '開始找到方向的外鄉人', '在鑄霧城真正活下來的人', '被街坊鄰居信任的新人', '開始接觸行會邊緣的人', '在下城闖出小名堂的人', '被娜娜稱讚很努力的人', '讓葛莉達點頭認可的房客', '讓席爾多說兩句話的常客', '被托比崇拜的外鄉前輩', '開始讓伊萊願意分享故事的人', '在下城有了自己位置的人', '下城人都知道的可靠人物', '開始進入行會視野的人', '被行會低階成員注意的外鄉人', '第一次踏上城市機會台階的人', '讓行會信使開始打招呼的人', '在鑄霧城有了自己故事的旅人', '開始承接重要委託的冒險者', '在下城與上城之間穿梭的人', '被行會正式列入名冊的外鄉人', '開始讓行會高層側目的人', '在鑄霧城累積了真實信任的人', '行會中嶄露頭角的新星', '開始影響下城局勢的行動者', '讓老居民願意分享秘密的人', '鑄霧城裡不能被忽視的存在', '在上城與下城都有名字的人', '正式踏入行會核心圈的人', '開始參與行會重要決策的人', '在行會中建立自己派系的人', '讓行會長老開始正視的人', '鑄霧城中流砥柱的行動者', '在危機中挺身而出的冒險者', '行會中最值得信賴的夥伴', '開始解開鑄霧城謎團的人', '在行會歷史上留下記錄的人', '鑄霧城傳說故事的主角之一', '讓所有NPC刮目相看的人', '行會中無可取代的核心人物', '開始被稱為前輩的冒險者', '鑄霧城最有影響力的外鄉人', '已經不再是外鄉人的鑄霧城人', '鑄霧城歷史的見證者', '在城市最黑暗時刻挺身的人', '讓上城貴族不得不正視的人', '改變鑄霧城命運的行動者', '城市最古老秘密的守護者', '跨越上城與下城藩籬的橋樑', '鑄霧城第一個真正的英雄', '讓行會重新思考未來的人', '在霧中找到光的引路人', '鑄霧城百年來最特別的存在', '已成為城市一部分的傳奇', '讓葛莉達說出「你比我年輕時強」的人', '讓席爾破例說出心裡話的人', '讓娜娜對你肅然起敬的人', '讓托比決定以你為目標的人', '鑄霧城的守護者', '讓伊萊願意分享最深秘密的人', '已經超越所有人期待的存在', '城市傳說中真實存在的人物', '在霧中燃起希望的那個人', '讓行會高層甘願低頭的人', '改寫鑄霧城歷史的行動者', '城市所有故事的交匯點', '在最深的黑暗中仍然前進的人', '鑄霧城最不可思議的傳奇', '讓整座城市記住名字的人', '超越外鄉人身份的城市靈魂', '行會與下城共同尊敬的存在', '已成為鑄霧城神話一部分的人', '城市百年來最偉大的貢獻者', '鑄霧城神話的起點', '讓歷史重新書寫的存在', '城市傳說中最閃耀的名字', '已超越凡人界限的冒險者', '鑄霧城永遠的守護星', '連上城皇室都知道名字的人', '改變整個世界觀的存在', '霧中最耀眼的一道光', '鑄霧城百年傳說的終結與起點', '已成為城市精神象徵的人', '讓所有人相信奇蹟的存在', '鑄霧城最後的秘密守護者', '超越時代的傳奇冒險者', '連神明都側目的凡人', '鑄霧城永恆傳說的主角', '在霧中刻下永恆足跡的人', '讓鑄霧城真正改變的那個人', '城市最深處守護光芒的靈魂', '超越所有故事的真實傳奇', '鑄霧城最偉大的冒險者'];
 const NPC_DATA = [
   { name: '葛莉達・鐵心', role: '房東', emoji: '👵', img: 'character/Greta.png', status: '在走廊修東西', personality: '妳是個說話直接、不客氣但實際上很照顧房客的老太太。有機械義肢手臂，年輕時是工廠技師，退休後靠收租過活。偶爾提到房租或是走廊上的貓「鏽斑」。講話簡短有力，不廢話，但關鍵時刻會說出溫暖的話。',
     visits: {
@@ -2335,14 +2331,14 @@ async function checkOverdueTasks() {
 // ─── UTILS ──────────────────────────────────────────
 function getLevel(exp) {
   for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (exp >= LEVEL_THRESHOLDS[i]) return i + 1;
+    if (exp >= LEVEL_THRESHOLDS[i]) return Math.min(i + 1, 100);
   }
   return 1;
 }
 function getLevelRange(lv) {
   return {
     current: LEVEL_THRESHOLDS[lv - 1] || 0,
-    next: LEVEL_THRESHOLDS[lv] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1] * 2
+    next: LEVEL_THRESHOLDS[lv] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1] + 999999
   };
 }
 
@@ -2363,58 +2359,58 @@ const SCENES = {
   entrance: {
     name: '門面區', img: 'place/Entrance.png',
     slots: [
-      { id: 'sign',    name: '招牌',     top: '8%',  left: '36%', width: '30%', height: '22%' },
-      { id: 'doorbell',name: '門鈴',     top: '46%', left: '60%', width: '7%',  height: '13%' },
-      { id: 'carpet',  name: '門口地毯', top: '78%', left: '33%', width: '34%', height: '16%' },
+      { id: 'sign', name: '招牌', top: '13.8%', left: '38.0%', width: '28.7%', height: '18.1%' },
+      { id: 'doorbell', name: '門鈴', top: '38.8%', left: '60.9%', width: '5.1%', height: '14.9%' },
+      { id: 'carpet', name: '門口地毯', top: '78.0%', left: '38.1%', width: '25.1%', height: '12.8%' },
     ]
   },
   reception: {
     name: '接待區', img: 'place/Reception.png',
     slots: [
-      { id: 'board',   name: '委託板',   top: '15%', left: '5%',  width: '26%', height: '35%' },
-      { id: 'counter', name: '櫃檯',     top: '33%', left: '27%', width: '46%', height: '38%' },
-      { id: 'chair',   name: '接待椅',   top: '50%', left: '30%', width: '13%', height: '28%' },
-      { id: 'book',    name: '帳本',     top: '28%', left: '74%', width: '22%', height: '36%' },
+      { id: 'board', name: '委託板', top: '26.2%', left: '10.5%', width: '17.6%', height: '26.6%' },
+      { id: 'counter', name: '櫃檯', top: '50.4%', left: '24.9%', width: '45.7%', height: '20.6%' },
+      { id: 'book', name: '帳本', top: '41.4%', left: '71.1%', width: '19.2%', height: '29.8%' },
+      { id: 'chair', name: '接待椅', top: '61.6%', left: '24.8%', width: '10.8%', height: '22.3%' },
     ]
   },
   work: {
     name: '工作區', img: 'place/Work.png',
     slots: [
-      { id: 'desk',    name: '書桌',     top: '38%', left: '20%', width: '60%', height: '48%' },
-      { id: 'chair',   name: '椅子',     top: '22%', left: '38%', width: '20%', height: '36%' },
-      { id: 'lamp',    name: '桌燈',     top: '25%', left: '22%', width: '18%', height: '28%' },
-      { id: 'ink',     name: '墨水',     top: '38%', left: '68%', width: '12%', height: '18%' },
+      { id: 'desk', name: '書桌', top: '57.5%', left: '30.3%', width: '40.4%', height: '28.4%' },
+      { id: 'chair', name: '椅子', top: '39.3%', left: '40.3%', width: '19.1%', height: '22.3%' },
+      { id: 'lamp', name: '桌燈', top: '47.8%', left: '31.1%', width: '10.8%', height: '18.1%' },
+      { id: 'ink', name: '墨水', top: '59.0%', left: '61.0%', width: '5.4%', height: '9.6%' },
     ]
   },
   storehouse: {
     name: '倉儲區', img: 'place/Storehouse.png',
     slots: [
-      { id: 'cabinet', name: '收納櫃',   top: '12%', left: '6%',  width: '26%', height: '68%' },
-      { id: 'shelf',   name: '置物架',   top: '5%',  left: '34%', width: '30%', height: '75%' },
-      { id: 'filebox', name: '文件櫃',   top: '12%', left: '60%', width: '16%', height: '68%' },
+      { id: 'cabinet', name: '收納櫃', top: '18.6%', left: '9.9%', width: '24.2%', height: '53.1%' },
+      { id: 'shelf', name: '置物架', top: '13.1%', left: '37.4%', width: '27.2%', height: '58.4%' },
+      { id: 'filebox', name: '文件櫃', top: '22.7%', left: '68.5%', width: '13.2%', height: '48.9%' },
     ]
   },
   home: {
     name: '小屋', img: 'place/Home.png',
     slots: [
-      { id: 'fireplace',name:'暖爐',     top: '35%', left: '1%',  width: '11%', height: '35%' },
-      { id: 'sofa',    name: '沙發',     top: '32%', left: '12%', width: '28%', height: '28%' },
-      { id: 'table',   name: '餐桌',     top: '50%', left: '22%', width: '52%', height: '38%' },
-      { id: 'bed',     name: '床鋪',     top: '25%', left: '60%', width: '34%', height: '38%' },
-      { id: 'petbed',  name: '寵物窩',  top: '68%', left: '73%', width: '14%', height: '18%' },
+      { id: 'fireplace', name: '暖爐', top: '50.6%', left: '2.0%', width: '13.2%', height: '31.9%' },
+      { id: 'sofa', name: '沙發', top: '49.9%', left: '22.8%', width: '21.5%', height: '22.3%' },
+      { id: 'table', name: '餐桌', top: '64.8%', left: '35.5%', width: '26.0%', height: '26.6%' },
+      { id: 'bed', name: '床鋪', top: '41.0%', left: '66.2%', width: '23.9%', height: '36.1%' },
+      { id: 'petbed', name: '寵物窩', top: '67.6%', left: '78.6%', width: '14.1%', height: '15.9%' },
     ]
   },
   equip: {
     name: '裝備', img: 'place/Equip.png',
     slots: [
-      { id: 'head',    name: '頭部',     top: '4%',  left: '39%', width: '20%', height: '16%' },
-      { id: 'neck',    name: '頸部',     top: '19%', left: '39%', width: '20%', height: '13%' },
-      { id: 'bracelet',name: '手環',     top: '30%', left: '22%', width: '14%', height: '14%' },
-      { id: 'body',    name: '上身',     top: '28%', left: '30%', width: '38%', height: '26%' },
-      { id: 'bag',     name: '背包',     top: '26%', left: '65%', width: '16%', height: '18%' },
-      { id: 'gloves',  name: '手套',     top: '46%', left: '22%', width: '14%', height: '15%' },
-      { id: 'pants',   name: '下身',     top: '52%', left: '30%', width: '38%', height: '20%' },
-      { id: 'boots',   name: '鞋子',     top: '70%', left: '33%', width: '32%', height: '16%' },
+      { id: 'head', name: '頭部', top: '9.2%', left: '43.6%', width: '11.0%', height: '11.0%' },
+      { id: 'neck', name: '頸部', top: '21.6%', left: '43.0%', width: '13.1%', height: '12.9%' },
+      { id: 'bracelet', name: '手環', top: '35.9%', left: '26.6%', width: '9.0%', height: '11.0%' },
+      { id: 'body', name: '上身', top: '30.4%', left: '36.9%', width: '26.2%', height: '26.7%' },
+      { id: 'gloves', name: '手套', top: '52.0%', left: '25.9%', width: '9.0%', height: '12.9%' },
+      { id: 'pants', name: '下身', top: '56.2%', left: '38.7%', width: '18.0%', height: '19.3%' },
+      { id: 'boots', name: '鞋子', top: '76.0%', left: '37.3%', width: '18.0%', height: '13.8%' },
+      { id: 'bag', name: '背包', top: '35.9%', left: '62.5%', width: '11.7%', height: '15.7%' },
     ]
   }
 };
