@@ -3970,7 +3970,7 @@ function showRustyClaimModal(reward) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML = `
     <div style="background:var(--panel);border:2px solid var(--gold);max-width:360px;width:100%;text-align:center;padding:30px 24px">
-      <div style="font-size:40px;margin-bottom:12px">🐱</div>
+      <div style="margin-bottom:12px"><img src="character/Rust_ban.png" alt="鏽斑" style="width:80px;height:80px;object-fit:contain"></div>
       <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);margin-bottom:8px">鏽斑叼來了東西</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">${reward.description}</div>
       <div style="background:var(--bg2);border:1px solid var(--gold);padding:12px;margin-bottom:20px">
@@ -4004,7 +4004,7 @@ function renderRustyCat() {
   cat.style.cssText = `
     position:absolute;
     top:${loc.top};left:${loc.left};
-    width:${loc.width};height:${loc.height};
+    width:calc(${loc.width} + 2%);height:calc(${loc.height} + 2%);
     cursor:pointer;
     display:flex;align-items:center;justify-content:center;
     font-size:clamp(12px,2vw,22px);
@@ -4012,7 +4012,7 @@ function renderRustyCat() {
     animation:${dailyRustyState.claimed ? 'none' : 'rustyPulse 2s ease-in-out infinite'};
     z-index:10;
   `;
-  cat.textContent = '🐱';
+  cat.innerHTML = `<img src="character/Rust_ban.png" alt="鏽斑" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;">`;
   cat.title = dailyRustyState.claimed ? '鏽斑今天已經給你東西了' : dailyRustyState.moodText;
   cat.onclick = () => {
     if (dailyRustyState.claimed) {
@@ -4033,7 +4033,7 @@ function showRustyInteractModal() {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--gold);max-width:340px;width:100%;padding:24px;text-align:center">
-      <div style="font-size:36px;margin-bottom:12px">🐱</div>
+      <div style="margin-bottom:12px"><img src="character/Rust_ban.png" alt="鏽斑" style="width:70px;height:70px;object-fit:contain"></div>
       <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:10px">找到鏽斑了</div>
       <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">${dailyRustyState.moodText}</div>
       <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:16px">牠嘴裡好像叼著什麼東西...</div>
