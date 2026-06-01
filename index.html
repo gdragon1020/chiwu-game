@@ -1219,7 +1219,6 @@
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
-      <div class="stat-pill" style="cursor:pointer;border-color:rgba(78,205,196,0.4);color:var(--cyan)" onclick="openFragmentShop()" title="碎片商店"><span class="icon">◈</span> <span id="headerFragments">0</span> 碎片</div>
       <div class="stat-pill exp"><span class="icon">⚡</span> <span id="headerExp">0</span> EXP</div>
       <div class="stat-pill gold"><span class="icon">◈</span> <span id="headerCoins">0</span> 金幣</div>
     </div>
@@ -1334,6 +1333,16 @@
 
   <!-- SHOP TAB -->
   <div class="tab-content" id="tab-shop">
+
+    <!-- Fragment Shop Section -->
+    <div style="background:var(--panel);border:1px solid var(--cyan);border-left:3px solid var(--cyan);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cyan);letter-spacing:1px;margin-bottom:3px">◈ 碎片商店</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3)">持有 <span id="shopFragments">0</span> 碎片 · 每日刷新 · 集滿100可兌換</div>
+      </div>
+      <button class="btn btn-cyan" style="font-size:11px;padding:7px 16px" onclick="openFragmentShop()">開啟商店</button>
+    </div>
+
     <div class="add-shop-form">
       <div class="section-label">✦ 登記心願</div>
       <div class="input-row">
@@ -1367,7 +1376,6 @@
       <button class="scene-btn" onclick="switchScene('work')" data-scene="work">📖 工作區</button>
       <button class="scene-btn" onclick="switchScene('storehouse')" data-scene="storehouse">📦 倉儲區</button>
       <button class="scene-btn" onclick="switchScene('home')" data-scene="home">🛋 小屋</button>
-      <button class="scene-btn" onclick="switchScene('equip')" data-scene="equip">⚔️ 裝備</button>
     </div>
 
     <!-- Scene viewport -->
@@ -3291,8 +3299,12 @@ function renderPlayer() {
   document.getElementById('playerLevel').textContent = lv;
   document.getElementById('headerExp').textContent = player.exp;
   document.getElementById('headerCoins').textContent = player.coins;
-  const fragEl = document.getElementById('headerFragments');
-  if (fragEl) fragEl.textContent = player.fragments || 0;
+  const shopFragEl = document.getElementById('shopFragments');
+  if (shopFragEl) shopFragEl.textContent = player.fragments || 0;
+  const bagFragEl = document.getElementById('bagFragments');
+  if (bagFragEl) bagFragEl.textContent = player.fragments || 0;
+  const fragBarEl = document.getElementById('fragmentBar');
+  if (fragBarEl) fragBarEl.style.width = Math.min(player.fragments || 0, 100) + '%';
   document.getElementById('expBar').style.width = pct + '%';
   document.getElementById('expLabel').textContent = `${player.exp} / ${next}`;
 
@@ -3990,7 +4002,7 @@ const SLOT_LABELS = {
   shoes:'鞋子', backpack:'背包'
 };
 const SLOT_ICONS = {
-  head:'🪖', neck:'📿', bracelet:'🔮',
+  head:'⛑', neck:'📿', bracelet:'🔮',
   upperBody:'🧥', gloves:'🧤', lowerBody:'👖',
   shoes:'👟', backpack:'🎒'
 };
