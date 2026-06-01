@@ -2821,15 +2821,17 @@ JSON格式：{"exp":5,"coins":2,"size":"微任務","category":"專注委託","co
       body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 150, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await res.json();
-    console.log('AI raw response:', JSON.stringify(data));
-    const text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
-    if (!text) { console.warn('AI returned empty text, debug:', data); }
-    const match = text.match(/\{[\s\S]*\}/);
+    if (data.debug?.code === 429 || data.debug?.status === 'RESOURCE_EXHAUSTED') { showQuotaWarning(); throw new Error('quota'); }
+    if (data.debug?.code === 503 || data.debug?.status === 'UNAVAILABLE') throw new Error('unavailable');
+    const text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').replace(/\n/g,' ').trim();
+    if (!text) { console.warn('AI empty:', data); }
+    const match = text.match(/\{[^{}]*\}/);
     if (match) {
-      const result = JSON.parse(match[0]);
-      if (correctedCat) result.category = correctedCat;
-      console.log('AI result:', result);
-      return result;
+      try {
+        const result = JSON.parse(match[0]);
+        if (correctedCat) result.category = correctedCat;
+        return result;
+      } catch(pe) { console.error('parse error:', pe, text); }
     }
   } catch(e) { console.error('AI assess failed:', e.message); }
   const userCorrections = JSON.parse(localStorage.getItem('chiwu_cat_corrections') || '{}');
