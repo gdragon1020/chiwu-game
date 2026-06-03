@@ -4198,8 +4198,7 @@ function renderStatusPanel() {
   effects.forEach(ef => {
     if (ef.type === 'chainBonus') {
       const current = chainTracker.chainCount;
-      const needed = ef.chainIndex - 1; // need this many same-cat before trigger
-      tags.push(`<span class="status-tag pending">🔗 連鎖第${ef.chainIndex}個同類任務 EXP +${ef.valuePercent}%（目前${current}連，再${Math.max(0, ef.chainIndex - current - 1)}個觸發）</span>`);
+      tags.push(`<span class="status-tag ${current > 0 ? 'active' : 'pending'}">🔗 連鎖第${ef.chainIndex}個同類任務 EXP +${ef.valuePercent}%（${current}/${ef.chainIndex}）</span>`);
     }
   });
 
