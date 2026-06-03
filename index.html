@@ -1291,6 +1291,78 @@
   .rusty-cat { transition: transform 0.2s; }
   .rusty-cat:hover { transform: scale(1.2) !important; }
 
+
+  /* ── 草稿區 ── */
+  .draft-section {
+    margin-top: 24px;
+  }
+  .draft-add-panel {
+    background: var(--bg2);
+    border: 1px dashed var(--border2);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .draft-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .draft-item {
+    background: var(--bg2);
+    border: 1px dashed var(--border);
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .draft-item:hover { border-color: var(--border2); }
+  .draft-item.remind-today { border-color: rgba(240,160,80,0.5); }
+
+  .draft-body { flex: 1; min-width: 0; }
+  .draft-title {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 3px;
+  }
+  .draft-desc { font-size: 11px; color: var(--text3); margin-bottom: 5px; }
+  .draft-meta {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text3);
+    align-items: center;
+  }
+  .draft-remind-tag {
+    color: #f0a050;
+    border: 1px solid rgba(240,160,80,0.4);
+    padding: 1px 6px;
+  }
+  .draft-remind-today-tag {
+    color: var(--red);
+    border: 1px solid rgba(224,92,92,0.4);
+    padding: 1px 6px;
+    animation: urgentPulse 1.5s ease-in-out infinite;
+  }
+  .draft-actions { display: flex; gap: 6px; align-items: flex-start; padding-top: 2px; flex-shrink: 0; }
+
+  .btn-promote {
+    background: transparent;
+    border: 1px solid rgba(78,205,196,0.4);
+    color: var(--cyan);
+    padding: 5px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-promote:hover { background: var(--cyan-dim); }
+
+  .draft-remind-input {
+    display: flex; gap: 6px; margin-top: 6px; align-items: center;
+  }
+  .draft-remind-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: var(--text3); white-space: nowrap;
+  }
+
   @media (max-width: 600px) {
     .equip-grid { grid-template-columns: repeat(2, 1fr); }
     .inventory-grid { grid-template-columns: 1fr 1fr; }
@@ -1448,6 +1520,28 @@
     <div style="margin-top:20px" class="section-label">已完成的委託</div>
     <div class="task-list" id="completedList">
       <div class="empty-state" id="emptyCompleted" style="display:none">尚無完成記錄。</div>
+    </div>
+
+    <!-- 草稿區 -->
+    <div class="draft-section">
+      <div class="section-label" style="border-style:dashed;color:var(--text3)">📝 草稿委託（想做但還沒準備好的事）</div>
+
+      <div class="draft-add-panel">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:10px">✦ 新增草稿</div>
+        <div class="input-row">
+          <input type="text" class="input-field" id="draftInput" placeholder="想到要做的事..." style="font-size:13px" />
+          <button class="btn btn-ghost" onclick="addDraft()" style="border-color:var(--border2)">暫存</button>
+        </div>
+        <textarea class="input-field" id="draftDesc" placeholder="備注（選填）..." style="margin-top:6px;height:48px;resize:none;font-size:12px;width:100%"></textarea>
+        <div class="draft-remind-input">
+          <span class="draft-remind-label">提醒日期（選填）：</span>
+          <input type="date" class="input-field" id="draftRemind" style="max-width:160px;font-size:12px;padding:6px 10px" />
+        </div>
+      </div>
+
+      <div class="draft-list" id="draftList">
+        <div class="empty-state" id="emptyDrafts">草稿區是空的。把腦袋裡的想法丟進來吧。</div>
+      </div>
     </div>
   </div>
 
@@ -4125,6 +4219,7 @@ async function init() {
     loadStoryState();
     await loadItemState();
     initRustyState();
+    await loadDrafts();
     renderAll();
     initWeather();
     setTimeout(() => {
@@ -5414,6 +5509,105 @@ function sortAndRenderTasks() {
   renderTasks();
 }
 
+// ─── DRAFT SYSTEM ────────────────────────────────────
+let drafts = [];
+
+async function loadDrafts() {
+  try {
+    const rows = await sb('drafts?select=*&order=created_at.desc');
+    drafts = rows || [];
+    renderDrafts();
+    checkDraftReminders();
+  } catch(e) { console.error('loadDrafts error:', e); }
+}
+
+async function addDraft() {
+  const title = document.getElementById('draftInput').value.trim();
+  const desc = document.getElementById('draftDesc').value.trim();
+  const remind = document.getElementById('draftRemind').value || null;
+  if (!title) return;
+
+  const record = { title, description: desc || null, remind_date: remind };
+  const saved = await sb('drafts', 'POST', record);
+  drafts.unshift(saved[0]);
+  document.getElementById('draftInput').value = '';
+  document.getElementById('draftDesc').value = '';
+  document.getElementById('draftRemind').value = '';
+  renderDrafts();
+  notify('草稿已暫存', 'gold');
+}
+
+async function deleteDraft(id) {
+  if (!confirm('確定要刪除這個草稿？')) return;
+  await sb(`drafts?id=eq.${id}`, 'DELETE');
+  drafts = drafts.filter(d => d.id !== id);
+  renderDrafts();
+}
+
+async function promoteDraft(id) {
+  const draft = drafts.find(d => d.id === id);
+  if (!draft) return;
+
+  // Fill task input with draft content and trigger AI assessment
+  document.getElementById('taskInput').value = draft.title;
+  document.getElementById('taskDesc').value = draft.description || '';
+
+  // Switch to tasks tab and scroll to top
+  switchTab('tasks');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  notify('草稿已移至任務輸入區，按送出讓魔法鑑定師評估！', 'cyan');
+
+  // Delete draft after promotion
+  await sb(`drafts?id=eq.${id}`, 'DELETE');
+  drafts = drafts.filter(d => d.id !== id);
+  renderDrafts();
+}
+
+function checkDraftReminders() {
+  const today = new Date().toISOString().slice(0,10);
+  const reminders = drafts.filter(d => d.remind_date && d.remind_date <= today);
+  if (reminders.length > 0) {
+    setTimeout(() => {
+      notify(`📝 你有 ${reminders.length} 個草稿到了提醒日期！`, 'gold');
+    }, 1500);
+  }
+}
+
+function renderDrafts() {
+  const list = document.getElementById('draftList');
+  const empty = document.getElementById('emptyDrafts');
+  if (!list) return;
+
+  if (drafts.length === 0) {
+    list.innerHTML = '<div class="empty-state">草稿區是空的。把腦袋裡的想法丟進來吧。</div>';
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  list.innerHTML = '';
+  drafts.forEach(d => {
+    const isRemindToday = d.remind_date && d.remind_date <= today;
+    const el = document.createElement('div');
+    el.className = 'draft-item' + (isRemindToday ? ' remind-today' : '');
+    el.innerHTML = `
+      <div class="draft-body">
+        <div class="draft-title">${d.title}</div>
+        ${d.description ? `<div class="draft-desc">${d.description}</div>` : ''}
+        <div class="draft-meta">
+          <span>${new Date(d.created_at).toLocaleDateString('zh-TW', { month:'short', day:'numeric' })}</span>
+          ${d.remind_date ? `<span class="${isRemindToday ? 'draft-remind-today-tag' : 'draft-remind-tag'}">${isRemindToday ? '⚠ 該行動了' : '📅 ' + d.remind_date}</span>` : ''}
+        </div>
+      </div>
+      <div class="draft-actions">
+        <button class="btn-promote" onclick="promoteDraft('${d.id}')">提交委託</button>
+        <button class="btn btn-red" onclick="deleteDraft('${d.id}')">刪除</button>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
 function correctCategory(taskId, taskTitle, newCat) {
   // Save correction to localStorage
   const corrections = JSON.parse(localStorage.getItem('chiwu_cat_corrections') || '{}');
@@ -5459,6 +5653,7 @@ function notify(msg, type = 'green') {
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'taskInput') addTask();
   if (e.key === 'Enter' && e.target.id === 'cityInputField') submitCity();
+  if (e.key === 'Enter' && e.target.id === 'draftInput') addDraft();
 });
 
 // ─── START ───────────────────────────────────────────
