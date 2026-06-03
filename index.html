@@ -1363,6 +1363,74 @@
     font-size: 11px; color: var(--text3); white-space: nowrap;
   }
 
+
+  /* ── RECORDS ── */
+  .record-subtabs {
+    display: flex;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    background: var(--bg2);
+  }
+  .record-subtab {
+    flex: 1; padding: 9px; text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: 1px;
+    color: var(--text3); cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .record-subtab:last-child { border-right: none; }
+  .record-subtab.active { color: var(--gold); background: var(--gold-dim); }
+  .record-subtab:hover:not(.active) { color: var(--text); background: var(--bg3); }
+
+  .record-filter-row {
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .record-filter-row .input-field { flex: 1; min-width: 120px; }
+
+  .record-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .record-item.failed-item { opacity: 0.7; border-left: 2px solid var(--red); }
+  .record-item.wish-item { border-left: 2px solid var(--gold); }
+
+  .record-item-body { flex: 1; min-width: 0; }
+  .record-item-title {
+    font-size: 13px; color: var(--text);
+    margin-bottom: 3px;
+    text-decoration: none;
+  }
+  .record-item.failed-item .record-item-title { text-decoration: line-through; color: var(--text3); }
+  .record-item-meta {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text3);
+  }
+  .record-item-right {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: var(--text3);
+    text-align: right; flex-shrink: 0;
+  }
+
+  .record-pagination {
+    display: flex; gap: 6px; justify-content: center;
+    margin-top: 12px; flex-wrap: wrap;
+  }
+  .page-btn {
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text2); padding: 5px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; cursor: pointer;
+  }
+  .page-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+  .page-btn:hover:not(.active) { border-color: var(--border2); }
+
   @media (max-width: 600px) {
     .equip-grid { grid-template-columns: repeat(2, 1fr); }
     .inventory-grid { grid-template-columns: 1fr 1fr; }
@@ -1488,6 +1556,7 @@
     <div class="tab" onclick="switchTab('npc')">👥 居民</div>
     <div class="tab" onclick="switchTab('decor')">🏠 裝潢</div>
     <div class="tab" onclick="switchTab('bag')">🎒 背包</div>
+    <div class="tab" onclick="switchTab('records')">📜 紀錄</div>
     <div class="tab" onclick="switchTab('debt')">💸 帳務</div>
   </div>
 
@@ -1653,6 +1722,45 @@
       <div style="height:4px;background:var(--bg);border:1px solid var(--border);margin-top:4px;overflow:hidden">
         <div id="fragmentBar" style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 0.5s;width:0%"></div>
       </div>
+    </div>
+
+  </div>
+
+  <!-- RECORDS TAB -->
+  <div class="tab-content" id="tab-records">
+
+    <!-- Sub tabs -->
+    <div class="record-subtabs">
+      <div class="record-subtab active" onclick="switchRecordTab('tasks')" id="rtab-tasks">📋 任務紀錄</div>
+      <div class="record-subtab" onclick="switchRecordTab('wishes')" id="rtab-wishes">🛍 心願紀錄</div>
+      <div class="record-subtab" onclick="switchRecordTab('failed')" id="rtab-failed">💀 失敗紀錄</div>
+    </div>
+
+    <!-- Task records -->
+    <div id="rcontent-tasks">
+      <div class="record-filter-row">
+        <input type="text" class="input-field" id="taskRecordSearch" placeholder="搜尋任務名稱..." style="font-size:12px;padding:7px 10px" oninput="renderTaskRecords()" />
+        <select class="input-field" id="taskRecordCat" style="font-size:12px;padding:7px 10px;max-width:130px" onchange="renderTaskRecords()">
+          <option value="">全部分類</option>
+          <option>日常委託</option>
+          <option>專注委託</option>
+          <option>外出委託</option>
+          <option>社交委託</option>
+          <option>任務委託</option>
+        </select>
+      </div>
+      <div id="taskRecordList"></div>
+      <div class="record-pagination" id="taskRecordPager"></div>
+    </div>
+
+    <!-- Wish records -->
+    <div id="rcontent-wishes" style="display:none">
+      <div id="wishRecordList"></div>
+    </div>
+
+    <!-- Failed records -->
+    <div id="rcontent-failed" style="display:none">
+      <div id="failedRecordList"></div>
     </div>
 
   </div>
@@ -4220,6 +4328,7 @@ async function init() {
     await loadItemState();
     initRustyState();
     await loadDrafts();
+    await loadPurchasedItems();
     renderAll();
     initWeather();
     setTimeout(() => {
@@ -5608,6 +5717,123 @@ function renderDrafts() {
   });
 }
 
+// ─── RECORDS SYSTEM ──────────────────────────────────
+let currentRecordTab = 'tasks';
+let taskRecordPage = 1;
+const RECORDS_PER_PAGE = 20;
+let purchasedItems = [];
+
+async function loadPurchasedItems() {
+  try {
+    const rows = await sb('shop_items?purchased=eq.true&select=*&order=created_at.desc');
+    purchasedItems = rows || [];
+  } catch(e) {}
+}
+
+function switchRecordTab(tab) {
+  currentRecordTab = tab;
+  ['tasks','wishes','failed'].forEach(t => {
+    document.getElementById('rtab-' + t)?.classList.toggle('active', t === tab);
+    const el = document.getElementById('rcontent-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+  });
+  if (tab === 'tasks') renderTaskRecords();
+  if (tab === 'wishes') renderWishRecords();
+  if (tab === 'failed') renderFailedRecords();
+}
+
+function renderTaskRecords() {
+  const search = (document.getElementById('taskRecordSearch')?.value || '').toLowerCase();
+  const cat = document.getElementById('taskRecordCat')?.value || '';
+  const list = document.getElementById('taskRecordList');
+  if (!list) return;
+
+  let filtered = completedTasks.filter(t => {
+    if (cat && t.category !== cat) return false;
+    if (search && !t.title.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / RECORDS_PER_PAGE));
+  taskRecordPage = Math.min(taskRecordPage, totalPages);
+  const start = (taskRecordPage - 1) * RECORDS_PER_PAGE;
+  const page = filtered.slice(start, start + RECORDS_PER_PAGE);
+
+  if (page.length === 0) {
+    list.innerHTML = '<div class="empty-state">沒有符合條件的紀錄</div>';
+    document.getElementById('taskRecordPager').innerHTML = '';
+    return;
+  }
+
+  list.innerHTML = page.map(t => {
+    const date = t.completed_at ? new Date(t.completed_at).toLocaleDateString('zh-TW', { year:'numeric', month:'short', day:'numeric' }) : '';
+    const catClass = getCatClass(t.category);
+    return `<div class="record-item">
+      <div class="record-item-body">
+        <div class="record-item-title">${t.title}</div>
+        <div class="record-item-meta">
+          ${t.category ? `<span class="reward-tag ${catClass}" style="font-size:10px;padding:1px 6px">${t.category}</span>` : ''}
+          ${t.size ? `<span>${t.size}</span>` : ''}
+          ${t.exp_reward ? `<span style="color:var(--exp-color)">+${t.exp_reward} EXP</span>` : ''}
+          ${t.coin_reward ? `<span style="color:var(--gold)">+${t.coin_reward} ◈</span>` : ''}
+        </div>
+      </div>
+      <div class="record-item-right">${date}</div>
+    </div>`;
+  }).join('');
+
+  // Pagination
+  const pager = document.getElementById('taskRecordPager');
+  if (totalPages <= 1) { pager.innerHTML = ''; return; }
+  let btns = '';
+  for (let i = 1; i <= totalPages; i++) {
+    btns += `<button class="page-btn ${i === taskRecordPage ? 'active' : ''}" onclick="taskRecordPage=${i};renderTaskRecords()">${i}</button>`;
+  }
+  pager.innerHTML = `<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-right:8px">共 ${total} 筆</span>` + btns;
+}
+
+function renderWishRecords() {
+  const list = document.getElementById('wishRecordList');
+  if (!list) return;
+  const purchased = shopItems.filter(i => i.purchased);
+  if (purchased.length === 0) {
+    list.innerHTML = '<div class="empty-state">尚未兌換任何心願</div>';
+    return;
+  }
+  list.innerHTML = purchased.map(item => `
+    <div class="record-item wish-item">
+      <div class="record-item-body">
+        <div class="record-item-title">✓ ${item.name}</div>
+        ${item.description ? `<div class="record-item-meta">${item.description}</div>` : ''}
+      </div>
+      <div class="record-item-right" style="color:var(--gold)">◈ ${item.cost}</div>
+    </div>
+  `).join('');
+}
+
+function renderFailedRecords() {
+  const list = document.getElementById('failedRecordList');
+  if (!list) return;
+  const failed = [...tasks, ...completedTasks].filter(t => t.status === 'failed');
+  if (failed.length === 0) {
+    list.innerHTML = '<div class="empty-state">沒有失敗紀錄，繼續保持！</div>';
+    return;
+  }
+  list.innerHTML = failed.map(t => {
+    const date = t.deadline ? `截止 ${t.deadline}` : '';
+    return `<div class="record-item failed-item">
+      <div class="record-item-body">
+        <div class="record-item-title">${t.title}</div>
+        <div class="record-item-meta">
+          ${t.category || ''}
+          ${date ? `<span style="color:var(--red)">${date}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function correctCategory(taskId, taskTitle, newCat) {
   // Save correction to localStorage
   const corrections = JSON.parse(localStorage.getItem('chiwu_cat_corrections') || '{}');
@@ -5626,7 +5852,7 @@ function correctCategory(taskId, taskTitle, newCat) {
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t, i) => {
-    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'debt'];
+    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'records', 'debt'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => {
@@ -5639,6 +5865,10 @@ function switchTab(name) {
     else if (hint) hint.style.display = 'none';
   }
   if (name === 'bag') renderBag();
+  if (name === 'records') {
+    taskRecordPage = 1;
+    renderTaskRecords();
+  }
 }
 
 function notify(msg, type = 'green') {
