@@ -3129,6 +3129,387 @@ const LEVEL_STORIES = {
       { id: "lv20_c", label: "先什麼都不做，觀察接下來會發生什麼", hiddenEffects: { routeB: 2, cityAwareness: 3, guildPressure: 1 } }
     ],
     unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  21: {
+    level: 21,
+    title: "正式的名字",
+    chapter: "第一部：霧下成形",
+    npc: ["娜娜", "葛莉達・鐵心"],
+    moodTags: ["商會", "被承認", "責任", "名字的重量"],
+    spoilerFreePreview: "有人第一次用商會的名字稱呼你，而不是叫你外鄉人。",
+    fullStory: `娜娜說，市場那邊有人開始叫你「無印商會的人」。
+
+你問她這個名字是怎麼出現的。她說她也不知道，只是有一天大家就這樣叫了，可能是你幫過的某個人說的，也可能是伊萊工坊那邊傳出去的，總之名字就出現了。
+
+「你要不要留著？」她問，語氣很輕鬆，像是在問你要不要多買一包香料。
+
+你沒有立刻回答。一個名字意味著你的委託會被記錄在下城的人脈網路裡，意味著有人可以找到你，意味著你有了一個可以被追究的身份。
+
+你說你要想一下。
+
+晚上回到公寓，葛莉達在走廊換一個壞掉的管件，鏽斑坐在她旁邊打呵欠。
+
+「你今天心事很重，」她說，連頭都沒抬，「不用說，我猜到了。」
+
+她把管件鎖好，站起來說：「名字這種東西，你不給，別人也會給。與其讓別人替你定義，不如你自己先說清楚你是什麼。」
+
+然後她拎著工具走了，留下鏽斑坐在走廊中間瞪著你。`,
+    choices: [
+      { id: "lv21_a", label: "決定正式採用「無印商會」這個名字，讓娜娜幫忙在市場傳開", hiddenEffects: { routeA: 2, merchantReputation: 3, npcTrust: { nana: 2 } } },
+      { id: "lv21_b", label: "說先不要用正式名字，繼續以個人方式接委託，保持彈性", hiddenEffects: { routeB: 2, npcTrust: { greta: 2 }, cityAwareness: 1 } },
+      { id: "lv21_c", label: "去問席爾，一個名字在下城意味著什麼", hiddenEffects: { routeC: 1, routeB: 1, npcTrust: { sear: 2 }, cityAwareness: 2 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  22: {
+    level: 22,
+    title: "不對的重量",
+    chapter: "第一部：霧下成形",
+    npc: ["伊萊・碎晶"],
+    moodTags: ["異常", "工坊", "靈石", "看不見的線索"],
+    spoilerFreePreview: "伊萊叫你看一樣東西，說他需要你的意見。",
+    fullStory: `伊萊不是會主動找人的人，所以你那天收到他的紙條時，有一點意外。
+
+紙條上只有一句話：「來工坊，帶你上次幫我跑腿拿回來的那個鐵盒。」
+
+你去了。
+
+他把那個鐵盒拿出來，放在燈下，用一個你不認識的工具在上面比了很久。
+
+「你拿到這個的時候，那個倉庫還有什麼？」他問。
+
+你說了一些細節——舊燈罩、廢棄的蒸汽管、幾個沒人要的木箱。
+
+他沉默了一會兒，說：「這個盒子的重量不對。」
+
+你問什麼意思。
+
+他說：「你用手秤一下。」
+
+你拿起鐵盒，是很普通的重量。
+
+他說：「現在。」他把盒子放在他的秤上，指針跳了一下，然後往一個你沒預期的數字走去。
+
+「它比應該的重，」他說，「不是很多，但它比空盒子重一點點，而且不是金屬造成的差異。」
+
+他把盒子還你，說：「你自己決定要不要繼續查。」
+
+他的義眼在那一刻沒有發光，但你覺得他一直在觀察你的反應。`,
+    choices: [
+      { id: "lv22_a", label: "請伊萊幫忙拆開鐵盒，一起查清楚", hiddenEffects: { routeC: 2, npcTrust: { eli: 3 }, cityAwareness: 2, guildPressure: 1 } },
+      { id: "lv22_b", label: "把鐵盒帶走，自己查，但不告訴更多人", hiddenEffects: { routeA: 1, routeC: 1, cityAwareness: 2 } },
+      { id: "lv22_c", label: "先把盒子放在工坊，等更多線索出現再說", hiddenEffects: { routeB: 2, npcTrust: { eli: 2 }, cityAwareness: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  23: {
+    level: 23,
+    title: "席爾說的那條線",
+    chapter: "第一部：霧下成形",
+    npc: ["席爾・煙霧"],
+    moodTags: ["警告", "上城", "邊界", "沉默的智慧"],
+    spoilerFreePreview: "席爾第一次說了一些比平常更直接的話。",
+    fullStory: `那天霧中燈只有你們兩個，連平常坐角落的那個老人都沒出現。
+
+席爾把一杯咖啡放在你面前，說：「你最近接的委託，有幾個來自上城中層的人。」
+
+你說你知道，那幾個委託金額不錯，也沒有什麼問題。
+
+他坐下來，說：「我不是說那些委託有問題。」
+
+他停了一下，把咖啡杯在桌上轉了半圈。
+
+「上城的人開始主動往下城找人，這件事本身值得注意。他們不是因為信任下城，是因為下城有他們需要的東西，但他們不方便自己來拿。」
+
+你問，那你怎麼辦。
+
+「我不是叫你拒絕，」他說，「我是說，你要知道，你替他們做事，就算完成得很乾淨，你在他們眼裡也不是合作夥伴，是工具。一旦你不再有用，或者有更便宜的選項，他們不會給你任何交代就換人。」
+
+他站起來，說：「這是下城的智識，你拿去用。」
+
+然後他回去繼續擦杯子，沒有再說什麼。`,
+    choices: [
+      { id: "lv23_a", label: "主動去找席爾談，想了解更多關於上城人在下城的動向", hiddenEffects: { routeC: 2, npcTrust: { sear: 3 }, cityAwareness: 3, guildPressure: 1 } },
+      { id: "lv23_b", label: "調整商會的委託篩選方式，盡量只接下城本地的業務", hiddenEffects: { routeA: 2, merchantReputation: 2, npcTrust: { sear: 1 } } },
+      { id: "lv23_c", label: "繼續接上城的委託，但開始默默記錄那些人的名字和需求", hiddenEffects: { routeB: 1, routeC: 1, cityAwareness: 2, guildPressure: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  24: {
+    level: 24,
+    title: "托比帶來的半句話",
+    chapter: "第一部：霧下成形",
+    npc: ["托比"],
+    moodTags: ["行會", "不完整的消息", "少年", "危險邊緣"],
+    spoilerFreePreview: "托比說了一件事，然後很快說他不確定，但你覺得他確定。",
+    fullStory: `托比來找你的時候，臉色比平常白一點。
+
+他說他最近在行會裡聽到一些話，說有幾個人在討論「整頓下城的委託流向」，說行會想要更清楚掌握下城哪些商會或個人在接什麼類型的委託。
+
+「我不知道這是不是真的，」他說，「我只是剛好在走廊聽到一點，然後他們就進去關門了，我不確定我聽對了。」
+
+你看著他。他眼神飄，手上的本子捏得有點緊。
+
+你說，你覺得他聽對了。
+
+他沉默了一下，點了點頭，又馬上搖頭，說：「我不確定，真的，你不要太放心上。」
+
+然後他說他最近不太方便來找你，說行會那邊最近管得比較嚴，說他可能要等一陣子才能再聊。
+
+他走之前，你看到他手上本子夾著一張紙，是一個名字，你沒看清楚，但那個字體不像他的筆跡。
+
+他沒有讓你看，也沒有提起那張紙。`,
+    choices: [
+      { id: "lv24_a", label: "讓托比知道你沒事，叫他保重，不要為你冒險", hiddenEffects: { routeA: 2, npcTrust: { toby: 3 }, merchantReputation: 1 } },
+      { id: "lv24_b", label: "問托比那張夾在本子裡的紙是什麼", hiddenEffects: { routeC: 2, npcTrust: { toby: 1 }, guildPressure: 2, cityAwareness: 2 } },
+      { id: "lv24_c", label: "什麼都不問，讓托比走，然後去找席爾說這件事", hiddenEffects: { routeB: 2, npcTrust: { sear: 2 }, cityAwareness: 2, guildPressure: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  25: {
+    level: 25,
+    title: "那個委託不對",
+    chapter: "第一部：霧下成形",
+    npc: ["娜娜", "葛莉達・鐵心", "伊萊・碎晶"],
+    moodTags: ["壓力", "選擇", "不對勁", "代價"],
+    spoilerFreePreview: "有一個委託擺在你面前，三個人給了三種不同的建議。",
+    fullStory: `那個委託是一個匿名業主透過娜娜轉來的，說要你幫忙把一批「舊文件」從下城第三區的一個地址搬到城外的一個據點，附帶說明是「私人物品清理，不需要登記」。
+
+報酬是你接過最高的一次，幾乎是正常跑腿的四倍。
+
+娜娜說她有點不確定，但業主是她認識的人介紹來的，她說如果你不想接她可以幫你推掉。
+
+你去碎光工坊問伊萊。他聽完，沉默了一下，問：「那個地址在第三區哪一條巷子？」
+
+你說了。他沉默更久一點，然後說：「那條巷子去年有一間倉庫被行會封過，說是違規使用。後來重新開了，但沒有正式備案。」
+
+他沒有說你應不應該接。
+
+你回到公寓，葛莉達剛好在門口。你說了這件事，她沒有猶豫：「那種委託，你不要碰。不是因為一定有問題，是因為你沒辦法查清楚，而你承擔不起事情出了問題的代價。」
+
+她說：「你現在不是一個人在跑腿，你有一個名字了。名字出了問題，不是你一個人的事。」
+
+三個人，三種說法，但沒有一個人告訴你答案。`,
+    choices: [
+      { id: "lv25_a", label: "拒絕這個委託，讓娜娜幫忙推掉，不追問來源", hiddenEffects: { routeA: 3, merchantReputation: 2, npcTrust: { greta: 2, nana: 1 } } },
+      { id: "lv25_b", label: "接下委託，但先去查清楚那個地址的背景再動作", hiddenEffects: { routeC: 3, cityAwareness: 3, guildPressure: 2, npcTrust: { eli: 2 } } },
+      { id: "lv25_c", label: "要求業主透過娜娜重新說明委託內容，等對方給出完整資訊再決定", hiddenEffects: { routeB: 3, npcTrust: { nana: 2 }, merchantReputation: 1, cityAwareness: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  26: {
+    level: 26,
+    title: "下城怎麼看你",
+    chapter: "第一部：霧下成形",
+    npc: ["娜娜", "葛莉達・鐵心"],
+    moodTags: ["聲譽", "人情", "商會定位", "選擇的重量"],
+    spoilerFreePreview: "你開始感覺到，不同的人對你的商會有不同的期待。",
+    fullStory: `娜娜說，最近市場有一些新的外鄉人在問你的名字，說他們想找靠譜的人接委託。
+
+這本來是好事，但她接著說：「問題是，你現在在下城的口碑有點分裂。有一批人覺得你可靠，接什麼都會做到。另一批人覺得你太謹慎，有些委託你不接，他們就去找別人了，然後說你沒有下城人的靈活。」
+
+她說這是中立的觀察，沒有批評的意思。
+
+葛莉達那天晚上敲你的門，說走廊的蒸汽管要換了，問你明天有沒有空幫她搬一個重的零件。你說有。
+
+搬的時候，她說：「我聽說下城有人說你太軟，說你不夠懂規矩。」
+
+你問她覺得呢。
+
+她用義肢手指緊了一下扳手，說：「懂規矩的意思，在下城有兩種。一種是知道哪些事做得，哪些事碰不得。另一種是什麼都願意做，說那叫靈活。」
+
+她說：「你自己選你想成為哪一種。」
+
+你把那個管件搬好，沒有說話。`,
+    choices: [
+      { id: "lv26_a", label: "決定明確告訴娜娜，商會有哪些類型的委託不接，讓她幫忙傳出去", hiddenEffects: { routeA: 2, merchantReputation: 3, npcTrust: { nana: 2, greta: 1 } } },
+      { id: "lv26_b", label: "不設限制，繼續視情況決定，讓商會保持彈性", hiddenEffects: { routeB: 1, routeC: 1, merchantReputation: 1, cityAwareness: 1 } },
+      { id: "lv26_c", label: "去問一些下城的老住民，他們覺得一個商會應該是什麼樣子", hiddenEffects: { routeB: 2, cityAwareness: 3, npcTrust: { greta: 2 } } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  27: {
+    level: 27,
+    title: "工坊裡的第三塊",
+    chapter: "第一部：霧下成形",
+    npc: ["伊萊・碎晶", "席爾・煙霧"],
+    moodTags: ["靈石", "線索", "工坊", "更大的拼圖"],
+    spoilerFreePreview: "伊萊說，那個刻印又出現了，而且不只一次。",
+    fullStory: `伊萊叫你來工坊，說有東西要給你看。
+
+桌上放著三件東西：你之前在廢棄房間找到的靈石、鐵盒裡取出的某個零件、還有一塊他從別的委託收進來的碎片。
+
+三件東西上面，有同一個刻印。
+
+「不是一樣的人刻的，」他說，「比對過了，手法不同，年代不同。但符號一樣。」
+
+你看著那三件東西，想說話，但沒有想好說什麼。
+
+「我查過這個符號，」他說，「行會的公開資料裡沒有。但我在一本很舊的工坊手冊裡見過類似的，說是舊時代的靈石標記，用來追蹤特定批次的靈石流向。」
+
+他把手冊推過來，你翻到那一頁，看到的字跡已經半褪色，旁邊有人用另一種墨水加了一行備注，說「此系列已於三十年前由行會回收銷毀」。
+
+你把手冊還他。
+
+他說：「你知道我下一步想做什麼，我也知道你知道。問題是，那樣做有風險，我一個人不打算做。」
+
+他等你說話。`,
+    choices: [
+      { id: "lv27_a", label: "同意和伊萊一起繼續查，兩個人分工", hiddenEffects: { routeC: 3, npcTrust: { eli: 3 }, guildPressure: 2, cityAwareness: 2 } },
+      { id: "lv27_b", label: "說先把這些東西的資料拍下來，帶去給席爾看，再決定下一步", hiddenEffects: { routeB: 2, npcTrust: { eli: 1, sear: 2 }, cityAwareness: 2 } },
+      { id: "lv27_c", label: "說你需要時間，叫伊萊先把東西收好，暫時不動", hiddenEffects: { routeA: 2, npcTrust: { eli: 1 }, guildPressure: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  28: {
+    level: 28,
+    title: "走廊盡頭的那封信",
+    chapter: "第一部：霧下成形",
+    npc: ["葛莉達・鐵心", "托比"],
+    moodTags: ["信件", "過去", "行會暗流", "選擇誰相信"],
+    spoilerFreePreview: "有一封信不是寫給你的，但和你有關。",
+    fullStory: `那天早上你在走廊發現地上有一封信，沒有信封，只是折起來的一張紙，掉在地上像是不小心從哪裡滑落的。
+
+你拿起來，上面寫著一個名字，不是你的名字，是葛莉達的。
+
+你猶豫了一下，但信是打開的，你看到了幾行字——說有人想要「重新確認下城某些房產的使用人資格」，說對方會安排時間來做記錄，說如果有疑問可以聯絡行會中層的某個名字。
+
+你把信拿給葛莉達。她看了很久，義肢的手指捏緊，然後放開。
+
+「這不是第一次了，」她說，「上次是五年前，也是這種說法，我那時候直接拒絕，後來什麼事都沒有。但這次不一樣。」
+
+你問她哪裡不一樣。
+
+她說：「上次沒有人知道你住在這裡。」
+
+同一天下午，托比突然來找你，說他在行會的布告欄上看到一個你的名字出現在一份「下城委託紀錄核查」的名單上，說他不確定這是例行的還是針對你的。`,
+    choices: [
+      { id: "lv28_a", label: "跟葛莉達一起想辦法，讓她知道你會站在她這邊", hiddenEffects: { routeA: 2, routeB: 1, npcTrust: { greta: 4 }, merchantReputation: 1 } },
+      { id: "lv28_b", label: "先去找席爾，把這兩件事都說了，看他怎麼判斷", hiddenEffects: { routeB: 2, npcTrust: { sear: 3 }, cityAwareness: 2, guildPressure: 1 } },
+      { id: "lv28_c", label: "讓托比幫你查那份名單，看你出現在哪個項目下面", hiddenEffects: { routeC: 2, npcTrust: { toby: 3 }, guildPressure: 3, cityAwareness: 1 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  29: {
+    level: 29,
+    title: "前夜",
+    chapter: "第一部：霧下成形",
+    npc: ["葛莉達・鐵心", "席爾・煙霧", "娜娜", "托比", "伊萊・碎晶"],
+    moodTags: ["凝重", "各自的提醒", "選擇前夜", "鑄霧城的霧"],
+    spoilerFreePreview: "在某件事發生之前，五個人各自說了一句話。",
+    fullStory: `那幾天，每個人都說了一些話，但沒有一個人說完整。
+
+葛莉達在走廊碰到你，說：「你最近很少在家，注意一下。」她沒說注意什麼。
+
+席爾在霧中燈等你，說：「你手上的那些東西，有些比你以為的更重要，但重要不代表你要一個人扛著。」他沒說讓誰來扛。
+
+娜娜在市場攔住你，說：「有幾個新的委託在問你，但我覺得你最近不適合接太雜，你自己拿捏。」她沒說為什麼不適合。
+
+托比從行會那邊跑來，說：「那份名單的事，我再查了一下，和你有關的那個項目下面有一個備注，我沒辦法看完整，但我看到一個日期，是這個月的。」他說完就走了，沒說那個日期是什麼意思。
+
+伊萊最後說了一句：「不管你決定怎麼做，那三塊靈石我幫你放好了，需要的時候說一聲。」他說完繼續修東西，好像說的是一件很普通的事。
+
+你一個人坐在公寓的房間裡，窗外是鑄霧城的夜景，蒸汽和燈光混在一起。
+
+你知道有什麼東西快要發生了，但你還是不知道那是什麼。`,
+    choices: [
+      { id: "lv29_a", label: "把這幾天每個人說的話都寫下來，重新整理一遍，看看有沒有你忽略的關聯", hiddenEffects: { routeA: 1, routeC: 1, cityAwareness: 2, merchantReputation: 1 } },
+      { id: "lv29_b", label: "去找席爾，說你想把你知道的全部告訴他，請他幫你判斷下一步", hiddenEffects: { routeB: 3, npcTrust: { sear: 4 }, cityAwareness: 1 } },
+      { id: "lv29_c", label: "決定明天主動去行會，用商會的名義正式詢問那份名單的事", hiddenEffects: { routeA: 2, routeC: 1, guildPressure: 3, merchantReputation: 2 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
+  },
+
+  30: {
+    level: 30,
+    title: "第一部的門",
+    chapter: "第一部：霧下成形",
+    npc: ["葛莉達・鐵心", "席爾・煙霧", "娜娜", "托比", "伊萊・碎晶"],
+    moodTags: ["收束", "轉折", "門打開了", "下一段路"],
+    spoilerFreePreview: "在這座城市住了一段時間之後，有些事情清楚了，有些事情變得更複雜。",
+    variants: {
+      A: {
+        variantId: "A",
+        title: "商會站穩了",
+        npc: ["葛莉達・鐵心", "娜娜", "伊萊・碎晶"],
+        fullStory: `事情是在一個普通的早上發生的。
+
+行會的人來到無印商會掛牌的地址，說是例行檢查，說只要確認幾份委託記錄就可以了。
+
+你把記錄交出去，清清楚楚，沒有任何一筆需要說明來源的東西。對方看完，蓋了章，說一切合規，然後就走了。
+
+娜娜在市場聽說了這件事，說整個下城都知道了，說行會的人來查、查完蓋章走人，這個結果比任何廣告都有效。
+
+伊萊說，那三塊靈石的事可以暫時放著，說目前的情況不需要動。他說：「你先把商會穩住，有些事情等你更有籌碼再說。」
+
+葛莉達那天晚上說了一句你沒預期的話：「你在鑄霧城活下來了。但下城的事只是開始，你記著，有些東西在更高的地方，還沒看到你。」
+
+鏽斑那天蹲在你的房間門口，等你回來，然後跟了你進去。
+
+你不確定前面是什麼，但你知道你的名字已經在這座城市裡站穩了。那三塊帶著刻印的靈石放在工坊的架子上，它們還在等待一個你還不知道的答案。`,
+        nextChapterHook: "商會的穩定帶來了新的注意——不只是下城的，還有更遠的地方。靈石的謎題還沒有結束，而有人在很遠的地方，已經注意到那個刻印。",
+        hiddenEffects: { merchantReputation: 3, npcTrust: { greta: 2, nana: 2, eli: 1 }, cityAwareness: 1 }
+      },
+      B: {
+        variantId: "B",
+        title: "席爾給了你一個名字",
+        npc: ["席爾・煙霧", "托比", "葛莉達・鐵心"],
+        fullStory: `那個答案是席爾給你的。
+
+他說，那份行會名單上你的名字旁邊，備注的是一個人的代號，說是那個人「希望追蹤」的對象。他說他花了一段時間，才把那個代號對應到一個真實身份——是一個在行會做上層業務的人，不住在下城，但他在下城有很多眼線。
+
+「他為什麼注意我？」你問。
+
+席爾說：「因為你的商會在做一件他沒辦法控制的事——你建立了一個下城人相信的流通網路，但你不欠他任何東西。」
+
+托比那天也說了一些話，說他在行會裡聽到有人說你的名字，說的方式不像是在抱怨你，更像是在評估你。
+
+葛莉達說：「你現在知道的，比你可以公開說的多。」她停了一下，「這個城市的人都是這樣活著的，歡迎加入。」
+
+你站在窗口，看著下城的蒸汽燈在霧裡一盞一盞亮著。
+
+你以為你只是來這裡找個立足點，但你現在持有的東西，已經不只是委託記錄了。那個人的代號，和那三塊靈石的刻印，在你腦子裡慢慢對上了某條線。但那條線通往哪裡，你還不知道。`,
+        nextChapterHook: "那個代號後面的人，和靈石刻印的來源，可能指向同一個地方。席爾說，下城只是入口，問題的答案在更深的地方。",
+        hiddenEffects: { cityAwareness: 3, npcTrust: { sear: 3, toby: 2 }, guildPressure: 1 }
+      },
+      C: {
+        variantId: "C",
+        title: "那塊靈石說話了",
+        npc: ["伊萊・碎晶", "席爾・煙霧", "葛莉達・鐵心"],
+        fullStory: `伊萊說，他找到了。
+
+他把那塊有刻印的靈石放在一個特殊的工具架上，接上了幾條導線，說這個測試通常用在鑑定靈石批次，但他改了一下，讓它可以讀那個刻印的頻率。
+
+讀出來的結果是一串數字，他說那是一個舊時代的登記碼，說這個系統三十年前就被宣布廢止了，但這塊靈石的碼是真實的，不是偽造的。
+
+「這塊靈石在三十年前還存在，」他說，「而且它是被追蹤的對象。」
+
+他把數字給席爾看，席爾沉默了很久，說：「這個碼我在一個很舊的地方見過，但我以為那批東西早就不在了。」
+
+葛莉達知道這件事之後，說了一句你沒預期的話：「我年輕時在上城工廠做事，那個工廠後來出了一件事，說是靈石批次出了問題，然後工廠關了，很多人失業。我一直不知道那個批次去哪裡了。」
+
+三個人，三種視角，指向同一件事的不同側面。
+
+你把那個登記碼記在本子裡，知道這是某個很大的問題的邊緣。那個問題的中心，在下城以上的某個地方，還沒有開口說話。`,
+        nextChapterHook: "那個登記碼連接的，不只是靈石，還有三十年前一場從未被公開說清楚的事故。伊萊說，如果你想繼續查，你需要進入下城以外的地方。",
+        hiddenEffects: { cityAwareness: 3, guildPressure: 2, npcTrust: { eli: 3, sear: 2, greta: 2 } }
+      }
+    },
+    choices: [
+      { id: "lv30_a", label: "把第一部這段時間的事情整理成一份記錄，留著備用", hiddenEffects: { routeA: 2, merchantReputation: 2, cityAwareness: 1 } },
+      { id: "lv30_b", label: "去找席爾，告訴他你準備好繼續了", hiddenEffects: { routeB: 2, npcTrust: { sear: 3 }, cityAwareness: 2 } },
+      { id: "lv30_c", label: "去找伊萊，說那個登記碼你想繼續查", hiddenEffects: { routeC: 2, npcTrust: { eli: 3 }, guildPressure: 2 } }
+    ],
+    unlocked: false, selectedChoiceId: null, readAt: null
   }
 
 };
@@ -3192,6 +3573,31 @@ function checkAndShowStory(newLevel) {
   showStoryModal(story);
 }
 
+// ── Lv.30 variant 判定 ────────────────────────────────
+function getStoryVariant(story) {
+  if (!story.variants) return null;
+  const s = storyState;
+  const a = s.routeA || 0, b = s.routeB || 0, c = s.routeC || 0;
+  if (a > b && a > c) return story.variants.A;
+  if (b > a && b > c) return story.variants.B;
+  if (c > a && c > b) return story.variants.C;
+  // tie-break 1: NPC trust
+  const trust = s.npcTrust || {};
+  const npcA = (trust.greta||0) + (trust.nana||0);
+  const npcB = (trust.sear||0) + (trust.toby||0);
+  const npcC = (trust.eli||0);
+  if (npcA > npcB && npcA > npcC) return story.variants.A;
+  if (npcB > npcA && npcB > npcC) return story.variants.B;
+  if (npcC > npcA && npcC > npcB) return story.variants.C;
+  // tie-break 2: stats
+  const repA = (s.merchantReputation||0);
+  const awareC = (s.cityAwareness||0);
+  const pressB = (s.guildPressure||0);
+  if (repA >= awareC && repA >= pressB) return story.variants.A;
+  if (pressB > repA && pressB >= awareC) return story.variants.B;
+  return story.variants.C;
+}
+
 function showStoryModal(story) {
   const existing = document.getElementById('storyModal');
   if (existing) existing.remove();
@@ -3202,6 +3608,25 @@ function showStoryModal(story) {
     position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;
     display:flex;align-items:center;justify-content:center;padding:20px;
   `;
+
+  // Determine content: variant (Lv.30) or normal
+  let displayTitle = story.title;
+  let displayContent = story.fullStory || '';
+  let variantBadge = '';
+
+  if (story.variants) {
+    const variant = getStoryVariant(story);
+    if (variant) {
+      displayTitle = variant.title;
+      displayContent = variant.fullStory;
+      variantBadge = `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cyan);margin-top:4px;letter-spacing:1px">第一部收束 · 你的鑄霧城</div>`;
+      const vKey = 'chiwu_variant_applied_lv' + story.level;
+      if (!localStorage.getItem(vKey) && variant.hiddenEffects) {
+        applyChoiceEffects(variant.hiddenEffects);
+        localStorage.setItem(vKey, '1');
+      }
+    }
+  }
 
   const hasChosen = !!story.selectedChoiceId;
   const choicesHtml = hasChosen
@@ -3224,11 +3649,12 @@ function showStoryModal(story) {
       <div style="padding:16px 20px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px">LV.${story.level} · ${story.chapter}</div>
-          <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);margin-top:4px">${story.title}</div>
+          <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);margin-top:4px">${displayTitle}</div>
+          ${variantBadge}
         </div>
         <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="closeStoryModal()">✕</span>
       </div>
-      <div style="padding:20px;font-size:14px;color:var(--text);line-height:2;white-space:pre-line">${story.fullStory}</div>
+      <div style="padding:20px;font-size:14px;color:var(--text);line-height:2;white-space:pre-line">${displayContent}</div>
       <div style="padding:16px 20px;border-top:1px solid var(--border2)">
         <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:1px">${hasChosen ? '已選擇' : '你會怎麼做？'}</div>
         ${choicesHtml}
