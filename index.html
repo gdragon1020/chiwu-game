@@ -4629,13 +4629,14 @@ function applyEquipmentEffects(baseExp, baseCoins, task) {
 }
 
 // ─── CHARGE SYSTEM ───────────────────────────────────
-function getDateKey() { return new Date().toDateString(); }
+// getDayKey: returns locale date string (e.g. "Thu Jun 04 2025"), used for charge/login daily resets
+function getDayKey() { return new Date().toDateString(); }
 
 async function updateChargeProgress(task) {
   const effects = getEquippedEffects().filter(e => e.type === 'charge');
   for (const ef of effects) {
     const state = chargeState[ef.chargeName] || { count: 0, lastGainedDate: '', lastUsedDate: '' };
-    const today = getDateKey();
+    const today = getDayKey();
     const cond = ef.gainCondition;
     const matches = cond.category ? task.category === cond.category : (cond.sameCategory ? task.category === chainTracker.lastCategory : true);
     if (matches && state.lastGainedDate !== today) {
@@ -4654,13 +4655,13 @@ async function updateChargeProgress(task) {
 }
 
 function hasCharge(chargeName) {
-  const today = getDateKey();
+  const today = getDayKey();
   const state = chargeState[chargeName];
   return state && state.last_gained_date === today && state.last_used_date !== today;
 }
 
 async function consumeCharge(chargeName) {
-  const today = getDateKey();
+  const today = getDayKey();
   if (!hasCharge(chargeName)) return false;
   chargeState[chargeName].last_used_date = today;
   await sb(`charge_state?charge_name=eq.${chargeName}`, 'PATCH', { last_used_date: today });
@@ -4669,7 +4670,7 @@ async function consumeCharge(chargeName) {
 
 // ─── DAILY LOGIN ─────────────────────────────────────
 async function checkDailyLogin() {
-  const today = getDateKey();
+  const today = getDayKey();
   const key = 'dailyLogin_' + today;
   if (localStorage.getItem(key)) return;
   localStorage.setItem(key, '1');
