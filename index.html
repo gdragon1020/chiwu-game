@@ -404,6 +404,48 @@
     100% { transform: translateX(100%); opacity: 0; height: 0; padding: 0; margin: 0; }
   }
 
+  .urgency-btn {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .urgency-btn:hover { transform: scale(1.3); }
+  .urgency-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .urgency-0 { background: var(--border2); }
+  .urgency-1 { background: #5cb85c; }
+  .urgency-2 { background: #f0a050; }
+  .urgency-3 { background: #e05c5c; box-shadow: 0 0 4px rgba(224,92,92,0.6); }
+
+  .urgency-selector {
+    position: absolute;
+    right: 60px; top: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    padding: 6px 8px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .urgency-selector-item {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; padding: 3px 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: var(--text2);
+  }
+  .urgency-selector-item:hover { background: var(--bg3); }
+
+  .task-item.urgency-high { border-left: 3px solid #e05c5c; }
+  .task-item.urgency-med  { border-left: 3px solid #f0a050; }
+
   .task-check {
     width: 20px; height: 20px;
     border: 2px solid var(--border2);
@@ -3363,7 +3405,18 @@ let chestState = { tasks_since_last_chest:0, consecutive_no_equip:0, total_chest
 let fragments = 0;
 let pendingEffects = []; // active consumable effects
 let dailyTaskCounts = {}; // { category: count } reset daily
-let chainTracker = { lastCategory: null, chainCount: 0 };
+let chainTracker = (() => {
+  const today = new Date().toDateString();
+  const saved = localStorage.getItem('chiwu_chain_' + today);
+  if (saved) return JSON.parse(saved);
+  return { lastCategory: null, chainCount: 0, date: today };
+})();
+
+function saveChainTracker() {
+  const today = new Date().toDateString();
+  chainTracker.date = today;
+  localStorage.setItem('chiwu_chain_' + today, JSON.stringify(chainTracker));
+}
 let dailyLoginDone = false;
 
 async function loadItemState() {
@@ -3578,7 +3631,11 @@ function applyEquipmentEffects(baseExp, baseCoins, task) {
       }
       if (chainTracker.chainCount >= ef.chainIndex) {
         if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+        // Reset chain after trigger
+        chainTracker.chainCount = 0;
+        chainTracker.lastCategory = null;
       }
+      saveChainTracker();
     }
   });
 
@@ -4012,7 +4069,7 @@ function renderRustyCat() {
     animation:${dailyRustyState.claimed ? 'none' : 'rustyPulse 2s ease-in-out infinite'};
     z-index:10;
   `;
-  cat.innerHTML = `<img src="character/Rust_ban.png" alt="鏽斑" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;mix-blend-mode:screen;">`;
+  cat.innerHTML = `<img src="character/Rust_ban.png" alt="" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;mix-blend-mode:screen;" onerror="this.style.display='none';this.parentElement.textContent='🐱'">`;
   cat.title = dailyRustyState.claimed ? '鏽斑今天已經給你東西了' : dailyRustyState.moodText;
   cat.onclick = () => {
     if (dailyRustyState.claimed) {
@@ -4141,8 +4198,8 @@ function renderStatusPanel() {
   effects.forEach(ef => {
     if (ef.type === 'chainBonus') {
       const current = chainTracker.chainCount;
-      const active = current >= ef.chainIndex;
-      tags.push(`<span class="status-tag ${active ? 'active' : 'pending'}">🔗 連鎖第${ef.chainIndex}個任務 EXP +${ef.valuePercent}%${active ? '（已連鎖）' : `（目前${current}連）`}</span>`);
+      const needed = ef.chainIndex - 1; // need this many same-cat before trigger
+      tags.push(`<span class="status-tag pending">🔗 連鎖第${ef.chainIndex}個同類任務 EXP +${ef.valuePercent}%（目前${current}連，再${Math.max(0, ef.chainIndex - current - 1)}個觸發）</span>`);
     }
   });
 
@@ -4210,6 +4267,13 @@ function renderStatusPanel() {
 
 function renderAll() {
   renderPlayer();
+  // Sort tasks by urgency then created_at
+  tasks.sort((a, b) => {
+    const ua = a.urgency || 0;
+    const ub = b.urgency || 0;
+    if (ub !== ua) return ub - ua;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
   renderTasks();
   renderShop();
   renderNPCs();
@@ -4259,9 +4323,11 @@ function renderTasks() {
   tasks.forEach(t => {
     const el = document.createElement('div');
     const cd = getCooldownStatus(t);
-    el.className = 'task-item' + (t.status === 'failed' ? ' overdue' : (t.deadline && isOverdue(t.deadline) ? ' overdue' : '')) + (cd.onCooldown ? ' on-cooldown' : '');
+    const urgencyClass = t.urgency === 3 ? ' urgency-high' : t.urgency === 2 ? ' urgency-med' : '';
+    el.className = 'task-item' + (t.status === 'failed' ? ' overdue' : (t.deadline && isOverdue(t.deadline) ? ' overdue' : '')) + (cd.onCooldown ? ' on-cooldown' : '') + urgencyClass;
     el.id = 'task-' + t.id;
     el.innerHTML = `
+      <div class="urgency-dot urgency-${t.urgency || 0}" onclick="showUrgencySelector('${t.id}', event)" title="設定急迫性" style="cursor:pointer"></div>
       <div class="task-check" onclick="completeTask('${t.id}')">✓</div>
       <div class="task-body">
         <div class="task-name">${t.title}</div>
@@ -5301,6 +5367,49 @@ function openFurnitureModal(slot, slotLabel) {
 
 function closeSlotInfo() {
   document.getElementById('slotInfoPanel').style.display = 'none';
+}
+
+const URGENCY_LABELS = ['無', '低', '中', '高'];
+const URGENCY_COLORS = ['var(--border2)', '#5cb85c', '#f0a050', '#e05c5c'];
+
+function showUrgencySelector(taskId, event) {
+  event.stopPropagation();
+  document.querySelectorAll('.urgency-selector').forEach(el => el.remove());
+
+  const sel = document.createElement('div');
+  sel.className = 'urgency-selector';
+  sel.innerHTML = [3,2,1,0].map(u => `
+    <div class="urgency-selector-item" onclick="setUrgency('${taskId}', ${u}); this.closest('.urgency-selector').remove()">
+      <div style="width:10px;height:10px;border-radius:50%;background:${URGENCY_COLORS[u]};flex-shrink:0"></div>
+      <span>${URGENCY_LABELS[u]}</span>
+    </div>
+  `).join('');
+
+  document.body.appendChild(sel);
+  const rect = event.target.getBoundingClientRect();
+  sel.style.position = 'fixed';
+  sel.style.top = (rect.bottom + 4) + 'px';
+  sel.style.left = rect.left + 'px';
+
+  setTimeout(() => document.addEventListener('click', () => sel.remove(), { once: true }), 10);
+}
+
+async function setUrgency(taskId, level) {
+  await sb(`tasks?id=eq.${taskId}`, 'PATCH', { urgency: level });
+  const task = tasks.find(t => t.id === taskId);
+  if (task) task.urgency = level;
+  sortAndRenderTasks();
+}
+
+function sortAndRenderTasks() {
+  tasks.sort((a, b) => {
+    const ua = a.urgency || 0;
+    const ub = b.urgency || 0;
+    if (ub !== ua) return ub - ua; // higher urgency first
+    // same urgency: newer created_at first
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+  renderTasks();
 }
 
 function correctCategory(taskId, taskTitle, newCat) {
