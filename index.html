@@ -1509,6 +1509,136 @@
     width: 20px; flex-shrink: 0;
   }
 
+
+  /* ── CALENDAR ── */
+  .cal-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .cal-month-title {
+    font-family: 'Cinzel', serif;
+    font-size: 16px; color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .cal-nav-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text2); width: 28px; height: 28px;
+    cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .cal-nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .cal-weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 2px; margin-bottom: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: var(--text3);
+    text-align: center; padding: 0 1px;
+  }
+
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .cal-day {
+    background: var(--bg2); border: 1px solid var(--border);
+    min-height: 64px; padding: 5px;
+    cursor: pointer; transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .cal-day:hover { border-color: var(--border2); background: var(--bg3); }
+  .cal-day.today { border-color: var(--gold); }
+  .cal-day.other-month { opacity: 0.35; }
+  .cal-day.selected { border-color: var(--cyan); background: rgba(78,205,196,0.07); }
+
+  .cal-day-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; color: var(--text2);
+    margin-bottom: 3px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .cal-today-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); flex-shrink: 0;
+  }
+  .cal-day-tasks {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text3);
+  }
+  .cal-day-events { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 3px; }
+  .cal-event-chip {
+    font-size: 10px; padding: 1px 4px;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold); max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .cal-event-chip.birthday { background: rgba(240,112,112,0.1); border-color: rgba(240,112,112,0.3); color: #f07070; }
+  .cal-event-chip.academic { background: rgba(126,184,247,0.1); border-color: rgba(126,184,247,0.3); color: var(--exp-color); }
+  .cal-event-chip.travel   { background: rgba(110,208,110,0.1); border-color: rgba(110,208,110,0.3); color: var(--green); }
+  .cal-event-chip.social   { background: rgba(208,140,240,0.1); border-color: rgba(208,140,240,0.3); color: #d08cf0; }
+  .cal-event-chip.deadline { background: rgba(240,160,80,0.1);  border-color: rgba(240,160,80,0.3);  color: #f0a050; }
+
+  /* Day detail */
+  .cal-detail {
+    margin-top: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border2);
+  }
+  .cal-detail-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .cal-detail-date {
+    font-family: 'Cinzel', serif;
+    font-size: 14px; color: var(--gold);
+  }
+  .cal-detail-body { padding: 14px 16px; }
+
+  .cal-section-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text3);
+    letter-spacing: 2px; margin-bottom: 8px; margin-top: 14px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  .cal-section-title:first-child { margin-top: 0; }
+
+  .cal-event-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 10px; background: var(--bg2);
+    border: 1px solid var(--border); margin-bottom: 6px;
+  }
+  .cal-event-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .cal-event-info { flex: 1; min-width: 0; }
+  .cal-event-title { font-size: 13px; color: var(--text); margin-bottom: 2px; }
+  .cal-event-meta { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text3); }
+  .cal-delete-btn { color: var(--text3); cursor: pointer; font-size: 12px; padding: 2px 4px; }
+  .cal-delete-btn:hover { color: var(--red); }
+
+  /* Add event modal */
+  .event-type-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px; margin-bottom: 12px;
+  }
+  .event-type-btn {
+    background: var(--bg2); border: 1px solid var(--border);
+    padding: 8px 4px; text-align: center; cursor: pointer;
+    font-size: 11px; color: var(--text2); transition: all 0.2s;
+  }
+  .event-type-btn:hover { border-color: var(--gold); }
+  .event-type-btn.selected { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); }
+  .event-type-btn .eti { font-size: 18px; display: block; margin-bottom: 3px; }
+
+  @media (max-width: 480px) {
+    .cal-day { min-height: 50px; }
+    .cal-event-chip { display: none; }
+    .event-type-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
   @media (max-width: 600px) {
     .stat-grid { grid-template-columns: 1fr 1fr; }
   }
@@ -1648,6 +1778,7 @@
     <div class="tab" onclick="switchTab('npc')">👥 居民</div>
     <div class="tab" onclick="switchTab('decor')">🏠 裝潢</div>
     <div class="tab" onclick="switchTab('bag')">🎒 背包</div>
+    <div class="tab" onclick="switchTab('calendar')">📅 日誌</div>
     <div class="tab" onclick="switchTab('records')">📜 紀錄</div>
     <div class="tab" onclick="switchTab('debt')">💸 帳務</div>
   </div>
@@ -1812,6 +1943,38 @@
       <div style="height:4px;background:var(--bg);border:1px solid var(--border);margin-top:4px;overflow:hidden">
         <div id="fragmentBar" style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 0.5s;width:0%"></div>
       </div>
+    </div>
+
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div class="tab-content" id="tab-calendar">
+
+    <!-- Month nav -->
+    <div class="cal-header">
+      <button class="cal-nav-btn" onclick="calPrevMonth()">‹</button>
+      <div class="cal-month-title" id="calMonthTitle"></div>
+      <button class="cal-nav-btn" onclick="calNextMonth()">›</button>
+      <button class="btn btn-gold" style="margin-left:auto;font-size:11px;padding:6px 14px" onclick="openAddEventModal()">+ 新增活動</button>
+    </div>
+
+    <!-- Weekday headers -->
+    <div class="cal-weekdays">
+      <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div>
+      <div style="color:rgba(201,168,76,0.7)">六</div>
+      <div style="color:rgba(240,112,112,0.7)">日</div>
+    </div>
+
+    <!-- Calendar grid -->
+    <div class="cal-grid" id="calGrid"></div>
+
+    <!-- Day detail panel -->
+    <div class="cal-detail" id="calDetail" style="display:none">
+      <div class="cal-detail-header">
+        <div class="cal-detail-date" id="calDetailDate"></div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="document.getElementById('calDetail').style.display='none'">✕</span>
+      </div>
+      <div class="cal-detail-body" id="calDetailBody"></div>
     </div>
 
   </div>
@@ -4777,6 +4940,403 @@ function applySummaryBuff(task, expGain, coinGain) {
   return { exp, coins };
 }
 
+
+// ─── CALENDAR SYSTEM ─────────────────────────────────
+const EVENT_TYPES = {
+  birthday: { icon:'🎂', label:'生日／紀念日', color:'birthday' },
+  academic:  { icon:'🎓', label:'學術／工作',  color:'academic' },
+  travel:    { icon:'🚆', label:'行程／旅行',  color:'travel'  },
+  life:      { icon:'🏠', label:'生活大事',   color:'life'    },
+  social:    { icon:'👥', label:'聚會／社交',  color:'social'  },
+  deadline:  { icon:'🧾', label:'截止／提醒',  color:'deadline'},
+  other:     { icon:'✨', label:'其他',       color:'other'   },
+};
+
+const PREP_TASKS = {
+  birthday: [
+    { title:'買禮物', category:'外出委託' },
+    { title:'確認時間', category:'社交委託' },
+    { title:'傳訊息給對方', category:'社交委託' },
+    { title:'出門前收拾包包', category:'日常委託' },
+  ],
+  academic: [
+    { title:'確認時間與地點', category:'專注委託' },
+    { title:'整理要帶的資料', category:'專注委託' },
+    { title:'收拾包包', category:'日常委託' },
+    { title:'規劃交通', category:'外出委託' },
+  ],
+  travel: [
+    { title:'整理行李', category:'日常委託' },
+    { title:'確認住宿或票券', category:'專注委託' },
+    { title:'規劃交通', category:'外出委託' },
+    { title:'傳訊息確認行程', category:'社交委託' },
+  ],
+  life: [
+    { title:'列出需要準備的東西', category:'專注委託' },
+    { title:'收拾相關物品', category:'日常委託' },
+    { title:'辦手續', category:'外出委託' },
+    { title:'聯絡相關人', category:'社交委託' },
+  ],
+  social: [
+    { title:'確認時間地點', category:'社交委託' },
+    { title:'出門前準備', category:'日常委託' },
+    { title:'傳訊息確認', category:'社交委託' },
+    { title:'規劃交通', category:'外出委託' },
+  ],
+  deadline: [
+    { title:'拆分截止任務', category:'任務委託' },
+    { title:'完成第一步', category:'專注委託' },
+    { title:'檢查資料', category:'專注委託' },
+    { title:'設提醒', category:'日常委託' },
+  ],
+  other: [
+    { title:'確認相關事項', category:'專注委託' },
+    { title:'準備所需物品', category:'日常委託' },
+  ],
+};
+
+let calendarEvents = [];
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let selectedCalDate = null;
+
+async function loadCalendarEvents() {
+  try {
+    const rows = await sb('calendar_events?select=*&order=start_at.asc');
+    calendarEvents = rows || [];
+  } catch(e) { console.error('loadCalendarEvents error:', e); }
+}
+
+function calPrevMonth() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+function calNextMonth() {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const title = document.getElementById('calMonthTitle');
+  if (title) title.textContent = `${calYear} 年 ${calMonth+1} 月`;
+
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay = new Date(calYear, calMonth+1, 0);
+
+  // Start from Monday
+  let startOffset = firstDay.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+
+  const cells = [];
+  // Prev month padding
+  for (let i = startOffset; i > 0; i--) {
+    const d = new Date(firstDay); d.setDate(d.getDate() - i);
+    cells.push({ date: d, otherMonth: true });
+  }
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    cells.push({ date: new Date(calYear, calMonth, d), otherMonth: false });
+  }
+  // Next month padding
+  while (cells.length % 7 !== 0) {
+    const last = cells[cells.length-1].date;
+    const next = new Date(last); next.setDate(next.getDate()+1);
+    cells.push({ date: next, otherMonth: true });
+  }
+
+  grid.innerHTML = '';
+  cells.forEach(({ date, otherMonth }) => {
+    const dateKey = date.toISOString().slice(0,10);
+    const isToday = date.getTime() === today.getTime();
+    const isSelected = selectedCalDate === dateKey;
+
+    // Tasks completed that day
+    const dayTasks = completedTasks.filter(t => t.completed_at && t.completed_at.slice(0,10) === dateKey);
+    // Events that day
+    const dayEvents = calendarEvents.filter(e => {
+      const sd = e.start_at?.slice(0,10);
+      const ed = e.end_at?.slice(0,10) || sd;
+      return dateKey >= sd && dateKey <= ed;
+    });
+    // Tasks with deadline that day
+    const deadlineTasks = tasks.filter(t => t.deadline === dateKey);
+
+    const el = document.createElement('div');
+    el.className = 'cal-day' + (otherMonth?' other-month':'') + (isToday?' today':'') + (isSelected?' selected':'');
+    el.onclick = () => { selectedCalDate = dateKey; showCalDayDetail(dateKey); renderCalendar(); };
+
+    let eventsHtml = dayEvents.slice(0,2).map(e => {
+      const et = EVENT_TYPES[e.event_type] || EVENT_TYPES.other;
+      return `<div class="cal-event-chip ${e.event_type}">${et.icon} ${e.title}</div>`;
+    }).join('');
+    if (dayEvents.length > 2) eventsHtml += `<div class="cal-event-chip">+${dayEvents.length-2}</div>`;
+
+    const deadlineHtml = deadlineTasks.length > 0
+      ? `<div style="font-size:9px;color:#f0a050;font-family:'Share Tech Mono',monospace">⏰ ${deadlineTasks.length}個到期</div>` : '';
+
+    el.innerHTML = `
+      <div class="cal-day-num">
+        ${isToday ? '<div class="cal-today-dot"></div>' : ''}
+        ${date.getDate()}
+      </div>
+      ${dayTasks.length > 0 ? `<div class="cal-day-tasks">✓ ${dayTasks.length}</div>` : ''}
+      ${deadlineHtml}
+      <div class="cal-day-events">${eventsHtml}</div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function showCalDayDetail(dateKey) {
+  const panel = document.getElementById('calDetail');
+  const body = document.getElementById('calDetailBody');
+  const dateTitle = document.getElementById('calDetailDate');
+  if (!panel || !body) return;
+
+  const d = new Date(dateKey + 'T00:00:00');
+  dateTitle.textContent = `${d.getMonth()+1} 月 ${d.getDate()} 日`;
+  panel.style.display = '';
+
+  const dayEvents = calendarEvents.filter(e => {
+    const sd = e.start_at?.slice(0,10);
+    const ed = e.end_at?.slice(0,10) || sd;
+    return dateKey >= sd && dateKey <= ed;
+  });
+  const dayCompleted = completedTasks.filter(t => t.completed_at?.slice(0,10) === dateKey);
+  const dayDeadlines = tasks.filter(t => t.deadline === dateKey);
+  const dayScheduled = tasks.filter(t => t.scheduled_date === dateKey);
+
+  let html = '';
+
+  // Events
+  if (dayEvents.length > 0) {
+    html += `<div class="cal-section-title">今日活動</div>`;
+    html += dayEvents.map(e => {
+      const et = EVENT_TYPES[e.event_type] || EVENT_TYPES.other;
+      const timeStr = e.all_day ? '全天' : (e.start_at ? new Date(e.start_at).toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'}) : '');
+      return `<div class="cal-event-item">
+        <div class="cal-event-icon">${et.icon}</div>
+        <div class="cal-event-info">
+          <div class="cal-event-title">${e.title}</div>
+          <div class="cal-event-meta">${et.label}${timeStr ? ' · '+timeStr : ''}${e.location ? ' · '+e.location : ''}</div>
+        </div>
+        <div style="display:flex;gap:4px">
+          <span class="cal-delete-btn" onclick="openPrepTaskModal('${e.id}')" title="生成準備任務">+任務</span>
+          <span class="cal-delete-btn" onclick="deleteCalEvent('${e.id}')">✕</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Deadline tasks
+  if (dayDeadlines.length > 0) {
+    html += `<div class="cal-section-title">今日截止</div>`;
+    html += dayDeadlines.map(t => `
+      <div style="padding:6px 10px;background:rgba(240,160,80,0.08);border:1px solid rgba(240,160,80,0.3);margin-bottom:5px;font-size:12px;color:var(--text2)">
+        ⏰ ${t.title} <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">${t.category||''}</span>
+      </div>`).join('');
+  }
+
+  // Completed tasks
+  if (dayCompleted.length > 0) {
+    const totalExp = dayCompleted.reduce((s,t)=>s+(t.exp_reward||0),0);
+    const totalGold = dayCompleted.reduce((s,t)=>s+(t.coin_reward||0),0);
+    html += `<div class="cal-section-title">今日完成（${dayCompleted.length} 個）</div>`;
+    html += `<div style="display:flex;gap:12px;margin-bottom:8px;font-family:'Share Tech Mono',monospace;font-size:11px">
+      <span style="color:var(--exp-color)">⚡ +${totalExp} EXP</span>
+      <span style="color:var(--gold)">◈ +${totalGold}</span>
+    </div>`;
+    html += dayCompleted.slice(0,10).map(t => `
+      <div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)">
+        ✓ ${t.title}
+        <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-left:6px">${t.category||''}</span>
+      </div>`).join('');
+    if (dayCompleted.length > 10) html += `<div style="font-size:11px;color:var(--text3);margin-top:4px">還有 ${dayCompleted.length-10} 個...</div>`;
+  }
+
+  if (!dayEvents.length && !dayCompleted.length && !dayDeadlines.length) {
+    html = '<div style="color:var(--text3);text-align:center;padding:20px;font-size:13px">這天沒有任何記錄</div>';
+  }
+
+  body.innerHTML = html;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Add event modal
+function openAddEventModal(prefillDate) {
+  const existing = document.getElementById('addEventModal');
+  if (existing) existing.remove();
+
+  const today = prefillDate || selectedCalDate || new Date().toISOString().slice(0,10);
+
+  const modal = document.createElement('div');
+  modal.id = 'addEventModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const typeBtns = Object.entries(EVENT_TYPES).map(([key, et]) =>
+    `<div class="event-type-btn" data-type="${key}" onclick="selectEventType('${key}')">
+      <span class="eti">${et.icon}</span>${et.label}
+    </div>`
+  ).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:460px;width:100%;max-height:85vh;overflow-y:auto">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold)">+ 新增生活活動</div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="document.getElementById('addEventModal').remove()">✕</span>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">活動類型</div>
+        <div class="event-type-grid">${typeBtns}</div>
+        <input type="hidden" id="newEventType" value="other">
+
+        <div style="margin-bottom:10px">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:5px">活動名稱</div>
+          <input type="text" class="input-field" id="newEventTitle" placeholder="例：研討會、幫誰慶生..." style="width:100%;font-size:13px">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:5px">開始日期</div>
+            <input type="date" class="input-field" id="newEventStart" value="${today}" style="width:100%;font-size:12px">
+          </div>
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:5px">結束日期（選填）</div>
+            <input type="date" class="input-field" id="newEventEnd" style="width:100%;font-size:12px">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:5px">地點（選填）</div>
+            <input type="text" class="input-field" id="newEventLocation" placeholder="地點..." style="width:100%;font-size:12px">
+          </div>
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:5px">相關人物（選填）</div>
+            <input type="text" class="input-field" id="newEventPerson" placeholder="人名..." style="width:100%;font-size:12px">
+          </div>
+        </div>
+
+        <textarea class="input-field" id="newEventDesc" placeholder="備注（選填）..." style="width:100%;height:56px;resize:none;font-size:12px;margin-bottom:12px"></textarea>
+
+        <button class="btn btn-gold" onclick="submitAddEvent()" style="width:100%">新增活動</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  // Default select 'other'
+  selectEventType('other');
+}
+
+function selectEventType(type) {
+  document.querySelectorAll('.event-type-btn').forEach(b => b.classList.toggle('selected', b.dataset.type === type));
+  const hidden = document.getElementById('newEventType');
+  if (hidden) hidden.value = type;
+}
+
+async function submitAddEvent() {
+  const title = document.getElementById('newEventTitle')?.value.trim();
+  if (!title) { notify('請輸入活動名稱', 'red'); return; }
+  const eventType = document.getElementById('newEventType')?.value || 'other';
+  const startDate = document.getElementById('newEventStart')?.value;
+  const endDate = document.getElementById('newEventEnd')?.value || null;
+  const location = document.getElementById('newEventLocation')?.value.trim() || null;
+  const person = document.getElementById('newEventPerson')?.value.trim() || null;
+  const desc = document.getElementById('newEventDesc')?.value.trim() || null;
+
+  const record = {
+    title, event_type: eventType,
+    start_at: startDate + 'T00:00:00',
+    end_at: endDate ? endDate + 'T23:59:59' : null,
+    all_day: true, location, related_person: person, description: desc
+  };
+  const saved = await sb('calendar_events', 'POST', record);
+  calendarEvents.push(saved[0]);
+  document.getElementById('addEventModal')?.remove();
+  notify(`✦ 活動「${title}」已新增`, 'gold');
+  renderCalendar();
+  if (selectedCalDate) showCalDayDetail(selectedCalDate);
+
+  // Ask about prep tasks
+  setTimeout(() => openPrepTaskModal(saved[0].id), 300);
+}
+
+async function deleteCalEvent(id) {
+  if (!confirm('確定要刪除這個活動？')) return;
+  await sb(`calendar_events?id=eq.${id}`, 'DELETE');
+  calendarEvents = calendarEvents.filter(e => e.id !== id);
+  notify('活動已刪除', 'gold');
+  renderCalendar();
+  if (selectedCalDate) showCalDayDetail(selectedCalDate);
+}
+
+function openPrepTaskModal(eventId) {
+  const event = calendarEvents.find(e => e.id === eventId);
+  if (!event) return;
+  const preps = PREP_TASKS[event.event_type] || PREP_TASKS.other;
+  const et = EVENT_TYPES[event.event_type] || EVENT_TYPES.other;
+
+  const existing = document.getElementById('prepTaskModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'prepTaskModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:3100;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const prepRows = preps.map((p, i) => `
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;color:var(--text2)">
+      <input type="checkbox" id="prep_${i}" checked style="accent-color:var(--gold)">
+      <span style="flex:1">${p.title}</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">${p.category}</span>
+    </label>`).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:420px;width:100%">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border2)">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold)">${et.icon} 為「${event.title}」建立準備委託</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'Share Tech Mono',monospace">勾選要加入任務板的項目</div>
+      </div>
+      <div style="padding:14px 20px">${prepRows}</div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('prepTaskModal').remove()">跳過</button>
+        <button class="btn btn-gold" style="flex:1" onclick="submitPrepTasks('${eventId}', ${preps.length})">加入任務板</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function submitPrepTasks(eventId, count) {
+  const event = calendarEvents.find(e => e.id === eventId);
+  const preps = PREP_TASKS[event?.event_type] || [];
+  const deadline = event?.start_at?.slice(0,10) || null;
+
+  for (let i = 0; i < count; i++) {
+    const cb = document.getElementById('prep_' + i);
+    if (!cb?.checked) continue;
+    const p = preps[i];
+    if (!p) continue;
+    const newTask = {
+      title: p.title,
+      category: p.category,
+      size: '微任務',
+      urgency: 1,
+      deadline,
+      exp_reward: 5,
+      coin_reward: 2
+    };
+    const saved = await sb('tasks', 'POST', newTask);
+    if (saved?.[0]) tasks.push({ ...saved[0], status: 'pending' });
+  }
+  document.getElementById('prepTaskModal')?.remove();
+  notify('準備委託已加入任務板！', 'gold');
+  renderAll();
+}
+
 // ─── INIT ───────────────────────────────────────────
 async function init() {
   try {
@@ -4803,6 +5363,7 @@ async function init() {
     initRustyState();
     await loadDrafts();
     await loadPurchasedItems();
+    await loadCalendarEvents();
     renderAll();
     initWeather();
     setTimeout(() => {
@@ -6584,7 +7145,7 @@ function correctCategory(taskId, taskTitle, newCat) {
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t, i) => {
-    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'records', 'debt'];
+    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'calendar', 'records', 'debt'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => {
@@ -6597,6 +7158,7 @@ function switchTab(name) {
     else if (hint) hint.style.display = 'none';
   }
   if (name === 'bag') renderBag();
+  if (name === 'calendar') renderCalendar();
   if (name === 'records') {
     taskRecordPage = 1;
     renderTaskRecords();
