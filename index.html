@@ -4970,12 +4970,15 @@ function getDeadlineText(deadline) {
 // ─── NPC VISIT ───────────────────────────────────────
 function triggerNPCVisit() {
   if (Math.random() > 0.35) return;
-  const count = completedTasks.length;
+  const today = new Date().toDateString();
+  const todayCount = completedTasks.filter(t => {
+    return t.completed_at && new Date(t.completed_at).toDateString() === today;
+  }).length;
   let tier;
-  if (count === 0) tier = 0;
-  else if (count <= 3) tier = 1;
-  else if (count <= 6) tier = 2;
-  else if (count <= 10) tier = 3;
+  if (todayCount === 0) tier = 0;
+  else if (todayCount <= 3) tier = 1;
+  else if (todayCount <= 6) tier = 2;
+  else if (todayCount <= 10) tier = 3;
   else tier = 4;
 
   const npc = NPC_DATA[Math.floor(Math.random() * NPC_DATA.length)];
