@@ -1624,6 +1624,18 @@
   </div>
 
   <!-- Status Panel -->
+  <!-- Daily Summary Button -->
+  <div style="margin-bottom:8px;margin-top:-8px;display:flex;justify-content:flex-end">
+    <button id="summaryBtn" onclick="doSummary()" style="
+      background:transparent;border:1px solid rgba(201,168,76,0.4);
+      color:var(--gold);padding:6px 14px;
+      font-family:'Share Tech Mono',monospace;font-size:11px;
+      cursor:pointer;letter-spacing:1px;transition:all 0.2s;
+    " onmouseover="this.style.background='var(--gold-dim)'" onmouseout="this.style.background='transparent'">
+      ✦ 每日總結
+    </button>
+  </div>
+
   <div class="status-panel" id="statusPanel">
     <div class="status-panel-title">✦ 目前加成狀態</div>
     <div class="status-tags" id="statusTags">
@@ -4396,6 +4408,377 @@ function showRustyInteractModal() {
   document.body.appendChild(modal);
 }
 
+
+// ─── 每日總結系統 ────────────────────────────────────
+const SUMMARY_BUFF_POOL = {
+  greta: [
+    { id:'greta_daily_exp', title:'房東點頭', description:'下一個日常委託 EXP +10%', condition: s => s.byCategory['日常委託'] >= 3,
+      effect:{ type:'nextCategoryBonus', category:'日常委託', target:'exp', valuePercent:10 } },
+    { id:'greta_daily_gold', title:'先把自己顧好', description:'下一個日常委託額外 +5 金幣', condition: s => s.totalTasks < 5,
+      effect:{ type:'nextCategoryFlat', category:'日常委託', target:'gold', amount:5 } },
+    { id:'greta_any_exp', title:'還算能住', description:'下一個任務 EXP +5%', condition: () => true,
+      effect:{ type:'nextTaskBonus', target:'exp', valuePercent:5 } },
+  ],
+  sear: [
+    { id:'sear_focus_exp', title:'一盞燈就夠', description:'下一個專注委託 EXP +10%', condition: s => s.byCategory['專注委託'] >= 2,
+      effect:{ type:'nextCategoryBonus', category:'專注委託', target:'exp', valuePercent:10 } },
+    { id:'sear_mission_exp', title:'整理過的線索', description:'下一個任務委託 EXP +8%', condition: s => s.byCategory['任務委託'] >= 1,
+      effect:{ type:'nextCategoryBonus', category:'任務委託', target:'exp', valuePercent:8 } },
+    { id:'sear_any_exp', title:'先選三張', description:'下一個任務 EXP +7%', condition: () => true,
+      effect:{ type:'nextTaskBonus', target:'exp', valuePercent:7 } },
+  ],
+  nana: [
+    { id:'nana_outing_gold', title:'跑腿行情', description:'下一個外出委託金幣 +10%', condition: s => s.byCategory['外出委託'] >= 1,
+      effect:{ type:'nextCategoryBonus', category:'外出委託', target:'gold', valuePercent:10 } },
+    { id:'nana_social_gold', title:'熟人價', description:'下一個社交委託金幣 +8%', condition: s => s.byCategory['社交委託'] >= 1,
+      effect:{ type:'nextCategoryBonus', category:'社交委託', target:'gold', valuePercent:8 } },
+    { id:'nana_flat_gold', title:'小賺也是賺', description:'下一個任務額外 +5 金幣', condition: () => true,
+      effect:{ type:'nextTaskFlat', target:'gold', amount:5 } },
+  ],
+  toby: [
+    { id:'toby_any_exp', title:'小委託也算', description:'下一個任務 EXP +5%', condition: () => true,
+      effect:{ type:'nextTaskBonus', target:'exp', valuePercent:5 } },
+    { id:'toby_low_exp', title:'我幫你抽', description:'下一個任務 EXP +10%', condition: s => s.totalTasks < 5,
+      effect:{ type:'nextTaskBonus', target:'exp', valuePercent:10 } },
+    { id:'toby_flat_gold', title:'跑腿少年支援', description:'下一個任務額外 +5 金幣', condition: () => true,
+      effect:{ type:'nextTaskFlat', target:'gold', amount:5 } },
+  ],
+  eli: [
+    { id:'eli_fragment', title:'碎片回收', description:'下一次獲得碎片時額外 +3', condition: s => s.totalFragments < 10,
+      effect:{ type:'nextFragmentBonus', amount:3 } },
+    { id:'eli_chest', title:'箱底補償', description:'下一次寶箱若沒出裝備家具，額外 +3 碎片', condition: s => s.chestsEarned > 0,
+      effect:{ type:'chestPityBonus', amount:3 } },
+    { id:'eli_any_exp', title:'齒輪校準', description:'下一個任務 EXP +5%', condition: () => true,
+      effect:{ type:'nextTaskBonus', target:'exp', valuePercent:5 } },
+  ]
+};
+
+const NPC_SUMMARY_PROMPTS = {
+  greta: '你是葛莉達・鐵心，下城公寓房東，語氣嘴硬但實際照顧人，不輕易誇獎但會承認玩家有撐住。',
+  sear:  '你是席爾・煙霧，霧中燈咖啡館老闆，語氣溫和冷靜，像看懂玩家狀態的人，善於策略分析。',
+  nana:  '你是娜娜，赤沙城來的市場攤販，語氣活潑現實，很會把努力換算成賺到多少。',
+  toby:  '你是托比，行會雜役少年，語氣興奮真誠，笨拙但陪伴感很強。',
+  eli:   '你是伊萊・碎晶，碎光工坊老闆，語氣冷淡技術型，講話像看機械數據，但有一點可靠。'
+};
+
+let activeSummaryBuff = null;
+let summaryHistory = [];
+
+function loadSummaryState() {
+  const buff = localStorage.getItem('chiwu_summary_buff');
+  if (buff) activeSummaryBuff = JSON.parse(buff);
+  const history = localStorage.getItem('chiwu_summary_history');
+  if (history) summaryHistory = JSON.parse(history);
+}
+
+function saveSummaryBuff(buff) {
+  activeSummaryBuff = buff;
+  localStorage.setItem('chiwu_summary_buff', JSON.stringify(buff));
+}
+
+function getLastSummaryTime() {
+  const t = localStorage.getItem('chiwu_last_summary');
+  return t ? parseInt(t) : null;
+}
+
+function canDoSummary() {
+  const last = getLastSummaryTime();
+  if (!last) return true;
+  return Date.now() - last >= 24 * 60 * 60 * 1000;
+}
+
+function getNextSummaryTime() {
+  const last = getLastSummaryTime();
+  if (!last) return null;
+  return new Date(last + 24 * 60 * 60 * 1000);
+}
+
+function getSummaryStartTime() {
+  const last = getLastSummaryTime();
+  if (last) return last;
+  // First time: today 5:00
+  const today5 = new Date(); today5.setHours(5,0,0,0);
+  if (Date.now() < today5.getTime()) today5.setDate(today5.getDate() - 1);
+  return today5.getTime();
+}
+
+function buildSummaryStats(startTime, endTime) {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const period = completedTasks.filter(t => {
+    if (!t.completed_at) return false;
+    const d = new Date(t.completed_at);
+    return d >= start && d < end;
+  });
+
+  const byCategory = { '日常委託':0,'專注委託':0,'外出委託':0,'社交委託':0,'任務委託':0 };
+  let totalExp = 0, totalGold = 0;
+  period.forEach(t => {
+    if (byCategory.hasOwnProperty(t.category)) byCategory[t.category]++;
+    totalExp += t.exp_reward || 0;
+    totalGold += t.coin_reward || 0;
+  });
+
+  const catEntries = Object.entries(byCategory).filter(([,v]) => v > 0);
+  const mostCat = catEntries.length > 0 ? catEntries.sort((a,b)=>b[1]-a[1])[0][0] : null;
+
+  // Fragment count from period (1 per task)
+  const totalFragments = period.length;
+  const completedCategoryCount = catEntries.length;
+  const completedLargeTasks = period.filter(t => t.size === '大任務').length;
+  const deadlineTasksCompleted = period.filter(t => t.deadline).length;
+
+  // Rusty claimed today
+  const dateKey = getRustyDateKey();
+  const rustyState = localStorage.getItem('chiwu_rusty_' + dateKey);
+  const rustyClaimed = rustyState ? JSON.parse(rustyState).claimed : false;
+
+  return {
+    totalTasks: period.length,
+    byCategory, totalExp, totalGold,
+    totalFragments, chestsEarned: 0,
+    completedLargeTasks, deadlineTasksCompleted,
+    usedDelayTickets: 0, rustyClaimed,
+    npcFunctionsUsed: [],
+    mostCompletedCategory: mostCat,
+    completedCategoryCount
+  };
+}
+
+function selectSummaryBuff(npcId, stats) {
+  const pool = SUMMARY_BUFF_POOL[npcId];
+  const eligible = pool.filter(b => b.condition(stats));
+  const best = eligible[0] || pool[pool.length-1];
+  return {
+    id: best.id,
+    title: best.title,
+    description: best.description,
+    sourceNpcId: npcId,
+    effect: best.effect,
+    consumed: false,
+    createdAt: Date.now()
+  };
+}
+
+async function generateSummaryComment(npcId, stats, startTime, endTime) {
+  const npc = NPC_DATA.find(n => n.id === npcId || n.name.includes(
+    npcId === 'greta' ? '葛莉達' : npcId === 'sear' ? '席爾' :
+    npcId === 'nana' ? '娜娜' : npcId === 'toby' ? '托比' : '伊萊'
+  ));
+  const npcName = npc ? npc.name : npcId;
+  const persona = NPC_SUMMARY_PROMPTS[npcId];
+  const startStr = new Date(startTime).toLocaleString('zh-TW');
+  const endStr = new Date(endTime).toLocaleString('zh-TW');
+
+  const prompt = `${persona}
+
+玩家在 ${startStr} 到 ${endStr} 之間的任務紀錄如下：
+完成任務總數：${stats.totalTasks} 個
+各類別：日常委託 ${stats.byCategory['日常委託']}、專注委託 ${stats.byCategory['專注委託']}、外出委託 ${stats.byCategory['外出委託']}、社交委託 ${stats.byCategory['社交委託']}、任務委託 ${stats.byCategory['任務委託']}
+獲得 EXP：${stats.totalExp}、金幣：${stats.totalGold}、碎片：${stats.totalFragments}
+完成大型任務：${stats.completedLargeTasks} 個
+完成種類數：${stats.completedCategoryCount} 種
+最常完成：${stats.mostCompletedCategory || '無'}
+
+請用你的角色語氣，對玩家這段期間的紀錄做 80～150 字的評論。
+規則：
+1. 必須提到至少一個實際統計結果
+2. 不可以責備玩家或說「你應該更努力」
+3. 最後給一句短短的下一步建議
+4. 不要暴露系統數值
+5. 用繁體中文回答`;
+
+  try {
+    const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    return data.content?.[0]?.text?.trim() || '（評論生成失敗，但這段冒險的紀錄已經留下了。）';
+  } catch(e) {
+    return '（網路連線問題，無法取得評論。但你這段時間的努力都被記錄下來了。）';
+  }
+}
+
+async function doSummary() {
+  if (!canDoSummary()) {
+    const next = getNextSummaryTime();
+    notify(`距離上次總結還不到24小時，下次可總結時間：${next.toLocaleString('zh-TW', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`, 'red');
+    return;
+  }
+
+  // Show loading
+  showSummaryLoadingModal();
+
+  const startTime = getSummaryStartTime();
+  const endTime = Date.now();
+  const stats = buildSummaryStats(startTime, endTime);
+
+  // Pick random NPC
+  const npcIds = ['greta','sear','nana','toby','eli'];
+  const npcId = npcIds[Math.floor(Math.random() * npcIds.length)];
+  const npc = NPC_DATA.find(n => n.name.includes(
+    npcId === 'greta' ? '葛莉達' : npcId === 'sear' ? '席爾' :
+    npcId === 'nana' ? '娜娜' : npcId === 'toby' ? '托比' : '伊萊'
+  ));
+
+  // Generate buff and comment
+  const buff = selectSummaryBuff(npcId, stats);
+  const comment = await generateSummaryComment(npcId, stats, startTime, endTime);
+
+  // Save
+  localStorage.setItem('chiwu_last_summary', endTime.toString());
+  saveSummaryBuff(buff);
+  const record = { startedAt: startTime, endedAt: endTime, npcId, stats, aiComment: comment, grantedBuff: buff, createdAt: endTime };
+  summaryHistory.unshift(record);
+  if (summaryHistory.length > 30) summaryHistory = summaryHistory.slice(0, 30);
+  localStorage.setItem('chiwu_summary_history', JSON.stringify(summaryHistory));
+
+  // Show result
+  showSummaryResultModal(record, npc);
+}
+
+function showSummaryLoadingModal() {
+  const existing = document.getElementById('summaryModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'summaryModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:480px;width:100%;padding:40px;text-align:center">
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);margin-bottom:12px">✦ 每日總結</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text3)">正在整理這段冒險的紀錄...</div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function showSummaryResultModal(record, npc) {
+  const modal = document.getElementById('summaryModal');
+  if (!modal) return;
+  const s = record.stats;
+  const buff = record.grantedBuff;
+  const startStr = new Date(record.startedAt).toLocaleString('zh-TW', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const endStr = new Date(record.endedAt).toLocaleString('zh-TW', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const catRows = Object.entries(s.byCategory).filter(([,v])=>v>0)
+    .map(([cat,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text2)">${cat}</span><span style="font-family:'Share Tech Mono',monospace;color:var(--gold)">${n}</span></div>`).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--gold);max-width:520px;width:100%;max-height:88vh;overflow-y:auto">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold)">✦ 每日總結</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-top:3px">${startStr} → ${endStr}</div>
+        </div>
+        <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="document.getElementById('summaryModal').remove()">✕</span>
+      </div>
+
+      <!-- NPC comment -->
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          ${npc?.img ? `<img src="${npc.img}" style="width:52px;height:52px;object-fit:cover;object-position:top;flex-shrink:0">` : `<div style="font-size:32px;flex-shrink:0">${npc?.emoji||'👤'}</div>`}
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:6px">${npc?.name || ''}</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.8">${record.aiComment}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:10px">SUMMARY</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="background:var(--bg2);padding:10px;text-align:center">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">完成任務</div>
+            <div style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold)">${s.totalTasks}</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px;text-align:center">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">獲得 EXP</div>
+            <div style="font-family:'Cinzel',serif;font-size:20px;color:var(--exp-color)">${s.totalExp}</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px;text-align:center">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">獲得金幣</div>
+            <div style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold)">◈ ${s.totalGold}</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px;text-align:center">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">獲得碎片</div>
+            <div style="font-family:'Cinzel',serif;font-size:20px;color:var(--cyan)">${s.totalFragments}</div>
+          </div>
+        </div>
+        ${catRows ? `<div style="margin-top:8px">${catRows}</div>` : ''}
+        ${s.rustyClaimed ? '<div style="font-size:11px;color:var(--gold);margin-top:8px">🐱 今日找到鏽斑</div>' : ''}
+        ${s.completedLargeTasks > 0 ? `<div style="font-size:11px;color:var(--exp-color);margin-top:4px">⭐ 完成大型任務 ${s.completedLargeTasks} 個</div>` : ''}
+      </div>
+
+      <!-- Buff -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">總結餘韻</div>
+        <div style="background:var(--gold-dim);border:1px solid rgba(201,168,76,0.4);padding:12px">
+          <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:4px">✦ ${buff.title}</div>
+          <div style="font-size:12px;color:var(--text2)">${buff.description}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-top:6px">觸發一次後消失</div>
+        </div>
+      </div>
+
+      <div style="padding:14px 20px">
+        <button class="btn btn-gold" style="width:100%" onclick="document.getElementById('summaryModal').remove();renderStatusPanel()">收下，繼續前進</button>
+      </div>
+    </div>`;
+}
+
+// Apply summary buff when completing a task
+function applySummaryBuff(task, expGain, coinGain) {
+  if (!activeSummaryBuff || activeSummaryBuff.consumed) return { exp: expGain, coins: coinGain };
+  const ef = activeSummaryBuff.effect;
+  let exp = expGain, coins = coinGain;
+
+  if (ef.type === 'nextTaskBonus') {
+    if (ef.target === 'exp') exp = Math.ceil(exp * (1 + ef.valuePercent/100));
+    else coins = Math.ceil(coins * (1 + ef.valuePercent/100));
+    activeSummaryBuff.consumed = true;
+    saveSummaryBuff(activeSummaryBuff);
+    notify(`✦ 總結餘韻「${activeSummaryBuff.title}」觸發！`, 'gold');
+  } else if (ef.type === 'nextCategoryBonus' && ef.category === task.category) {
+    if (ef.target === 'exp') exp = Math.ceil(exp * (1 + ef.valuePercent/100));
+    else coins = Math.ceil(coins * (1 + ef.valuePercent/100));
+    activeSummaryBuff.consumed = true;
+    saveSummaryBuff(activeSummaryBuff);
+    notify(`✦ 總結餘韻「${activeSummaryBuff.title}」觸發！`, 'gold');
+  } else if (ef.type === 'nextTaskFlat' && ef.target === 'gold') {
+    setTimeout(async () => {
+      await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + ef.amount });
+      player.coins += ef.amount;
+      renderPlayer();
+      notify(`✦ 總結餘韻「${activeSummaryBuff.title}」觸發！+${ef.amount} 金幣`, 'gold');
+    }, 300);
+    activeSummaryBuff.consumed = true;
+    saveSummaryBuff(activeSummaryBuff);
+  } else if (ef.type === 'nextCategoryFlat' && ef.category === task.category) {
+    setTimeout(async () => {
+      await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + ef.amount });
+      player.coins += ef.amount;
+      renderPlayer();
+      notify(`✦ 總結餘韻「${activeSummaryBuff.title}」觸發！+${ef.amount} 金幣`, 'gold');
+    }, 300);
+    activeSummaryBuff.consumed = true;
+    saveSummaryBuff(activeSummaryBuff);
+  } else if (ef.type === 'nextFragmentBonus') {
+    setTimeout(async () => {
+      await addFragments(ef.amount);
+      notify(`✦ 總結餘韻「${activeSummaryBuff.title}」觸發！+${ef.amount} 碎片`, 'exp');
+    }, 300);
+    activeSummaryBuff.consumed = true;
+    saveSummaryBuff(activeSummaryBuff);
+  }
+
+  return { exp, coins };
+}
+
 // ─── INIT ───────────────────────────────────────────
 async function init() {
   try {
@@ -4418,6 +4801,7 @@ async function init() {
     await loadCooldownLog();
     loadStoryState();
     await loadItemState();
+    loadSummaryState();
     initRustyState();
     await loadDrafts();
     await loadPurchasedItems();
@@ -4546,6 +4930,11 @@ function renderStatusPanel() {
       tags.push(`<span class="status-tag charge">🧪 ${item.name} 效果啟用中</span>`);
     }
   });
+
+  // Summary buff
+  if (activeSummaryBuff && !activeSummaryBuff.consumed) {
+    tags.push(`<span class="status-tag bonus">✦ 總結餘韻：${activeSummaryBuff.title}（${activeSummaryBuff.description}）</span>`);
+  }
 
   // Weather
   if (weatherState && !weatherState.triggered) {
@@ -4887,6 +5276,11 @@ async function completeTask(id) {
       await logCooldown(task.title);
       let expGain = cd.half ? Math.ceil(task.exp_reward * 0.5) : task.exp_reward;
       let coinGain = cd.half ? Math.ceil(task.coin_reward * 0.5) : task.coin_reward;
+
+      // 0. Apply summary buff
+      const summaryResult = applySummaryBuff(task, expGain, coinGain);
+      expGain = summaryResult.exp;
+      coinGain = summaryResult.coins;
 
       // 1. Apply equipment effects
       const equipBonus = applyEquipmentEffects(expGain, coinGain, task);
