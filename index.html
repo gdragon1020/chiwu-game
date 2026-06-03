@@ -1569,6 +1569,16 @@
         <div class="player-name" id="playerName">旅人</div>
         <div class="player-level">LV.<span id="playerLevel">1</span> &nbsp;|&nbsp; 鑄霧城新來的外鄉人</div>
       </div>
+      <button onclick="doSummary()" id="summaryBtn" style="
+        margin-left:auto;flex-shrink:0;
+        background:transparent;border:1px solid rgba(201,168,76,0.4);
+        color:var(--gold);padding:6px 12px;
+        font-family:'Share Tech Mono',monospace;font-size:10px;
+        cursor:pointer;letter-spacing:1px;
+        transition:all 0.2s;align-self:center;
+      " onmouseover="this.style.background='var(--gold-dim)'" onmouseout="this.style.background='transparent'">
+        ✦ 每日總結
+      </button>
     </div>
     <div class="exp-bar-wrap">
       <div class="exp-bar-label">
@@ -5567,7 +5577,7 @@ async function loadCooldownLog() {
   reset.setHours(5, 0, 0, 0);
   if (now < reset) reset.setDate(reset.getDate() - 1);
 
-  const logs = await sb(`cooldown_log?select=*&completed_at=gte.${reset.toISOString()}&order=completed_at.desc.nullslast`);
+  const logs = await sb(`cooldown_log?select=*&order=completed_at.desc&limit=50`);
   cooldownCache = {};
   logs.forEach(l => {
     if (!cooldownCache[l.task_title]) cooldownCache[l.task_title] = [];
