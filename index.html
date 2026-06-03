@@ -691,6 +691,84 @@
   }
   .npc-loading.show { display: block; }
 
+  /* ── NPC 信任值 ── */
+  .npc-trust-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px 8px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+  .npc-trust-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    min-width: 52px;
+  }
+  .npc-trust-bar-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .npc-trust-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+  .npc-trust-stage {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    white-space: nowrap;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  /* ── 特殊話題 ── */
+  .npc-special-topic {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(201,168,74,0.06);
+    border-bottom: 1px solid var(--border);
+  }
+  .npc-special-topic-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    flex: 1;
+  }
+  .btn-special-topic {
+    background: transparent;
+    border: 1px solid rgba(201,168,74,0.5);
+    color: var(--gold);
+    padding: 4px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-special-topic:hover { background: var(--gold-dim); }
+  .btn-special-topic.used { opacity: 0.4; cursor: default; border-style: dashed; }
+  .npc-special-bubble {
+    background: rgba(201,168,74,0.08);
+    border: 1px solid rgba(201,168,74,0.25);
+    border-left: 2px solid var(--gold);
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
   /* Notifications */
   .notif-container {
     position: fixed;
@@ -5140,7 +5218,123 @@ const NPC_SUMMARY_PROMPTS = {
   eli:   '你是伊萊・碎晶，碎光工坊老闆，語氣冷淡技術型，講話像看機械數據，但有一點可靠。'
 };
 
-let activeSummaryBuff = null;
+// ─── NPC TRUST SYSTEM ────────────────────────────────
+
+// 信任值門檻（每個 NPC 最大值不同，分 5 階）
+const NPC_TRUST_MAX = { greta: 35, sear: 60, nana: 27, toby: 17, eli: 34 };
+const NPC_TRUST_STAGES = [
+  { min: 0,    label: '陌生人',   color: 'var(--text3)' },
+  { min: 0.15, label: '熟面孔',   color: '#90c8ff' },
+  { min: 0.35, label: '信任',     color: '#6ed06e' },
+  { min: 0.60, label: '深交',     color: 'var(--gold)' },
+  { min: 0.85, label: '知己',     color: 'var(--gold2)' },
+];
+
+function getNpcTrustStage(npcId) {
+  const trust = storyState.npcTrust?.[npcId] || 0;
+  const max = NPC_TRUST_MAX[npcId] || 20;
+  const ratio = Math.min(trust / max, 1);
+  let stage = NPC_TRUST_STAGES[0];
+  for (const s of NPC_TRUST_STAGES) {
+    if (ratio >= s.min) stage = s;
+  }
+  return { ratio, stage };
+}
+
+function getNpcTrustContext(npcId) {
+  const { stage } = getNpcTrustStage(npcId);
+  const stageIdx = NPC_TRUST_STAGES.indexOf(stage);
+  const contexts = {
+    greta: [
+      '你剛搬進來，葛莉達對你很陌生，說話直接但不多。',
+      '葛莉達見過你幾次了，偶爾會多說一句話。',
+      '葛莉達開始相信你是個靠得住的房客，話少但有溫度。',
+      '葛莉達對你有一定的信任，偶爾說出一些平常不說的事。',
+      '葛莉達把你當成真正照顧的人，義肢手臂放鬆一點，話也多一點。',
+    ],
+    sear: [
+      '席爾對你是普通的客人，沉默多、觀察多。',
+      '席爾記得你的喜好了，偶爾主動說幾句。',
+      '席爾開始分享一些下城的觀察，語氣多了一點信任。',
+      '席爾會在你坐下前就開始準備咖啡，偶爾說出一些他觀察到的情報。',
+      '席爾對你說的話比對其他客人多得多，像是把你當成了真正的朋友。',
+    ],
+    nana: [
+      '娜娜熱情，但你只是又一個外鄉人。',
+      '娜娜記住你的名字了，會特地跟你分享市場消息。',
+      '娜娜把你當作下城的朋友，說話更坦白。',
+      '娜娜開始偷偷幫你留好東西，說話像是一起做生意的夥伴。',
+      '娜娜把你當成最信任的下城朋友之一，什麼話都說。',
+    ],
+    toby: [
+      '托比對你很緊張，崇拜但不敢靠太近。',
+      '托比稍微放鬆了，開始主動找你搭話。',
+      '托比把你當作他在行會外最信任的人，偶爾說出一些他聽到的消息。',
+      '托比對你毫無保留，有什麼說什麼，包括一些他說了就後悔的事。',
+      '托比把你當成了某種榜樣，說話裡帶著一種你有時候沒意識到的依賴。',
+    ],
+    eli: [
+      '伊萊對你只是又一個帶東西來的客人。',
+      '伊萊記得你了，說話少了幾分客氣。',
+      '伊萊開始主動告訴你一些工坊的發現，不像平常那麼冷淡。',
+      '伊萊把你當作他少數信任的人之一，義眼掃你的時候多了一點柔和。',
+      '伊萊說話的方式不一樣了，更直接也更坦白，像是你已經是他工坊的一部分。',
+    ],
+  };
+  return contexts[npcId]?.[stageIdx] || '';
+}
+
+// 特殊話題：每位 NPC 一個，信任達到「深交」（0.60）才解鎖
+const NPC_SPECIAL_TOPICS = {
+  greta: {
+    id: 'greta_factory',
+    unlockRatio: 0.60,
+    buttonLabel: '問她工廠的事',
+    question: '妳以前在上城工廠做事……那裡發生了什麼？',
+    systemExtra: `玩家問了葛莉達一個她很少提到的話題：她年輕時在上城工廠的事。那個工廠後來因為一場靈石事故關閉了，很多人失業，葛莉達也是其中之一。她沒有主動說過這件事，但今天你問了。她說話比平常更慢，義肢的手指偶爾會捏緊。請用她的個性（嘴硬但有話要說）回應，可以說一點點關於工廠的細節，但不要說太清楚，留一些東西沒說完。繁體中文，80字以內。`,
+  },
+  sear: {
+    id: 'sear_upperCity',
+    unlockRatio: 0.60,
+    buttonLabel: '問他上城的事',
+    question: '你對上城了解多少？那邊的人為什麼在意下城？',
+    systemExtra: `玩家問了席爾關於上城的事，還有為什麼上城的人最近開始注意下城。席爾知道一些事，但他不是隨便說的人。今天他選擇說一點，但仍然保留了更多。請用他的語氣（溫和、觀察型、詩意但精準）回應，透露一個關於上城和行會之間關係的線索，但不要直接說出完整答案。繁體中文，90字以內。`,
+  },
+  nana: {
+    id: 'nana_redSand',
+    unlockRatio: 0.60,
+    buttonLabel: '問她為什麼來這裡',
+    question: '妳從赤沙城走了那麼遠來這裡……是為什麼？',
+    systemExtra: `玩家問了娜娜一個她沒想到會被問的問題：她為什麼真的要離開赤沙城。娜娜通常說是來做生意的，但今天玩家問得很認真。請用她的語氣（活潑但今天少了一點快）回應，說出一個更真實的理由，可以有點意外，但不要太悲傷。繁體中文，80字以內。`,
+  },
+  toby: {
+    id: 'toby_guild_secret',
+    unlockRatio: 0.60,
+    buttonLabel: '問他行會的事',
+    question: '行會裡面……有什麼你覺得不太對的事嗎？',
+    systemExtra: `玩家問了托比他是否覺得行會有什麼不對勁。托比知道一些事，他聽過一些對話，看過一些他不應該看到的文件，但他一直不知道該不該說。今天他決定說一件事，說完他立刻有點後悔。請用他的語氣（緊張、說得很快、說完馬上補救）回應，透露一個小線索，然後試圖轉移話題。繁體中文，80字以內。`,
+  },
+  eli: {
+    id: 'eli_registration_code',
+    unlockRatio: 0.60,
+    buttonLabel: '問他那個刻印',
+    question: '那個靈石上的刻印……你查出什麼了嗎？',
+    systemExtra: `玩家問了伊萊關於靈石刻印的進展。伊萊查到了一些事，但他一直在等一個合適的時機說。今天你問了，他決定說。請用他的語氣（冷靜技術型，說話像在報告結果）回應，透露一個具體的線索——那個登記碼連接到一個三十年前的事件——但不要說完整，結尾留一個懸念。繁體中文，100字以內。`,
+  },
+};
+
+// 記錄哪些特殊話題已使用
+function getSpecialTopicUsed(topicId) {
+  const used = JSON.parse(localStorage.getItem('chiwu_special_topics_used') || '[]');
+  return used.includes(topicId);
+}
+function markSpecialTopicUsed(topicId) {
+  const used = JSON.parse(localStorage.getItem('chiwu_special_topics_used') || '[]');
+  if (!used.includes(topicId)) {
+    used.push(topicId);
+    localStorage.setItem('chiwu_special_topics_used', JSON.stringify(used));
+  }
+}
 let summaryHistory = [];
 
 function loadSummaryState() {
@@ -6163,8 +6357,19 @@ function renderShop() {
 function renderNPCs() {
   const list = document.getElementById('npcList');
   list.innerHTML = '';
+  // NPC id 對照表
+  const npcIdMap = { '葛莉達・鐵心': 'greta', '席爾・煙霧': 'sear', '娜娜': 'nana', '托比': 'toby', '伊萊・碎晶': 'eli' };
+
   NPC_DATA.forEach(npc => {
     const msgs = npcChats[npc.name] || [];
+    const npcId = npcIdMap[npc.name];
+    const { ratio, stage } = getNpcTrustStage(npcId);
+    const pct = Math.round(ratio * 100);
+    const specialTopic = NPC_SPECIAL_TOPICS[npcId];
+    const topicUnlocked = specialTopic && ratio >= specialTopic.unlockRatio;
+    const topicUsed = specialTopic && getSpecialTopicUsed(specialTopic.id);
+    const key = npc.name.replace(/[\s・]/g,'_');
+
     const el = document.createElement('div');
     el.className = 'npc-card';
     el.innerHTML = `
@@ -6176,18 +6381,43 @@ function renderNPCs() {
         </div>
         <div class="npc-status">${npc.status}</div>
       </div>
-      <div class="npc-chat" id="chat-${npc.name.replace(/\s/g,'_')}">
-        <div class="chat-messages" id="msgs-${npc.name.replace(/\s/g,'_')}">
-          ${msgs.length === 0 ? '<div style="color:var(--text3);font-size:12px;font-family:Share Tech Mono,monospace">還沒說過話。要去打個招呼嗎？</div>' : msgs.map(m => `
-            <div class="chat-bubble ${m.npc_name === npc.name && m.message.startsWith('[玩家]') ? 'player' : 'npc'}">
-              <div class="bubble-name">${m.message.startsWith('[玩家]') ? '你' : npc.name}</div>
-              ${m.message.replace('[玩家]','').trim()}
-            </div>
-          `).join('')}
+
+      <!-- 信任條 -->
+      <div class="npc-trust-row">
+        <span class="npc-trust-label">信任</span>
+        <div class="npc-trust-bar-track">
+          <div class="npc-trust-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${stage.color},${stage.color})"></div>
         </div>
-        <div class="npc-loading" id="npcload-${npc.name.replace(/\s/g,'_')}">⚙ ${npc.name} 正在思考...</div>
+        <span class="npc-trust-stage" style="color:${stage.color}">${stage.label}</span>
+      </div>
+
+      <!-- 特殊話題（信任達門檻才顯示） -->
+      ${topicUnlocked ? `
+      <div class="npc-special-topic">
+        <span class="npc-special-topic-label">✦ 特殊話題</span>
+        <button class="btn-special-topic ${topicUsed ? 'used' : ''}"
+          onclick="${topicUsed ? '' : `askSpecialTopic('${npc.name}')`}"
+          ${topicUsed ? 'disabled' : ''}
+        >${topicUsed ? '已詢問過' : specialTopic.buttonLabel}</button>
+      </div>` : ''}
+
+      <div class="npc-chat" id="chat-${key}">
+        <div class="chat-messages" id="msgs-${key}">
+          ${msgs.length === 0
+            ? '<div style="color:var(--text3);font-size:12px;font-family:Share Tech Mono,monospace">還沒說過話。要去打個招呼嗎？</div>'
+            : msgs.map(m => {
+                const isPlayer = m.message.startsWith('[玩家]');
+                const isSpecial = m.message.startsWith('[特殊]');
+                const text = m.message.replace(/^\[玩家\]|\[特殊\]/,'').trim();
+                return `<div class="${isSpecial ? 'npc-special-bubble' : `chat-bubble ${isPlayer ? 'player' : 'npc'}`}">
+                  <div class="bubble-name">${isPlayer ? '你' : npc.name}${isSpecial ? ' · 特殊話題' : ''}</div>
+                  ${text}
+                </div>`;
+              }).join('')}
+        </div>
+        <div class="npc-loading" id="npcload-${key}">⚙ ${npc.name} 正在思考...</div>
         <div class="chat-input-row">
-          <input type="text" class="input-field" id="chatinput-${npc.name.replace(/\s/g,'_')}" placeholder="說點什麼..." />
+          <input type="text" class="input-field" id="chatinput-${key}" placeholder="說點什麼..." />
           <button class="btn btn-gold" style="padding:7px 14px;font-size:11px" onclick="sendChat('${npc.name}')">說</button>
         </div>
       </div>
@@ -6513,13 +6743,12 @@ async function deleteShopItem(id) {
 
 // ─── NPC ─────────────────────────────────────────────
 function toggleNPC(name) {
-  const key = name.replace(/\s/g,'_');
+  const key = name.replace(/[\s・]/g,'_');
   const chat = document.getElementById('chat-' + key);
   chat.classList.toggle('open');
   if (chat.classList.contains('open')) {
     const msgs = document.getElementById('msgs-' + key);
     msgs.scrollTop = msgs.scrollHeight;
-
     if (!npcChats[name] || npcChats[name].length === 0) {
       setTimeout(() => greetNPC(name), 300);
     }
@@ -6529,10 +6758,13 @@ function toggleNPC(name) {
 async function greetNPC(name) {
   const npc = NPC_DATA.find(n => n.name === name);
   if (!npc) return;
-  const key = name.replace(/\s/g,'_');
+  const npcIdMap = { '葛莉達・鐵心': 'greta', '席爾・煙霧': 'sear', '娜娜': 'nana', '托比': 'toby', '伊萊・碎晶': 'eli' };
+  const npcId = npcIdMap[name];
+  const key = name.replace(/[\s・]/g,'_');
   document.getElementById('npcload-' + key).classList.add('show');
 
-  const playerInfo = `玩家是個剛從小鎮來到鑄霧城的年輕人，目前等級 ${getLevel(player?.exp || 0)}，金幣 ${player?.coins || 0}。`;
+  const trustContext = getNpcTrustContext(npcId);
+  const playerInfo = `玩家目前等級 ${getLevel(player?.exp || 0)}，金幣 ${player?.coins || 0}。${trustContext}`;
 
   try {
     const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
@@ -6556,7 +6788,7 @@ async function greetNPC(name) {
 }
 
 async function sendChat(name) {
-  const key = name.replace(/\s/g,'_');
+  const key = name.replace(/[\s・]/g,'_');
   const input = document.getElementById('chatinput-' + key);
   const text = input.value.trim();
   if (!text) return;
@@ -6566,16 +6798,20 @@ async function sendChat(name) {
   renderNPCChat(name);
 
   const npc = NPC_DATA.find(n => n.name === name);
+  const npcIdMap = { '葛莉達・鐵心': 'greta', '席爾・煙霧': 'sear', '娜娜': 'nana', '托比': 'toby', '伊萊・碎晶': 'eli' };
+  const npcId = npcIdMap[name];
   document.getElementById('npcload-' + key).classList.add('show');
 
   const history = (npcChats[name] || []).slice(-10)
+    .filter(m => !m.message.startsWith('[特殊]'))
     .map(m => ({
       role: m.message.startsWith('[玩家]') ? 'user' : 'assistant',
       content: m.message.replace('[玩家]','').trim()
     }))
     .filter(m => m.content.length > 0);
 
-  const playerInfo = `玩家等級 ${getLevel(player?.exp || 0)}，金幣 ${player?.coins || 0}，負債 ${player?.debt || 0}。任務完成數 ${completedTasks.length}。`;
+  const trustContext = getNpcTrustContext(npcId);
+  const playerInfo = `玩家等級 ${getLevel(player?.exp || 0)}，金幣 ${player?.coins || 0}，負債 ${player?.debt || 0}。任務完成數 ${completedTasks.length}。${trustContext}`;
 
   try {
     const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
@@ -6589,10 +6825,9 @@ async function sendChat(name) {
       })
     });
     const data = await res.json();
-    console.log('Worker response:', JSON.stringify(data));
     if (data.debug?.code === 429 || data.debug?.status === 'RESOURCE_EXHAUSTED') { showQuotaWarning(); return; }
     const msg = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
-    if (!msg) { notify('NPC沒有回應', 'red'); console.error('empty response', data); return; }
+    if (!msg) { notify('NPC沒有回應', 'red'); return; }
     await saveNPCMsg(name, msg, false);
     renderNPCChat(name);
   } catch(e) { console.error('sendChat error:', e); notify('NPC沒有回應', 'red'); }
@@ -6606,18 +6841,69 @@ async function saveNPCMsg(npcName, message, isPlayer) {
 }
 
 function renderNPCChat(name) {
-  const key = name.replace(/\s/g,'_');
+  const key = name.replace(/[\s・]/g,'_');
   const msgs = npcChats[name] || [];
   const container = document.getElementById('msgs-' + key);
+  if (!container) return;
   container.innerHTML = msgs.map(m => {
     const isPlayer = m.message.startsWith('[玩家]');
-    const text = m.message.replace('[玩家]','').trim();
-    return `<div class="chat-bubble ${isPlayer ? 'player' : 'npc'}">
-      <div class="bubble-name">${isPlayer ? '你' : name}</div>
+    const isSpecial = m.message.startsWith('[特殊]');
+    const text = m.message.replace(/^\[玩家\]|\[特殊\]/,'').trim();
+    return `<div class="${isSpecial ? 'npc-special-bubble' : `chat-bubble ${isPlayer ? 'player' : 'npc'}`}">
+      <div class="bubble-name">${isPlayer ? '你' : name}${isSpecial ? ' · 特殊話題' : ''}</div>
       ${text}
     </div>`;
   }).join('');
   container.scrollTop = container.scrollHeight;
+}
+
+async function askSpecialTopic(name) {
+  const npcIdMap = { '葛莉達・鐵心': 'greta', '席爾・煙霧': 'sear', '娜娜': 'nana', '托比': 'toby', '伊萊・碎晶': 'eli' };
+  const npcId = npcIdMap[name];
+  const topic = NPC_SPECIAL_TOPICS[npcId];
+  if (!topic) return;
+  if (getSpecialTopicUsed(topic.id)) return;
+
+  const npc = NPC_DATA.find(n => n.name === name);
+  const key = name.replace(/[\s・]/g,'_');
+
+  // 標記已使用並重繪按鈕
+  markSpecialTopicUsed(topic.id);
+  renderNPCs(); // 重繪讓按鈕變灰
+  // 重新打開聊天框
+  const chat = document.getElementById('chat-' + key);
+  if (chat) chat.classList.add('open');
+
+  // 先存玩家問題
+  await saveNPCMsg(name, '[特殊] ' + topic.question, false);
+  renderNPCChat(name);
+
+  const loadEl = document.getElementById('npcload-' + key);
+  if (loadEl) loadEl.classList.add('show');
+
+  const trustContext = getNpcTrustContext(npcId);
+  const playerInfo = `玩家等級 ${getLevel(player?.exp || 0)}，金幣 ${player?.coins || 0}。${trustContext}`;
+
+  try {
+    const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 200,
+        system: `你是鑄霧城裡的 ${npc.name}，${npc.role}。${npc.personality}\n\n${playerInfo}\n\n${topic.systemExtra}`,
+        messages: [{ role: 'user', content: topic.question }]
+      })
+    });
+    const data = await res.json();
+    if (data.debug?.code === 429 || data.debug?.status === 'RESOURCE_EXHAUSTED') { showQuotaWarning(); return; }
+    const msg = data.content?.[0]?.text?.trim();
+    if (!msg) return;
+    await saveNPCMsg(name, msg, false);
+    renderNPCChat(name);
+    notify(`✦ ${name} 說了一些平常不說的話`, 'gold');
+  } catch(e) { console.error('askSpecialTopic error:', e); }
+  if (loadEl) loadEl.classList.remove('show');
 }
 
 // ─── DEBT ────────────────────────────────────────────
