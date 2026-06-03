@@ -1624,18 +1624,6 @@
   </div>
 
   <!-- Status Panel -->
-  <!-- Daily Summary Button -->
-  <div style="margin-bottom:8px;margin-top:-8px;display:flex;justify-content:flex-end">
-    <button id="summaryBtn" onclick="doSummary()" style="
-      background:transparent;border:1px solid rgba(201,168,76,0.4);
-      color:var(--gold);padding:6px 14px;
-      font-family:'Share Tech Mono',monospace;font-size:11px;
-      cursor:pointer;letter-spacing:1px;transition:all 0.2s;
-    " onmouseover="this.style.background='var(--gold-dim)'" onmouseout="this.style.background='transparent'">
-      ✦ 每日總結
-    </button>
-  </div>
-
   <div class="status-panel" id="statusPanel">
     <div class="status-panel-title">✦ 目前加成狀態</div>
     <div class="status-tags" id="statusTags">
@@ -5579,7 +5567,7 @@ async function loadCooldownLog() {
   reset.setHours(5, 0, 0, 0);
   if (now < reset) reset.setDate(reset.getDate() - 1);
 
-  const logs = await sb(`cooldown_log?select=*&completed_at=gte.${reset.toISOString()}&order=completed_at.desc`);
+  const logs = await sb(`cooldown_log?select=*&completed_at=gte.${reset.toISOString()}&order=completed_at.desc.nullslast`);
   cooldownCache = {};
   logs.forEach(l => {
     if (!cooldownCache[l.task_title]) cooldownCache[l.task_title] = [];
