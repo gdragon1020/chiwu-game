@@ -5701,17 +5701,23 @@ async function acceptGretaDailyCheckOption(optionId) {
   gretaState.dailyCheck.acceptedOptionId = optionId;
   saveGretaState();
 
-  // 評估每個任務並加入任務板
+  // 葛莉達任務全是小型日常委託，直接給固定預設值，不呼叫 AI
+  const gretaTaskRewards = (estimatedMinutes) => {
+    if (estimatedMinutes <= 2) return { exp: 5, coins: 2, size: '小任務' };
+    if (estimatedMinutes <= 5) return { exp: 8, coins: 3, size: '小任務' };
+    return { exp: 12, coins: 5, size: '小任務' };
+  };
+
   let addedCount = 0;
   for (const t of opt.tasks) {
     try {
-      const assessment = await assessTask(t.title, '');
+      const rewards = gretaTaskRewards(t.estimatedMinutes || 3);
       const task = await sb('tasks', 'POST', {
         title: t.title,
         description: '葛莉達推薦的日常委託',
-        exp_reward: assessment.exp,
-        coin_reward: assessment.coins,
-        size: assessment.size,
+        exp_reward: rewards.exp,
+        coin_reward: rewards.coins,
+        size: rewards.size,
         category: '日常委託',
         status: 'pending',
         source: 'gretaDailyCheck'
