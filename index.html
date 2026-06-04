@@ -5368,18 +5368,102 @@ const NPC_SUMMARY_PROMPTS = {
   eli:   '你是伊萊・碎晶，碎光工坊老闆，語氣冷淡技術型，講話像看機械數據，但有一點可靠。'
 };
 
-// ─── GRETA SYSTEM ────────────────────────────────────
+// ─── GRETA SYSTEM ─────────────────────────────────────
+// 完全本地化，不呼叫 AI API
 
-// 葛莉達用的 keyword 組（複用 keywordGroups，稍微擴充）
-const gretaKeywords = {
-  organize: [...(keywordGroups.daily.organize), '衣服放進洗衣籃', '清出', '清一塊', '桌面'],
-  sleepPrep: [...(keywordGroups.daily.sleepPrep), '充電', '關燈'],
-  food: [...(keywordGroups.daily.food), '吃一點', '喝一杯水'],
+// ── Keywords ──────────────────────────────────────────
+const gretaKeywordGroups = {
+  organize:   ['整理','收拾','丟垃圾','洗碗','歸位','清理','打掃','衣服','洗衣籃','桌面','床'],
+  sleepPrep:  ['睡前','睡覺','刷牙','洗臉','設鬧鐘','關燈','充手機'],
+  food:       ['喝水','吃飯','吃一餐','早餐','午餐','晚餐','保健食品','吃藥','維他命'],
+  bodyCare:   ['洗澡','洗臉','刷牙','換衣服','保健食品'],
+  outingPrep: ['收拾包包','準備明天','帶鑰匙','帶錢包','帶文件','充手機'],
 };
 
-const GRETA_FORBIDDEN_KEYWORDS = ['整理整個房間','完成所有','全部清','報告','PPT','email','出門辦','去學校','聯絡','搬家','完成全部','大掃除'];
+function taskMatchesKeywords(task, keywords) {
+  const haystack = [task.title, task.description, ...(task.tags||[])].join(' ').toLowerCase();
+  return keywords.some(kw => haystack.includes(kw.toLowerCase()));
+}
 
-// ── 房間耐久度 state ─────────────────────────────────
+// ── 任務池 ────────────────────────────────────────────
+const gretaTaskTemplates = [
+  { id:'drink_water',            title:'喝一杯水',             category:'日常委託', tags:['喝水','飲食'],              estimatedMinutes:1,  pool:'food' },
+  { id:'eat_something',          title:'吃一點東西',           category:'日常委託', tags:['吃飯','飲食'],              estimatedMinutes:10, pool:'food' },
+  { id:'take_supplement',        title:'吃保健食品',           category:'日常委託', tags:['保健食品','飲食'],          estimatedMinutes:1,  pool:'food' },
+  { id:'throw_3_trash',          title:'丟 3 個垃圾',          category:'日常委託', tags:['整理','丟垃圾'],            estimatedMinutes:3,  pool:'organize' },
+  { id:'clear_small_desk_area',  title:'清出桌面一小塊',       category:'日常委託', tags:['整理','桌面'],              estimatedMinutes:5,  pool:'organize' },
+  { id:'wash_3_dishes',          title:'洗 3 個碗',            category:'日常委託', tags:['整理','洗碗'],              estimatedMinutes:5,  pool:'organize' },
+  { id:'put_clothes_basket',     title:'把衣服放進洗衣籃',     category:'日常委託', tags:['整理','衣服','洗衣籃'],     estimatedMinutes:3,  pool:'organize' },
+  { id:'remove_bed_item',        title:'把床上一樣東西拿開',   category:'日常委託', tags:['整理','床'],                estimatedMinutes:2,  pool:'organize' },
+  { id:'brush_teeth',            title:'刷牙',                 category:'日常委託', tags:['刷牙','睡前'],              estimatedMinutes:3,  pool:'sleepPrep' },
+  { id:'charge_phone',           title:'把手機插上充電',       category:'日常委託', tags:['睡前','充手機'],            estimatedMinutes:1,  pool:'sleepPrep' },
+  { id:'set_alarm',              title:'設定明天鬧鐘',         category:'日常委託', tags:['睡前','設鬧鐘'],            estimatedMinutes:2,  pool:'sleepPrep' },
+  { id:'turn_off_light',         title:'關掉一盞不需要的燈',   category:'日常委託', tags:['睡前','關燈'],              estimatedMinutes:1,  pool:'sleepPrep' },
+  { id:'wash_face',              title:'洗臉',                 category:'日常委託', tags:['洗臉','生活照顧'],          estimatedMinutes:3,  pool:'bodyCare' },
+  { id:'shower',                 title:'洗澡',                 category:'日常委託', tags:['洗澡','生活照顧'],          estimatedMinutes:10, pool:'bodyCare' },
+  { id:'change_clothes',         title:'換一套舒服的衣服',     category:'日常委託', tags:['換衣服','生活照顧'],        estimatedMinutes:5,  pool:'bodyCare' },
+  { id:'pack_bag',               title:'收拾包包',             category:'日常委託', tags:['收拾包包','出門準備'],      estimatedMinutes:5,  pool:'outingPrep' },
+  { id:'prepare_tomorrow_item',  title:'準備明天要帶的一樣東西',category:'日常委託',tags:['準備明天','出門準備'],      estimatedMinutes:3,  pool:'outingPrep' },
+  { id:'stand_up_once',          title:'站起來一次',           category:'日常委託', tags:['低能量','重啟'],            estimatedMinutes:1,  pool:'lowEnergy' },
+  { id:'open_curtain',           title:'打開窗簾或看一眼窗外', category:'日常委託', tags:['低能量','重啟'],            estimatedMinutes:1,  pool:'lowEnergy' },
+];
+
+const gretaRepairTaskTemplates = [
+  { id:'repair_trash',     title:'丟 3 個垃圾',           category:'日常委託', tags:['整理','丟垃圾'],        estimatedMinutes:3, tone:'organize' },
+  { id:'repair_desk',      title:'清出桌面一小塊',         category:'日常委託', tags:['整理','桌面'],          estimatedMinutes:5, tone:'organize' },
+  { id:'repair_dishes',    title:'洗 3 個碗',              category:'日常委託', tags:['整理','洗碗'],          estimatedMinutes:5, tone:'organize' },
+  { id:'repair_laundry',   title:'把衣服放進洗衣籃',       category:'日常委託', tags:['整理','衣服'],          estimatedMinutes:3, tone:'organize' },
+  { id:'repair_bed',       title:'把床上一樣東西拿開',     category:'日常委託', tags:['整理','床'],            estimatedMinutes:2, tone:'organize' },
+  { id:'repair_bag_trash', title:'把包包裡一個垃圾拿出來', category:'日常委託', tags:['整理','收拾包包'],      estimatedMinutes:2, tone:'organize' },
+  { id:'repair_water',     title:'喝一杯水',               category:'日常委託', tags:['喝水','飲食'],          estimatedMinutes:1, tone:'food' },
+  { id:'repair_face',      title:'洗臉',                   category:'日常委託', tags:['洗臉','生活照顧'],      estimatedMinutes:3, tone:'bodyCare' },
+  { id:'repair_charge',    title:'把手機插上充電',         category:'日常委託', tags:['睡前','充手機'],        estimatedMinutes:1, tone:'sleepPrep' },
+];
+
+// ── 文案模板 ──────────────────────────────────────────
+const gretaDailyIntroTexts = [
+  '葛莉達敲了敲門，冷著臉看了你一眼：「今天至少把自己照顧到能算個活人。」',
+  '葛莉達把手裡的紙條往門邊一貼：「別想太多，先做最小的。」',
+  '葛莉達站在門口，機械義肢發出一聲輕響：「房間可以亂，腦子別跟著一起亂。」',
+  '葛莉達皺著眉看了你一眼：「今天不用逞強，先把基本的做了。」',
+];
+
+const gretaOptionNotes = {
+  food:       ['先把人顧好。','肚子和水分先處理。','別空著肚子硬撐。'],
+  organize:   ['先清出一小塊能下腳的地方。','不用整理全部，先動一角。','讓房間看起來還能住。'],
+  sleepPrep:  ['把今天收掉一點。','別把明天也拖進霧裡。','睡前先做一點收尾。'],
+  bodyCare:   ['把自己收拾一下。','人先清醒，事情再說。','先照顧這副身體。'],
+  outingPrep: ['明天要出門就先少漏一樣東西。','包包先管好，別到門口才翻。','先把要帶的東西放好。'],
+  lowEnergy:  ['爛一點也行，別完全停掉。','今天只要很小一步。','能動一下就算數。'],
+};
+
+const repairOrderTitles = {
+  messy: ['葛莉達貼在門上的修繕單','房東檢查後留下的紙條','門邊多出來的一張修繕單'],
+  fogged:['葛莉達的緊急修繕單','房門上那張不太客氣的紙條','霧氣警戒修繕單'],
+};
+
+const repairOrderNotes = {
+  messy: [
+    '房間還沒壞，但已經開始不像能安心住人的地方了。別想一次整理完，先修一小塊。',
+    '我不是叫你大掃除。先把能下腳、能坐下、能呼吸的地方清出來。',
+    '還不算糟，但你最好別假裝沒看見。先做一件小的。',
+  ],
+  fogged: [
+    '這不是亂，這是霧都快在你房裡築巢了。先別逞強，照著紙條做兩件小事。',
+    '房間現在不是不能救，但你不能再只站在門口看。先從最小的地方動手。',
+    '我不管你今天狀態怎樣，先把這兩件做了。做完再說別的。',
+  ],
+};
+
+const repairCompleteTexts = [
+  '葛莉達看了看修好的地方，哼了一聲：「行，至少現在能下腳了。」',
+  '葛莉達把修繕單撕下來：「還算能住。別讓它明天又長回去。」',
+  '葛莉達點了點頭：「這才像有人住的地方。」',
+];
+
+function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ── State ─────────────────────────────────────────────
 let gretaState = {
   room: { durability: 80, status: 'stable', lastCheckedAt: null },
   dailyCheck: { dateKey: '', used: false, introText: '', options: [], acceptedOptionId: null },
@@ -5388,274 +5472,193 @@ let gretaState = {
 
 function loadGretaState() {
   const saved = localStorage.getItem('chiwu_greta_state');
-  if (saved) {
-    try { gretaState = JSON.parse(saved); } catch(e) {}
-  }
+  if (saved) { try { gretaState = JSON.parse(saved); } catch(e) {} }
   syncRoomStatus();
 }
-
 function saveGretaState() {
   localStorage.setItem('chiwu_greta_state', JSON.stringify(gretaState));
 }
-
 function syncRoomStatus() {
   const d = gretaState.room.durability;
-  if (d >= 70) gretaState.room.status = 'stable';
-  else if (d >= 40) gretaState.room.status = 'messy';
-  else gretaState.room.status = 'fogged';
+  gretaState.room.status = d >= 70 ? 'stable' : d >= 40 ? 'messy' : 'fogged';
 }
+function clampDurability(val) { return Math.max(0, Math.min(100, val)); }
 
-function clampDurability(val) {
-  return Math.max(0, Math.min(100, val));
-}
-
-// ── 耐久度更新（完成任務時呼叫）─────────────────────
+// ── 耐久度更新 ────────────────────────────────────────
 function updateRoomDurabilityOnTask(task) {
   if (task.category !== '日常委託') return;
-  const isOrganize = taskMatchesKeywords(task, gretaKeywords.organize);
-  const isSleepPrep = taskMatchesKeywords(task, gretaKeywords.sleepPrep);
-  const isRepairTask = gretaState.repairOrders.some(o =>
+  const isOrganize  = taskMatchesKeywords(task, gretaKeywordGroups.organize);
+  const isSleepPrep = taskMatchesKeywords(task, gretaKeywordGroups.sleepPrep);
+  const isRepair    = gretaState.repairOrders.some(o =>
     o.status === 'active' && o.tasks.some(t => t.title === task.title && !t.completed)
   );
-
-  let delta = 3; // 基本日常委託
-  if (isRepairTask) delta = 10;
-  else if (isOrganize) delta = 5;
-  else if (isSleepPrep) delta = 3;
-
+  let delta = isRepair ? 10 : isOrganize ? 5 : isSleepPrep ? 3 : 3;
   gretaState.room.durability = clampDurability(gretaState.room.durability + delta);
   syncRoomStatus();
-
-  // 檢查修繕單任務是否完成
   checkRepairOrderProgress(task.title);
   saveGretaState();
 }
 
-// ── 每日 00:00 房間檢查（init 時呼叫）───────────────
+// ── 每日 00:00 房間檢查 ───────────────────────────────
 async function runGretaRoomInspection() {
   const now = new Date();
-  const todayKey = now.toISOString().slice(0, 10);
-  const lastChecked = gretaState.room.lastCheckedAt;
-  const lastKey = lastChecked ? new Date(lastChecked).toISOString().slice(0, 10) : '';
-
-  if (lastKey === todayKey) return; // 今天已執行過
+  const todayKey = now.toISOString().slice(0,10);
+  const lastKey  = gretaState.room.lastCheckedAt
+    ? new Date(gretaState.room.lastCheckedAt).toISOString().slice(0,10) : '';
+  if (lastKey === todayKey) return;
   gretaState.room.lastCheckedAt = now.getTime();
 
-  // 前一天有沒有日常委託
   const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = yesterday.toISOString().slice(0, 10);
-  const hadDailyYesterday = completedTasks.some(t =>
-    t.category === '日常委託' && t.completed_at && t.completed_at.slice(0, 10) === yesterdayKey
+  yesterday.setDate(yesterday.getDate()-1);
+  const yKey = yesterday.toISOString().slice(0,10);
+  const hadDailyYesterday = completedTasks.some(
+    t => t.category === '日常委託' && t.completed_at?.slice(0,10) === yKey
   );
-
   if (!hadDailyYesterday) {
     gretaState.room.durability = clampDurability(gretaState.room.durability - 5);
     syncRoomStatus();
   }
 
-  // 若需要生成修繕單
-  const hasActiveOrder = gretaState.repairOrders.some(o => o.status === 'active');
-  if (!hasActiveOrder && (gretaState.room.status === 'messy' || gretaState.room.status === 'fogged')) {
-    await generateRepairOrder();
+  const hasActive = gretaState.repairOrders.some(o => o.status === 'active');
+  if (!hasActive && gretaState.room.status !== 'stable') {
+    generateLocalRepairOrder();
   }
-
   saveGretaState();
 }
 
-// ── 統計玩家近24h狀態 ─────────────────────────────
+// ── 統計近24h ─────────────────────────────────────────
 function buildRecentStats() {
-  const now = Date.now();
-  const h24ago = now - 86400000;
+  const h24ago = Date.now() - 86400000;
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
   const yKey = yesterday.toISOString().slice(0,10);
-  const tKey = new Date().toISOString().slice(0,10);
-
   const recent = completedTasks.filter(t => t.completed_at && new Date(t.completed_at).getTime() > h24ago);
-  const dailyRecent = recent.filter(t => t.category === '日常委託');
-
+  const daily  = recent.filter(t => t.category === '日常委託');
   return {
-    completedTasksLast24h: recent.length,
-    dailyTasksLast24h: dailyRecent.length,
-    organizeTasksLast24h: dailyRecent.filter(t => taskMatchesKeywords(t, gretaKeywords.organize)).length,
-    sleepPrepTasksLast24h: dailyRecent.filter(t => taskMatchesKeywords(t, gretaKeywords.sleepPrep)).length,
-    foodTasksLast24h: dailyRecent.filter(t => taskMatchesKeywords(t, gretaKeywords.food)).length,
-    hadAnyTaskYesterday: completedTasks.some(t => t.completed_at?.slice(0,10) === yKey),
-    hadDailyTaskYesterday: completedTasks.some(t => t.category === '日常委託' && t.completed_at?.slice(0,10) === yKey),
+    completedTasksLast24h:  recent.length,
+    dailyTasksLast24h:      daily.length,
+    organizeTasksLast24h:   daily.filter(t => taskMatchesKeywords(t, gretaKeywordGroups.organize)).length,
+    sleepPrepTasksLast24h:  daily.filter(t => taskMatchesKeywords(t, gretaKeywordGroups.sleepPrep)).length,
+    foodTasksLast24h:       daily.filter(t => taskMatchesKeywords(t, gretaKeywordGroups.food)).length,
+    bodyCareTasksLast24h:   daily.filter(t => taskMatchesKeywords(t, gretaKeywordGroups.bodyCare)).length,
+    hadAnyTaskYesterday:    completedTasks.some(t => t.completed_at?.slice(0,10) === yKey),
+    hadDailyTaskYesterday:  completedTasks.some(t => t.category==='日常委託' && t.completed_at?.slice(0,10) === yKey),
   };
 }
 
-// ── 房東檢查 Prompt ──────────────────────────────────
-function buildGretaDailyCheckPrompt(stats, roomState) {
-  return `你正在替任務型生活RPG生成NPC「葛莉達」的房東檢查。
-葛莉達是房東，語氣嘴硬、實際、不太溫柔，但不會責備玩家。她的目標是幫玩家維持基本生活。
+// ── 房東檢查：權重計算 ────────────────────────────────
+function getGretaPoolWeights(stats, roomState, now) {
+  const hour = new Date(now).getHours();
+  const isNight = hour >= 21 || hour < 5;
+  const todayEvents = calendarEvents?.filter(e => {
+    const sd = e.start_at?.slice(0,10);
+    return sd === getDateKey();
+  }) || [];
 
-玩家近24小時紀錄：
-- 完成任務總數：${stats.completedTasksLast24h}
-- 日常委託：${stats.dailyTasksLast24h}
-- 整理類：${stats.organizeTasksLast24h}
-- 睡前類：${stats.sleepPrepTasksLast24h}
-- 飲食類：${stats.foodTasksLast24h}
-- 昨天有任何任務：${stats.hadAnyTaskYesterday}
-
-房間狀態：${roomState.status === 'stable' ? '穩定' : roomState.status === 'messy' ? '微亂' : '霧化'}（耐久度 ${roomState.durability}/100）
-
-請生成三組日常委託推薦。限制：
-1. 必須生成3組，每組1-3個任務
-2. 所有任務 category 必須是「日常委託」
-3. 每個任務 estimatedMinutes 必須1-10
-4. 不可生成專注/外出/社交/任務委託
-5. 不要生成大型任務，不要責備玩家
-6. 三組要有差異，若低能量則任務更小
-7. 回傳JSON，不要額外解釋
-
-請輸出：{"introText":"string","options":[{"id":"string","label":"string","note":"string","tasks":[{"title":"string","category":"日常委託","tags":["string"],"estimatedMinutes":1}]}]}`;
+  const w = { food:3, organize:3, sleepPrep:2, bodyCare:2, outingPrep:1, lowEnergy:1 };
+  if (stats.foodTasksLast24h === 0)       { w.food      += 4; }
+  if (stats.organizeTasksLast24h === 0)   { w.organize  += 3; }
+  if (stats.sleepPrepTasksLast24h === 0 && isNight) { w.sleepPrep += 4; }
+  if (stats.bodyCareTasksLast24h === 0)   { w.bodyCare  += 2; }
+  if (roomState.status === 'messy')       { w.organize  += 3; }
+  if (roomState.status === 'fogged')      { w.organize  += 5; w.lowEnergy += 3; }
+  if (!stats.hadAnyTaskYesterday)         { w.lowEnergy += 5; w.food += 2; }
+  if (todayEvents.length > 0)             { w.outingPrep += 3; }
+  return w;
 }
 
-// ── 修繕單 Prompt ────────────────────────────────────
-function buildGretaRepairOrderPrompt(stats, roomState) {
-  const taskCount = roomState.status === 'fogged' ? 2 : 1;
-  return `你正在替任務型生活RPG生成NPC「葛莉達」的修繕單。
-葛莉達是房東，語氣嘴硬、實際，不責備玩家。
-
-房間狀態：${roomState.status === 'messy' ? '微亂' : '霧化'}（耐久度 ${roomState.durability}/100）
-近24h完成日常委託：${stats.dailyTasksLast24h} 個
-
-請生成一張修繕單，包含 ${taskCount} 個日常委託。限制：
-1. category 只能是「日常委託」
-2. estimatedMinutes 必須1-10
-3. 不要大型任務，不要責備
-4. 回傳JSON，不要額外解釋
-
-請輸出：{"noteTitle":"string","noteText":"string","tasks":[{"title":"string","category":"日常委託","tags":["string"],"estimatedMinutes":1}]}`;
+// 依權重從 pool 隨機選
+function pickFromPool(pool, weights, count, usedIds = new Set()) {
+  const candidates = gretaTaskTemplates.filter(t => t.pool === pool && !usedIds.has(t.id));
+  const shuffled = candidates.sort(() => Math.random()-0.5);
+  return shuffled.slice(0, count);
 }
 
-// ── Fallback 資料 ─────────────────────────────────────
-const gretaDailyCheckFallback = {
-  introText: '葛莉達敲了敲門：「今天先做最小的，別跟我討價還價。」',
-  options: [
-    { id:'fallback_a', label:'A 組', note:'先把身體顧好。',
-      tasks:[{ title:'喝一杯水', category:'日常委託', tags:['喝水','飲食'], estimatedMinutes:1 }] },
-    { id:'fallback_b', label:'B 組', note:'先清出一點空間。',
-      tasks:[{ title:'丟 3 個垃圾', category:'日常委託', tags:['整理','丟垃圾'], estimatedMinutes:3 }] },
-    { id:'fallback_c', label:'C 組', note:'先把今晚收掉。',
-      tasks:[
-        { title:'把手機插上充電', category:'日常委託', tags:['睡前','充手機'], estimatedMinutes:1 },
-        { title:'設定明天鬧鐘', category:'日常委託', tags:['睡前','設鬧鐘'], estimatedMinutes:2 }
-      ]
+function pickWeightedPool(weights, exclude = []) {
+  const pools = Object.entries(weights).filter(([p]) => !exclude.includes(p));
+  const total = pools.reduce((s,[,w]) => s+w, 0);
+  let r = Math.random() * total;
+  for (const [pool, w] of pools) { r -= w; if (r <= 0) return pool; }
+  return pools[0][0];
+}
+
+// ── 生成三組房東檢查選項 ─────────────────────────────
+function generateGretaDailyCheckOptions() {
+  const stats     = buildRecentStats();
+  const now       = Date.now();
+  const hour      = new Date().getHours();
+  const isNight   = hour >= 21 || hour < 5;
+  const isLow     = !stats.hadAnyTaskYesterday || stats.completedTasksLast24h === 0;
+  const maxPerGroup = isLow ? 2 : 3;
+  const weights   = getGretaPoolWeights(stats, gretaState.room, now);
+
+  // 強制保證條件
+  const mustHave = [];
+  if (gretaState.room.status !== 'stable') mustHave.push('organize');
+  if (stats.foodTasksLast24h === 0) mustHave.push('food');
+  if (isNight && stats.sleepPrepTasksLast24h === 0) mustHave.push('sleepPrep');
+
+  const options = [];
+  const usedCombos = new Set();
+
+  for (let i = 0; i < 3; i++) {
+    const usedIds = new Set();
+    const tasks = [];
+    const groupSize = isLow ? 1 : (i === 0 ? 1 : i === 1 ? 2 : Math.min(3, maxPerGroup));
+
+    // 第一個任務：若有強制需求先滿足
+    const forced = mustHave[i % mustHave.length];
+    const firstPool = forced || pickWeightedPool(weights);
+    const firstPick = pickFromPool(firstPool, weights, 1, usedIds);
+    if (firstPick.length === 0) {
+      // 回退到任意池
+      const fb = gretaTaskTemplates.find(t => !usedIds.has(t.id));
+      if (fb) { tasks.push(fb); usedIds.add(fb.id); }
+    } else {
+      tasks.push(firstPick[0]); usedIds.add(firstPick[0].id);
     }
-  ]
-};
 
-const gretaRepairFallbackPool = [
-  { title:'丟 3 個垃圾', category:'日常委託', tags:['整理','丟垃圾'], estimatedMinutes:3 },
-  { title:'清出桌面一小塊', category:'日常委託', tags:['整理','桌面'], estimatedMinutes:5 },
-  { title:'把衣服放進洗衣籃', category:'日常委託', tags:['整理','衣服'], estimatedMinutes:3 },
-  { title:'喝一杯水', category:'日常委託', tags:['喝水','飲食'], estimatedMinutes:1 },
-  { title:'把手機插上充電', category:'日常委託', tags:['睡前','充手機'], estimatedMinutes:1 },
-];
-
-// ── 驗證 AI 房東檢查回傳 ─────────────────────────────
-function validateGretaDailyCheckResponse(raw) {
-  try {
-    const data = typeof raw === 'string' ? JSON.parse(raw.replace(/```json|```/g,'').trim()) : raw;
-    if (!data.options || data.options.length < 3) throw new Error('not 3 options');
-    for (const opt of data.options) {
-      if (!opt.tasks || opt.tasks.length < 1 || opt.tasks.length > 3) throw new Error('task count');
-      for (const t of opt.tasks) {
-        if (t.category !== '日常委託') throw new Error('category');
-        if (t.estimatedMinutes < 1 || t.estimatedMinutes > 10) throw new Error('minutes');
-        if (GRETA_FORBIDDEN_KEYWORDS.some(kw => (t.title||'').includes(kw))) throw new Error('forbidden keyword');
-      }
+    // 補齊到 groupSize
+    for (let j = tasks.length; j < groupSize; j++) {
+      const pool = pickWeightedPool(weights);
+      const pick = pickFromPool(pool, weights, 1, usedIds);
+      if (pick.length > 0) { tasks.push(pick[0]); usedIds.add(pick[0].id); }
     }
-    return data;
-  } catch(e) {
-    console.warn('validateGretaDailyCheck failed:', e.message);
-    return null;
-  }
-}
 
-// ── 驗證 AI 修繕單回傳 ───────────────────────────────
-function validateGretaRepairOrderResponse(raw, roomStatus) {
-  const expectedCount = roomStatus === 'fogged' ? 2 : 1;
-  try {
-    const data = typeof raw === 'string' ? JSON.parse(raw.replace(/```json|```/g,'').trim()) : raw;
-    if (!data.tasks || data.tasks.length < expectedCount) throw new Error('task count');
-    for (const t of data.tasks) {
-      if (t.category !== '日常委託') throw new Error('category');
-      if (t.estimatedMinutes < 1 || t.estimatedMinutes > 10) throw new Error('minutes');
-      if (GRETA_FORBIDDEN_KEYWORDS.some(kw => (t.title||'').includes(kw))) throw new Error('forbidden');
-    }
-    return data;
-  } catch(e) {
-    console.warn('validateGretaRepairOrder failed:', e.message);
-    return null;
-  }
-}
+    const mainPool = tasks[0]?.pool || 'lowEnergy';
+    const noteArr  = gretaOptionNotes[mainPool] || gretaOptionNotes.lowEnergy;
+    const comboKey = tasks.map(t=>t.id).sort().join(',');
 
-// ── 房東檢查（AI）────────────────────────────────────
-async function openGretaDailyCheck() {
-  const todayKey = getDateKey();
-  if (gretaState.dailyCheck.dateKey === todayKey && gretaState.dailyCheck.used) {
-    // 已使用，直接顯示結果
-    showGretaCheckModal(gretaState.dailyCheck, true);
-    return;
-  }
-  if (gretaState.dailyCheck.dateKey === todayKey && gretaState.dailyCheck.options?.length > 0) {
-    // 已生成但未選，直接顯示
-    showGretaCheckModal(gretaState.dailyCheck, false);
-    return;
-  }
-
-  // 生成新的
-  const loadModal = showGretaLoadingModal('葛莉達正在敲你的門...');
-  const stats = buildRecentStats();
-  const prompt = buildGretaDailyCheckPrompt(stats, gretaState.room);
-
-  let checkData = null;
-  try {
-    const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini', max_tokens: 600,
-        messages: [{ role: 'user', content: prompt }]
-      })
+    // 避免三組完全一樣
+    const label = ['A 組','B 組','C 組'][i];
+    options.push({
+      id: `opt_${i}`,
+      label,
+      note: randFrom(noteArr),
+      tasks: tasks.map(t => ({ ...t, source: 'gretaDailyCheck' })),
+      _comboKey: comboKey,
     });
-    const d = await res.json();
-    if (d.debug?.code === 429) { showQuotaWarning(); loadModal.remove(); return; }
-    const text = d.content?.[0]?.text || '';
-    checkData = validateGretaDailyCheckResponse(text);
-  } catch(e) { console.error('gretaDailyCheck AI error:', e); }
+  }
 
-  if (!checkData) checkData = { ...gretaDailyCheckFallback, _isFallback: true };
+  return { introText: randFrom(gretaDailyIntroTexts), options };
+}
 
-  gretaState.dailyCheck = {
-    dateKey: todayKey,
-    used: false,
-    introText: checkData.introText,
-    options: checkData.options,
-    acceptedOptionId: null
-  };
+// ── 開啟房東檢查 Modal ────────────────────────────────
+function openGretaDailyCheck() {
+  const todayKey = getDateKey();
+  // 今日已生成但未接受 → 直接顯示同一批
+  if (gretaState.dailyCheck.dateKey === todayKey && gretaState.dailyCheck.options?.length > 0) {
+    showGretaCheckModal(gretaState.dailyCheck, gretaState.dailyCheck.used);
+    return;
+  }
+  // 生成新的一批
+  const { introText, options } = generateGretaDailyCheckOptions();
+  gretaState.dailyCheck = { dateKey: todayKey, used: false, introText, options, acceptedOptionId: null };
   saveGretaState();
-  loadModal.remove();
   showGretaCheckModal(gretaState.dailyCheck, false);
 }
 
-function showGretaLoadingModal(msg) {
-  const modal = document.createElement('div');
-  modal.className = 'greta-check-modal-overlay';
-  modal.innerHTML = `<div class="greta-check-modal" style="padding:40px;text-align:center">
-    <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:8px">葛莉達</div>
-    <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text3)">${msg}</div>
-  </div>`;
-  document.body.appendChild(modal);
-  return modal;
-}
-
 function showGretaCheckModal(checkData, alreadyUsed) {
-  const existing = document.getElementById('gretaCheckModal');
-  if (existing) existing.remove();
+  document.getElementById('gretaCheckModal')?.remove();
 
   const optionsHtml = checkData.options.map(opt => {
     const tasksHtml = opt.tasks.map(t =>
@@ -5687,7 +5690,7 @@ function showGretaCheckModal(checkData, alreadyUsed) {
         <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="document.getElementById('gretaCheckModal').remove()">✕</span>
       </div>
       <div style="padding:16px 20px 6px">
-        <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px;font-style:italic">${checkData.introText || ''}</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px;font-style:italic">${checkData.introText}</div>
         ${optionsHtml}
       </div>
     </div>`;
@@ -5695,123 +5698,149 @@ function showGretaCheckModal(checkData, alreadyUsed) {
 }
 
 async function acceptGretaDailyCheckOption(optionId) {
+  if (gretaState.dailyCheck.used) return;
   const opt = gretaState.dailyCheck.options.find(o => o.id === optionId);
   if (!opt) return;
+
+  const rewardFor = (min) => min <= 2
+    ? { exp:5, coins:2 } : min <= 5
+    ? { exp:8, coins:3 } : { exp:12, coins:5 };
+
+  // 把任務存在 gretaState 裡，不加進任務板
   gretaState.dailyCheck.used = true;
   gretaState.dailyCheck.acceptedOptionId = optionId;
+  gretaState.dailyCheck.acceptedAt = Date.now();
+  gretaState.dailyCheck.activeTasks = opt.tasks.map((t, i) => ({
+    id: 'greta_task_' + Date.now() + '_' + i,
+    title: t.title,
+    estimatedMinutes: t.estimatedMinutes || 3,
+    tags: t.tags || [],
+    completed: false,
+    completedAt: null,
+    rewards: rewardFor(t.estimatedMinutes || 3),
+  }));
   saveGretaState();
 
-  // 葛莉達任務全是小型日常委託，直接給固定預設值，不呼叫 AI
-  const gretaTaskRewards = (estimatedMinutes) => {
-    if (estimatedMinutes <= 2) return { exp: 5, coins: 2, size: '小任務' };
-    if (estimatedMinutes <= 5) return { exp: 8, coins: 3, size: '小任務' };
-    return { exp: 12, coins: 5, size: '小任務' };
-  };
-
-  let addedCount = 0;
-  for (const t of opt.tasks) {
-    try {
-      const rewards = gretaTaskRewards(t.estimatedMinutes || 3);
-      const task = await sb('tasks', 'POST', {
-        title: t.title,
-        description: '葛莉達推薦的日常委託',
-        exp_reward: rewards.exp,
-        coin_reward: rewards.coins,
-        size: rewards.size,
-        category: '日常委託',
-        status: 'pending',
-        source: 'gretaDailyCheck'
-      });
-      tasks.unshift(task[0]);
-      addedCount++;
-    } catch(e) { console.error('greta task add failed:', e); }
-  }
-
   document.getElementById('gretaCheckModal')?.remove();
-  renderTasks();
   renderGretaPanel();
-  notify(`✦ 葛莉達的房東推薦：已加入 ${addedCount} 個委託`, 'gold');
+  notify(`✦ 葛莉達的房東推薦已接受，記得回來打勾`, 'gold');
 }
 
-// ── 修繕單生成（AI）──────────────────────────────────
-async function generateRepairOrder() {
-  const stats = buildRecentStats();
+async function completeGretaTask(taskId) {
+  const activeTasks = gretaState.dailyCheck.activeTasks || [];
+  const task = activeTasks.find(t => t.id === taskId);
+  if (!task || task.completed) return;
+
+  task.completed = true;
+  task.completedAt = Date.now();
+  saveGretaState();
+
+  // 給獎勵
+  const r = task.rewards;
+  await sb(`player?id=eq.${player.id}`, 'PATCH', {
+    exp: player.exp + r.exp,
+    coins: player.coins + r.coins
+  });
+  player.exp   += r.exp;
+  player.coins += r.coins;
+
+  // 更新房間耐久度（模擬日常委託完成）
+  const fakeTask = { category: '日常委託', title: task.title, tags: task.tags, description: '' };
+  updateRoomDurabilityOnTask(fakeTask);
+
+  // 檢查升級
+  const newLevel = getLevel(player.exp);
+  if (newLevel > getLevel(player.exp - r.exp)) checkAndShowStory(newLevel);
+
+  renderPlayer();
+  renderGretaPanel();
+  notify(`✓ ${task.title} +${r.exp} EXP / +${r.coins} ◈`, 'gold');
+}
+
+// ── 本地修繕單 ────────────────────────────────────────
+function generateLocalRepairOrder() {
   const roomStatus = gretaState.room.status;
   if (roomStatus === 'stable') return;
+  const stats   = buildRecentStats();
+  const hour    = new Date().getHours();
+  const isNight = hour >= 21 || hour < 5;
+  const needed  = roomStatus === 'fogged' ? 2 : 1;
 
-  const prompt = buildGretaRepairOrderPrompt(stats, gretaState.room);
-  let orderData = null;
+  // 優先 organize，依條件允許混其他
+  const allowedTones = ['organize'];
+  if (stats.foodTasksLast24h === 0)                          allowedTones.push('food');
+  if (stats.sleepPrepTasksLast24h === 0 && isNight)          allowedTones.push('sleepPrep');
+  if (stats.bodyCareTasksLast24h === 0)                      allowedTones.push('bodyCare');
 
-  try {
-    const res = await fetch('https://chiwu-proxy.gdragon1020.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini', max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const d = await res.json();
-    if (d.debug?.code === 429) return;
-    const text = d.content?.[0]?.text || '';
-    orderData = validateGretaRepairOrderResponse(text, roomStatus);
-  } catch(e) { console.error('gretaRepairOrder AI error:', e); }
+  const pool = gretaRepairTaskTemplates
+    .filter(t => allowedTones.includes(t.tone))
+    .sort(() => Math.random()-0.5);
 
-  // Fallback
-  if (!orderData) {
-    const needed = roomStatus === 'fogged' ? 2 : 1;
-    const shuffled = [...gretaRepairFallbackPool].sort(() => Math.random()-0.5);
-    orderData = {
-      noteTitle: '葛莉達貼在門上的修繕單',
-      noteText: roomStatus === 'fogged'
-        ? '霧氣有點重了。不用一次全清，先把能下腳的地方清出來。'
-        : '房間有點亂了。先動一下，不用多，一樣就好。',
-      tasks: shuffled.slice(0, needed),
-      _isFallback: true
-    };
+  const picked = [];
+  const usedIds = new Set();
+  for (const t of pool) {
+    if (picked.length >= needed) break;
+    if (!usedIds.has(t.id)) { picked.push(t); usedIds.add(t.id); }
+  }
+  // 若不夠就從全部補
+  if (picked.length < needed) {
+    for (const t of gretaRepairTaskTemplates.sort(() => Math.random()-0.5)) {
+      if (picked.length >= needed) break;
+      if (!usedIds.has(t.id)) { picked.push(t); usedIds.add(t.id); }
+    }
   }
 
   const orderId = 'repair_' + Date.now();
   const order = {
-    id: orderId,
-    createdAt: Date.now(),
-    dateKey: getDateKey(),
+    id: orderId, createdAt: Date.now(), dateKey: getDateKey(),
     roomStatusAtCreated: roomStatus,
     roomDurabilityAtCreated: gretaState.room.durability,
-    generatedBy: orderData._isFallback ? 'fallback' : 'ai',
-    noteTitle: orderData.noteTitle,
-    noteText: orderData.noteText,
-    tasks: orderData.tasks.map((t, i) => ({
-      id: orderId + '_t' + i,
-      title: t.title,
-      category: '日常委託',
-      tags: t.tags || [],
-      estimatedMinutes: t.estimatedMinutes,
-      completed: false,
-      completedAt: null
+    generatedBy: 'local',
+    noteTitle: randFrom(repairOrderTitles[roomStatus]),
+    noteText:  randFrom(repairOrderNotes[roomStatus]),
+    tasks: picked.map((t,i) => ({
+      id: orderId+'_t'+i, title: t.title, category: '日常委託',
+      tags: t.tags, estimatedMinutes: t.estimatedMinutes,
+      completed: false, completedAt: null
     })),
-    status: 'active',
-    completedAt: null,
-    rewardClaimed: false
+    status: 'active', completedAt: null, rewardClaimed: false
   };
-
   gretaState.repairOrders.push(order);
   saveGretaState();
   notify('📋 葛莉達貼了一張修繕單', 'gold');
 }
 
-// ── 修繕單進度追蹤 ────────────────────────────────────
+// ── 修繕單任務直接打勾（面板內） ─────────────────────
+async function completeRepairTask(orderId, taskId) {
+  const order = gretaState.repairOrders.find(o => o.id === orderId);
+  if (!order || order.status !== 'active') return;
+  const t = order.tasks.find(t => t.id === taskId);
+  if (!t || t.completed) return;
+  t.completed = true;
+  t.completedAt = Date.now();
+
+  // 耐久度更新
+  const fakeTask = { category: '日常委託', title: t.title, tags: t.tags, description: '' };
+  updateRoomDurabilityOnTask(fakeTask);
+
+  if (order.tasks.every(t => t.completed) && !order.rewardClaimed) {
+    await completeGretaRepairOrder(order.id);
+  } else {
+    saveGretaState();
+    renderGretaPanel();
+  }
+}
+
+// ── 修繕單進度 ────────────────────────────────────────
 function checkRepairOrderProgress(taskTitle) {
   for (const order of gretaState.repairOrders) {
     if (order.status !== 'active') continue;
     for (const t of order.tasks) {
       if (!t.completed && t.title === taskTitle) {
-        t.completed = true;
-        t.completedAt = Date.now();
+        t.completed = true; t.completedAt = Date.now();
       }
     }
-    const allDone = order.tasks.every(t => t.completed);
-    if (allDone && !order.rewardClaimed) {
+    if (order.tasks.every(t => t.completed) && !order.rewardClaimed) {
       completeGretaRepairOrder(order.id);
     }
   }
@@ -5820,59 +5849,44 @@ function checkRepairOrderProgress(taskTitle) {
 async function completeGretaRepairOrder(orderId) {
   const order = gretaState.repairOrders.find(o => o.id === orderId);
   if (!order || order.rewardClaimed) return;
-
-  order.status = 'completed';
-  order.completedAt = Date.now();
-  order.rewardClaimed = true;
+  order.status = 'completed'; order.completedAt = Date.now(); order.rewardClaimed = true;
 
   const prevStatus = order.roomStatusAtCreated;
   gretaState.room.durability = clampDurability(gretaState.room.durability + 10);
   syncRoomStatus();
 
-  // 隨機 +10 金幣或 +10 碎片
-  const rewardType = Math.random() < 0.5 ? 'gold' : 'fragment';
-  if (rewardType === 'gold') {
-    await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins + 10 });
+  const msg = randFrom(repairCompleteTexts);
+  if (Math.random() < 0.5) {
+    await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins+10 });
     player.coins += 10;
-    notify('📋 修繕單完成！房間 +10 耐久 / +10 金幣', 'gold');
+    notify(`📋 ${msg}　房間 +10 耐久 ／ +10 金幣`, 'gold');
   } else {
     await addFragments(10);
-    notify('📋 修繕單完成！房間 +10 耐久 / +10 碎片', 'exp');
+    notify(`📋 ${msg}　房間 +10 耐久 ／ +10 碎片`, 'exp');
   }
-
-  // 10% 機率獲得小寶箱（從嚴重狀態回復時）
-  if ((prevStatus === 'fogged') && Math.random() < 0.10) {
-    setTimeout(() => openChest(), 800);
-  }
-
-  renderPlayer();
-  renderGretaPanel();
-  saveGretaState();
+  if (prevStatus === 'fogged' && Math.random() < 0.10) setTimeout(() => openChest(), 800);
+  renderPlayer(); renderGretaPanel(); saveGretaState();
 }
 
-// ── 開啟房間狀態 Modal ────────────────────────────────
+// ── 房間狀態 Modal ────────────────────────────────────
 function openGretaRoomModal() {
-  const existing = document.getElementById('gretaRoomModal');
-  if (existing) existing.remove();
-
+  document.getElementById('gretaRoomModal')?.remove();
   const { durability, status } = gretaState.room;
   const statusLabel = { stable:'穩定', messy:'微亂', fogged:'霧化' }[status];
   const statusColor = { stable:'var(--green)', messy:'#f0a050', fogged:'var(--red)' }[status];
-  const gretaQuote = {
+  const gretaQuote  = {
     stable: '「還算能住。繼續保持。」',
-    messy: '「還沒壞，但你最好別再假裝沒看到。」',
-    fogged: '「霧要在你房間裡築巢了。動一下。」'
+    messy:  '「還沒壞，但你最好別再假裝沒看到。」',
+    fogged: '「霧要在你房間裡築巢了。動一下。」',
   }[status];
-
   const activeOrder = gretaState.repairOrders.find(o => o.status === 'active');
-
-  const repairHtml = activeOrder ? `
-    <div class="repair-order-card">
+  const repairHtml  = activeOrder ? `
+    <div class="repair-order-card" style="margin:12px 0 0">
       <div class="repair-order-title">${activeOrder.noteTitle}</div>
       <div class="repair-order-note">${activeOrder.noteText}</div>
       ${activeOrder.tasks.map(t => `
         <div class="repair-task-item">
-          <span class="${t.completed ? 'repair-task-done' : ''}">${t.completed ? '✓' : '·'} ${t.title}</span>
+          <span class="${t.completed?'repair-task-done':''}">${t.completed?'✓':'·'} ${t.title}</span>
           <span class="greta-task-min" style="margin-left:auto">${t.estimatedMinutes}分鐘</span>
         </div>`).join('')}
       <div class="repair-reward-hint">完成後：耐久度 +10 ／ +10 金幣或碎片</div>
@@ -5889,7 +5903,7 @@ function openGretaRoomModal() {
         <span style="color:var(--text3);cursor:pointer;font-size:18px" onclick="document.getElementById('gretaRoomModal').remove()">✕</span>
       </div>
       <div style="padding:16px 20px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
           <div>
             <div style="font-family:'Cinzel',serif;font-size:18px;color:${statusColor}">${statusLabel}</div>
             <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-top:2px">耐久度 ${durability} / 100</div>
@@ -5901,32 +5915,62 @@ function openGretaRoomModal() {
           </div>
         </div>
         <div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:14px">${gretaQuote}</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">耐久度提升方式</div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.8">
-          完成日常委託 +3 · 整理類 +5 · 完成修繕單 +10<br>
-          未完成任何日常委託的隔天 -5
-        </div>
-        ${repairHtml || (status !== 'stable' ? '<div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--text3);margin-top:12px">修繕單將在明天 00:00 自動生成</div>' : '')}
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:1px">耐久度提升方式</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.8">完成日常委託 +3 · 整理類 +5 · 完成修繕單 +10<br>未完成任何日常委託的隔天 -5</div>
+        ${repairHtml || (status !== 'stable' ? '<div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--text3);margin-top:10px">若房間狀態不穩定，修繕單將在 00:00 自動出現</div>' : '')}
       </div>
     </div>`;
   document.body.appendChild(modal);
 }
 
-// ── 葛莉達面板渲染（嵌在 NPC 卡片內）────────────────
+// ── 葛莉達面板渲染 ────────────────────────────────────
 function renderGretaPanel() {
   const el = document.getElementById('gretaPanelInner');
   if (!el) return;
-
-  const todayKey = getDateKey();
-  const checkUsed = gretaState.dailyCheck.dateKey === todayKey && gretaState.dailyCheck.used;
+  const todayKey    = getDateKey();
+  const check       = gretaState.dailyCheck;
+  const checkToday  = check.dateKey === todayKey;
+  const checkUsed   = checkToday && check.used;
+  const activeTasks = (checkToday && check.activeTasks) || [];
   const { durability, status } = gretaState.room;
   const statusLabel = { stable:'穩定', messy:'微亂', fogged:'霧化' }[status];
   const statusColor = { stable:'var(--green)', messy:'#f0a050', fogged:'var(--red)' }[status];
   const activeOrder = gretaState.repairOrders.find(o => o.status === 'active');
 
+  // 已接受的任務清單
+  const activeTasksHtml = activeTasks.length > 0 ? `
+    <div style="padding:8px 16px 10px;border-top:1px solid var(--border)">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:6px">今日葛莉達委託</div>
+      ${activeTasks.map(t => `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:${t.completed ? 'var(--text3)' : 'var(--text2)'};flex:1;${t.completed ? 'text-decoration:line-through' : ''}">${t.title}</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">${t.estimatedMinutes}分</span>
+          ${t.completed
+            ? `<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green)">✓</span>`
+            : `<button class="btn-greta" style="padding:2px 8px;font-size:10px" onclick="completeGretaTask('${t.id}')">完成</button>`
+          }
+        </div>`).join('')}
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-top:6px">
+        ${activeTasks.filter(t=>t.completed).length} / ${activeTasks.length} 完成
+      </div>
+    </div>` : '';
+
+  // 修繕單任務
+  const repairTasksHtml = activeOrder ? `
+    <div style="padding:8px 16px 10px;border-top:1px solid rgba(240,112,112,0.3)">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);letter-spacing:1px;margin-bottom:4px">📋 ${activeOrder.noteTitle}</div>
+      <div style="font-size:11px;color:var(--text3);font-style:italic;margin-bottom:6px;line-height:1.5">${activeOrder.noteText}</div>
+      ${activeOrder.tasks.map(t => `
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+          <span style="font-size:13px;color:${t.completed?'var(--text3)':'var(--text2)'};flex:1;${t.completed?'text-decoration:line-through':''}">${t.completed?'✓':'·'} ${t.title}</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">${t.estimatedMinutes}分</span>
+          ${t.completed ? '' : `<button class="btn-greta" style="padding:2px 8px;font-size:10px;border-color:rgba(240,112,112,0.5);color:var(--red)" onclick="completeRepairTask('${activeOrder.id}','${t.id}')">完成</button>`}
+        </div>`).join('')}
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">完成後：耐久度 +10 ／ +10 金幣或碎片</div>
+    </div>` : '';
+
   el.innerHTML = `
     <div class="greta-panel">
-      <!-- 房間狀態列 -->
       <div class="greta-panel-row">
         <span class="greta-panel-label">房間狀態</span>
         <div class="room-durability-bar-track">
@@ -5935,14 +5979,14 @@ function renderGretaPanel() {
         <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${statusColor};min-width:32px;text-align:right">${statusLabel}</span>
         <button class="btn-greta" style="padding:3px 8px;font-size:10px" onclick="openGretaRoomModal()">詳情</button>
       </div>
-      <!-- 功能按鈕列 -->
       <div class="greta-panel-row">
-        <button class="btn-greta" ${checkUsed ? 'disabled' : ''} onclick="openGretaDailyCheck()">
+        <button class="btn-greta" ${checkUsed?'disabled':''} onclick="openGretaDailyCheck()">
           ${checkUsed ? '✓ 今日已使用' : '房東檢查'}
         </button>
-        ${activeOrder ? `<button class="btn-greta" style="border-color:rgba(240,112,112,0.5);color:var(--red)" onclick="openGretaRoomModal()">📋 修繕單待處理</button>` : ''}
       </div>
-    </div>`;
+    </div>
+    ${activeTasksHtml}
+    ${repairTasksHtml}`;
 }
 
 // ─── NPC TRUST SYSTEM ────────────────────────────────
