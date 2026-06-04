@@ -6490,7 +6490,11 @@ function renderCalendar() {
 
   grid.innerHTML = '';
   cells.forEach(({ date, otherMonth }) => {
-    const dateKey = date.toISOString().slice(0,10);
+    // 用本地時間產生 dateKey，避免 toISOString() UTC 偏移問題
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    const dateKey = `${y}-${m}-${d}`;
     const isToday = date.getTime() === today.getTime();
     const isSelected = selectedCalDate === dateKey;
 
