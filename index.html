@@ -948,6 +948,41 @@
   @keyframes notifIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   @keyframes notifOut { to { transform: translateX(100%); opacity: 0; } }
 
+
+
+  /* ── NPC FEATURE COLLAPSE ── */
+  .npc-feature-box {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+  .npc-feature-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: rgba(201,168,74,0.06);
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--gold);
+    padding: 9px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .npc-feature-toggle:hover { background: var(--gold-dim); }
+  .npc-feature-toggle .feature-hint {
+    color: var(--text3);
+    font-size: 10px;
+    letter-spacing: 0;
+    margin-left: auto;
+  }
+  .npc-feature-body { display: block; }
+  .npc-feature-body.collapsed { display: none; }
+  .npc-feature-caret { color: var(--gold2); min-width: 14px; text-align: right; }
+
   /* Section labels */
   .section-label {
     font-family: 'Share Tech Mono', monospace;
@@ -1296,6 +1331,121 @@
     font-size: 11px;
     color: var(--text3);
     white-space: nowrap;
+  }
+
+
+  /* ── 托比完成對話小窗 ── */
+  .toby-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: 2600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .toby-modal {
+    width: min(520px, 100%);
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    box-shadow: 0 0 32px rgba(224,184,74,0.16), 0 12px 40px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+    animation: tobyModalIn 0.22s ease-out;
+  }
+  .toby-modal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(224,184,74,0.10), transparent 35%),
+      radial-gradient(circle at 90% 85%, rgba(94,221,212,0.08), transparent 38%);
+    pointer-events: none;
+  }
+  @keyframes tobyModalIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .toby-modal-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border2);
+    background: rgba(30,33,48,0.42);
+  }
+  .toby-modal-avatar {
+    width: 46px;
+    height: 46px;
+    border: 1px solid var(--gold);
+    background: var(--bg2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .toby-modal-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .toby-modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .toby-modal-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    margin-top: 3px;
+  }
+  .toby-modal-close {
+    margin-left: auto;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+  }
+  .toby-modal-close:hover { color: var(--text); }
+  .toby-modal-body {
+    position: relative;
+    padding: 18px;
+  }
+  .toby-modal-task {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .toby-modal-speech {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    padding: 13px 15px;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.8;
+    margin-bottom: 12px;
+  }
+  .toby-modal-reward {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    line-height: 1.7;
+    background: rgba(224,184,74,0.07);
+    border: 1px solid rgba(224,184,74,0.25);
+    padding: 9px 12px;
+    margin-bottom: 14px;
+  }
+  .toby-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   /* ── WEATHER CARD ── */
@@ -2228,7 +2378,6 @@
     <div class="tab active" onclick="switchTab('tasks')">📋 任務</div>
     <div class="tab" onclick="switchTab('shop')">🏪 商店</div>
     <div class="tab" onclick="switchTab('npc')">👥 居民</div>
-    <div class="tab" onclick="switchTab('tobydice')">🎲 占卜</div>
     <div class="tab" onclick="switchTab('decor')">🏠 裝潢</div>
     <div class="tab" onclick="switchTab('bag')">🎒 背包</div>
     <div class="tab" onclick="switchTab('calendar')">📅 日誌</div>
@@ -2326,55 +2475,7 @@
 
 
 
-  <!-- TOBY DICE TAB -->
-  <div class="tab-content" id="tab-tobydice">
-    <div class="toby-dice-hero">
-      <div class="toby-dice-top">
-        <div class="toby-dice-avatar"><img src="character/Toby.png" alt="托比" onerror="this.parentElement.innerHTML='⚙️'"></div>
-        <div>
-          <div class="toby-dice-title">托比的業餘占卜｜任務骰子</div>
-          <div class="toby-dice-subtitle">AMATEUR DIVINATION · DAILY DRIFT DICE</div>
-          <div class="toby-dice-copy">
-            托比把黃銅骰子、舊紙籤和一顆有點裂掉的靈石排在桌上。<br>
-            「這不是命令，是一個可能性。骰子說，不用做很大的事，稍微繞一下就好。」
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-label">選擇現在的霧氣狀態</div>
-    <div class="toby-state-grid" id="tobyStateGrid"></div>
-
-    <div class="toby-dice-actions">
-      <button class="btn btn-gold" onclick="rollTobyDice()">擲骰</button>
-      <button class="btn btn-ghost" onclick="rerollTobyDice()">重新擲骰</button>
-      <button class="btn btn-ghost" onclick="renderTobyHistory()">更新紀錄</button>
-    </div>
-
-    <div class="toby-dice-note" id="tobyDiceHint">
-      今天的霧氣有點黏。先選一個狀態，讓托比抽一張不太重要、但可能讓今天發亮的小任務。
-    </div>
-
-    <div id="tobyCardWrap"></div>
-
-    <div class="toby-dice-actions" id="tobyCardActions" style="display:none">
-      <button class="btn btn-gold" onclick="markTobyTask('completed')">標記完成</button>
-      <button class="btn btn-ghost" onclick="markTobyTask('later')">稍後再說</button>
-      <button class="btn btn-ghost" onclick="markTobyTask('skip')">今天先不做</button>
-    </div>
-
-    <div class="toby-finish-panel" id="tobyFinishPanel">
-      <div class="toby-finish-title">✦ 托比回收占卜紙籤</div>
-      <div class="toby-finish-text" id="tobyFinishText"></div>
-    </div>
-
-    <div class="section-label">今日偏航紀錄</div>
-    <div class="toby-history-list" id="tobyHistoryList">
-      <div class="empty-state">今天還沒有偏航紀錄。骰子正在桌上小聲滾動。</div>
-    </div>
-  </div>
-
-    <!-- DECOR TAB -->
+  <!-- DECOR TAB -->
   <div class="tab-content" id="tab-decor">
     <!-- Scene selector -->
     <div class="scene-selector">
@@ -4804,40 +4905,14 @@ let dailyTaskCounts = {}; // { category: count } reset daily
 let chainTracker = (() => {
   const today = new Date().toDateString();
   const saved = localStorage.getItem('chiwu_chain_' + today);
-  if (saved) {
-    const parsed = JSON.parse(saved);
-    return {
-      lastCategory: parsed.lastCategory || null,
-      chainCount: parsed.chainCount || 0,
-      previousCategory: parsed.previousCategory || null,
-      date: parsed.date || today
-    };
-  }
-  return { lastCategory: null, chainCount: 0, previousCategory: null, date: today };
+  if (saved) return JSON.parse(saved);
+  return { lastCategory: null, chainCount: 0, date: today };
 })();
 
 function saveChainTracker() {
   const today = new Date().toDateString();
   chainTracker.date = today;
   localStorage.setItem('chiwu_chain_' + today, JSON.stringify(chainTracker));
-}
-
-function updateChainTrackerForTask(task) {
-  const today = new Date().toDateString();
-  if (chainTracker.date !== today) {
-    chainTracker = { lastCategory: null, chainCount: 0, previousCategory: null, date: today };
-  }
-
-  const previousCategory = chainTracker.lastCategory || null;
-  const currentCategory = task.category;
-  const nextCount = previousCategory === currentCategory ? (chainTracker.chainCount || 0) + 1 : 1;
-
-  chainTracker.previousCategory = previousCategory;
-  chainTracker.lastCategory = currentCategory;
-  chainTracker.chainCount = nextCount;
-  saveChainTracker();
-
-  return { previousCategory, currentCategory, chainCount: nextCount };
 }
 let dailyLoginDone = false;
 
@@ -5131,11 +5206,19 @@ function applyEquipmentEffects(baseExp, baseCoins, task) {
       }
     }
     if (ef.type === 'chainBonus') {
-      const categoryMatches = !ef.category || ef.category === cat;
-      if (categoryMatches && chainTracker.chainCount === ef.chainIndex) {
-        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
-        else if (ef.target === 'gold') coinBonus = Math.min(coinBonus + ef.valuePercent / 100, MAX_BONUS);
+      if (chainTracker.lastCategory === cat) {
+        chainTracker.chainCount++;
+      } else {
+        chainTracker.lastCategory = cat;
+        chainTracker.chainCount = 1;
       }
+      if (chainTracker.chainCount >= ef.chainIndex) {
+        if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
+        // Reset chain after trigger
+        chainTracker.chainCount = 0;
+        chainTracker.lastCategory = null;
+      }
+      saveChainTracker();
     }
   });
 
@@ -5154,11 +5237,9 @@ async function updateChargeProgress(task) {
     const state = chargeState[ef.chargeName] || { count: 0, lastGainedDate: '', lastUsedDate: '' };
     const today = getDayKey();
     const cond = ef.gainCondition;
-    const matches = cond.category
-      ? task.category === cond.category
-      : (cond.sameCategory ? chainTracker.chainCount >= cond.completedCount : true);
+    const matches = cond.category ? task.category === cond.category : (cond.sameCategory ? task.category === chainTracker.lastCategory : true);
     if (matches && state.lastGainedDate !== today) {
-      state.count = cond.sameCategory ? cond.completedCount : (state.count || 0) + 1;
+      state.count = (state.count || 0) + 1;
       if (state.count >= cond.completedCount) {
         state.count = 0;
         state.lastGainedDate = today;
@@ -7421,6 +7502,66 @@ function renderShop() {
   });
 }
 
+function isNpcFeatureCollapsed(featureId) {
+  return localStorage.getItem('chiwu_npc_feature_collapsed_' + featureId) === '1';
+}
+function toggleNpcFeature(featureId) {
+  const nowCollapsed = !isNpcFeatureCollapsed(featureId);
+  localStorage.setItem('chiwu_npc_feature_collapsed_' + featureId, nowCollapsed ? '1' : '0');
+  renderNPCs();
+}
+function npcFeatureToggleHtml(featureId, title, hint) {
+  const collapsed = isNpcFeatureCollapsed(featureId);
+  return `
+    <button class="npc-feature-toggle" onclick="event.stopPropagation(); toggleNpcFeature('${featureId}')">
+      <span>${title}</span>
+      <span class="feature-hint">${hint || ''}</span>
+      <span class="npc-feature-caret">${collapsed ? '▸' : '▾'}</span>
+    </button>`;
+}
+function renderTobyDicePanelHtml() {
+  const collapsed = isNpcFeatureCollapsed('toby_dice');
+  return `
+    <div class="npc-feature-box toby-npc-feature">
+      ${npcFeatureToggleHtml('toby_dice', '🎲 托比的業餘占卜｜任務骰子', '完成目前任務後才能再骰')}
+      <div class="npc-feature-body ${collapsed ? 'collapsed' : ''}" id="tobyDiceNpcBody">
+        <div class="toby-dice-hero" style="border-left:none;border-right:none;border-top:none;margin:0">
+          <div class="toby-dice-top">
+            <div class="toby-dice-avatar"><img src="character/Toby.png" alt="托比" onerror="this.parentElement.innerHTML='⚙️'"></div>
+            <div>
+              <div class="toby-dice-title">任務骰子</div>
+              <div class="toby-dice-subtitle">AMATEUR DIVINATION · DAILY DRIFT DICE</div>
+              <div class="toby-dice-copy">
+                托比把黃銅骰子、舊紙籤和一顆有點裂掉的靈石排在桌上。<br>
+                「這不是命令，是一個可能性。骰子說，不用做很大的事，稍微繞一下就好。」
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 16px 0">
+          <div class="section-label">選擇現在的霧氣狀態</div>
+          <div class="toby-state-grid" id="tobyStateGrid"></div>
+          <div class="toby-dice-actions">
+            <button class="btn btn-gold" id="tobyRollBtn" onclick="rollTobyDice()">擲骰</button>
+            <button class="btn btn-ghost" id="tobyRerollBtn" onclick="rerollTobyDice()">重新擲骰</button>
+          </div>
+          <div class="toby-dice-note" id="tobyDiceHint">
+            今天的霧氣有點黏。先選一個狀態，讓托比抽一張不太重要、但可能讓今天發亮的小任務。
+          </div>
+          <div id="tobyCardWrap"></div>
+          <div class="toby-dice-actions" id="tobyCardActions" style="display:none">
+            <button class="btn btn-gold" onclick="markTobyTask('completed')">標記完成</button>
+            <button class="btn btn-ghost" onclick="markTobyTask('later')">稍後再說</button>
+            <button class="btn btn-ghost" onclick="markTobyTask('skip')">今天先不做</button>
+          </div>
+          <div class="toby-finish-panel" id="tobyFinishPanel">
+            <div class="toby-finish-title">✦ 托比回收占卜紙籤</div>
+            <div class="toby-finish-text" id="tobyFinishText"></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
 function renderNPCs() {
   const list = document.getElementById('npcList');
   list.innerHTML = '';
@@ -7436,6 +7577,7 @@ function renderNPCs() {
     const topicUnlocked = specialTopic && ratio >= specialTopic.unlockRatio;
     const topicUsed = specialTopic && getSpecialTopicUsed(specialTopic.id);
     const key = npc.name.replace(/[\s・]/g,'_');
+    const gretaCollapsed = isNpcFeatureCollapsed('greta_panel');
 
     const el = document.createElement('div');
     el.className = 'npc-card';
@@ -7459,7 +7601,16 @@ function renderNPCs() {
       </div>
 
       <!-- 葛莉達專屬面板 -->
-      ${npc.name === '葛莉達・鐵心' ? `<div id="gretaPanelInner"></div>` : ''}
+      ${npc.name === '葛莉達・鐵心' ? `
+        <div class="npc-feature-box">
+          ${npcFeatureToggleHtml('greta_panel', '🛠 葛莉達的房東檢查', '房間狀態／日常委託')}
+          <div class="npc-feature-body ${gretaCollapsed ? 'collapsed' : ''}">
+            <div id="gretaPanelInner"></div>
+          </div>
+        </div>` : ''}
+
+      <!-- 托比任務骰子 -->
+      ${npc.name === '托比' ? renderTobyDicePanelHtml() : ''}
 
       <!-- 特殊話題（信任達門檻才顯示） -->
       ${topicUnlocked ? `
@@ -7478,7 +7629,7 @@ function renderNPCs() {
             : msgs.map(m => {
                 const isPlayer = m.message.startsWith('[玩家]');
                 const isSpecial = m.message.startsWith('[特殊]');
-                const text = m.message.replace(/^\[玩家\]|\[特殊\]/,'').trim();
+                const text = m.message.replace(/^\[玩家\]|^\[特殊\]/,'').trim();
                 return `<div class="${isSpecial ? 'npc-special-bubble' : `chat-bubble ${isPlayer ? 'player' : 'npc'}`}">
                   <div class="bubble-name">${isPlayer ? '你' : npc.name}${isSpecial ? ' · 特殊話題' : ''}</div>
                   ${text}
@@ -7494,8 +7645,13 @@ function renderNPCs() {
     `;
     list.appendChild(el);
   });
-  // 葛莉達面板需要等 DOM 建立後渲染
-  requestAnimationFrame(renderGretaPanel);
+  requestAnimationFrame(() => {
+    renderGretaPanel();
+    renderTobyStateButtons();
+    renderCurrentTobyCard();
+    renderTobyHistory();
+    updateTobyDiceLockUI();
+  });
 }
 
 function renderDebt() {
@@ -7656,10 +7812,6 @@ async function completeTask(id) {
       let expGain = cd.half ? Math.ceil(task.exp_reward * 0.5) : task.exp_reward;
       let coinGain = cd.half ? Math.ceil(task.coin_reward * 0.5) : task.coin_reward;
 
-      // 0. Update chain once per completed task.
-      // A chain only counts when this task has the same category as the immediately previous completed task.
-      const chainInfo = updateChainTrackerForTask(task);
-
       // 0. Apply summary buff
       const summaryResult = applySummaryBuff(task, expGain, coinGain);
       expGain = summaryResult.exp;
@@ -7699,7 +7851,7 @@ async function completeTask(id) {
       for (const ef of chargeEffects) {
         const applies = ef.consumeEffect.nextTaskCategory
           ? task.category === ef.consumeEffect.nextTaskCategory
-          : (ef.consumeEffect.sameCategory ? chainTracker.chainCount >= 2 : true);
+          : (ef.consumeEffect.sameCategory ? task.category === chainTracker.lastCategory : true);
         if (applies && hasCharge(ef.chargeName)) {
           await consumeCharge(ef.chargeName);
           if (ef.consumeEffect.target === 'exp') expGain = Math.ceil(expGain * ef.consumeEffect.multiplier);
@@ -9076,7 +9228,7 @@ const TOBY_TASK_POOL = [
   { id:'toby_low_001', title:'腳尖著陸', category:'低能量日專用', description:'今天不用起飛。骰子說，腳碰到地板就已經是登陸。', action:'把腳放到地上，停 5 秒。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['低能量','不花錢','不出門'], finishText:'著陸成功。托比沒有放煙火，怕嚇到你。' },
   { id:'toby_low_002', title:'坐起來小儀式', category:'低能量日專用', description:'骰子沒有要求你站起來。它只小小地指向坐起來。', action:'坐起來，或換一個比較舒服的姿勢。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['低能量','照顧自己','不花錢','不出門'], finishText:'姿勢更新完成。托比說今天的任務介面終於載入了一點點。' },
   { id:'toby_low_003', title:'看窗外', category:'低能量日專用', description:'外面的世界不用你處理，你只要確認它還在。', action:'看窗外 10 秒，或看房間裡最遠的地方。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['低能量','感官','觀察','不花錢','不出門'], finishText:'遠方確認。托比說世界還在，今天可以先這樣。' },
-  { id:'toby_low_004', title:'呼吸三枚霧幣', category:'低能量日專用', description:'托比把三枚想像中的霧幣放在桌上，請你慢慢呼吸三次。', action:'慢慢呼吸 3 次。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['低能量','感官','照顧自己','不花錢','不出門'], finishText:'三枚霧幣收回。托比說你剛剛把自己撿回來一點。' },
+  { id:'toby_low_004', title:'呼吸三枚金幣', category:'低能量日專用', description:'托比把三枚想像中的金幣放在桌上，請你慢慢呼吸三次。', action:'慢慢呼吸 3 次。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['低能量','感官','照顧自己','不花錢','不出門'], finishText:'三枚金幣收回。托比說你剛剛把自己撿回來一點。' },
   { id:'toby_morning_001', title:'早晨天空截圖', category:'早晨／夜晚限定', description:'早上的天空像剛開機的城市，需要一張紀錄。', action:'早上看一眼天空，可以拍照，也可以只記得它的顏色。', time:'1分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['早晨'], completionType:'拍照', tags:['早晨','觀察','不花錢'], finishText:'晨間天空已備份。托比說今天的雲像剛睡醒。' },
   { id:'toby_morning_002', title:'第一口水', category:'早晨／夜晚限定', description:'晨霧還沒散，先替身體點一盞小燈。', action:'早上喝第一口水。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['早晨'], completionType:'打勾', tags:['早晨','低能量','感官','不花錢','不出門'], finishText:'第一口水抵達。托比說爐心啟動聲很小，但他聽見了。' },
   { id:'toby_night_001', title:'睡前收工鈴', category:'早晨／夜晚限定', description:'鑄霧城的工坊都會收工，人也可以。今天不用再證明什麼。', action:'睡前對自己說：「今天收工。」', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['夜晚'], completionType:'自由確認', tags:['夜晚收尾','低能量','照顧自己','不花錢','不出門'], finishText:'收工鈴已響。托比把明天的霧先蓋起來。' },
@@ -9173,7 +9325,29 @@ function pickTobyTask(key) {
   if (notLast.length) candidates = notLast;
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
+function hasActiveTobyTask() {
+  return !!(tobyDiceState.currentTaskId && tobyDiceState.currentStatus !== 'completed');
+}
+function updateTobyDiceLockUI() {
+  const locked = hasActiveTobyTask();
+  const rollBtn = document.getElementById('tobyRollBtn');
+  const rerollBtn = document.getElementById('tobyRerollBtn');
+  [rollBtn, rerollBtn].forEach(btn => {
+    if (!btn) return;
+    btn.disabled = locked;
+    btn.style.opacity = locked ? '0.45' : '';
+    btn.style.cursor = locked ? 'not-allowed' : '';
+  });
+  const hint = document.getElementById('tobyDiceHint');
+  if (hint && locked) hint.textContent = '托比把骰子抱在懷裡：這張紙籤還亮著。等你完成它，我們再抽下一張。';
+}
 function rollTobyDice() {
+  if (hasActiveTobyTask()) {
+    const hint = document.getElementById('tobyDiceHint');
+    if (hint) hint.textContent = '托比小聲說：這顆骰子一次只指向一件事。等這張任務完成，再讓霧氣重新洗牌。';
+    updateTobyDiceLockUI();
+    return;
+  }
   const task = pickTobyTask(tobyDiceState.selectedState || 'lost');
   if (!task) return;
   tobyDiceState.currentTaskId = task.id;
@@ -9194,8 +9368,15 @@ function rollTobyDice() {
   if (hint) hint.textContent = '骰子停下了。托比把占卜卡推到你面前，表情非常慎重。';
   renderCurrentTobyCard();
   renderTobyHistory();
+  updateTobyDiceLockUI();
 }
 function rerollTobyDice() {
+  if (hasActiveTobyTask()) {
+    const hint = document.getElementById('tobyDiceHint');
+    if (hint) hint.textContent = '托比搖搖頭：這張占卜卡還沒有回到霧裡。完成之後，骰子才會再醒來。';
+    updateTobyDiceLockUI();
+    return;
+  }
   const hint = document.getElementById('tobyDiceHint');
   if (hint) hint.textContent = '托比沒有責備你。他只是把骰子撿回來，重新吹了一口霧。';
   rollTobyDice();
@@ -9235,12 +9416,87 @@ function renderCurrentTobyCard() {
         <div class="toby-meta"><div class="toby-meta-label">適合時間</div><div class="toby-meta-value">${tobyEscape((task.suitableTime || ['不限']).join('／'))}</div></div>
       </div>
     </div>`;
-  if (actions) actions.style.display = 'flex';
+  if (actions) actions.style.display = tobyDiceState.currentStatus === 'completed' ? 'none' : 'flex';
   if (finish && tobyDiceState.currentStatus !== 'completed') finish.classList.remove('show');
+  updateTobyDiceLockUI();
 }
+
+function closeTobyFinishModal() {
+  const modal = document.getElementById('tobyFinishModalOverlay');
+  if (modal) modal.remove();
+}
+function openTobyFinishModal(task, reward) {
+  closeTobyFinishModal();
+  const overlay = document.createElement('div');
+  overlay.className = 'toby-modal-overlay';
+  overlay.id = 'tobyFinishModalOverlay';
+  overlay.onclick = (event) => {
+    if (event.target === overlay) closeTobyFinishModal();
+  };
+  overlay.innerHTML = `
+    <div class="toby-modal" role="dialog" aria-modal="true" aria-label="托比完成回饋">
+      <div class="toby-modal-header">
+        <div class="toby-modal-avatar"><img src="character/Toby.png" alt="托比" onerror="this.parentElement.innerHTML='⚙️'"></div>
+        <div>
+          <div class="toby-modal-title">托比回收占卜紙籤</div>
+          <div class="toby-modal-subtitle">DRIFT CARD RECOVERED</div>
+        </div>
+        <div class="toby-modal-close" onclick="closeTobyFinishModal()">✕</div>
+      </div>
+      <div class="toby-modal-body">
+        <div class="toby-modal-task">完成任務：${tobyEscape(task.title)}</div>
+        <div class="toby-modal-speech">${tobyEscape(task.finishText)}</div>
+        <div class="toby-modal-reward">${tobyEscape(reward.text)}<br>今日偏航已悄悄記錄。托比似乎對自己的占卜更有信心了。</div>
+        <div class="toby-modal-actions">
+          <button class="btn btn-gold" onclick="closeTobyFinishModal()">收下紙籤</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function grantTobySmallReward() {
+  if (!player) return { text:'托比把空空的小袋子翻了翻，最後遞給你一張「努力有被看見」的紙條。', notify:'托比記下了你的偏航', type:'gold' };
+  const roll = Math.random() * 100;
+  try {
+    if (roll < 45) {
+      const amount = 3;
+      const newCoins = (player.coins || 0) + amount;
+      player.coins = newCoins;
+      if (player.id) await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: newCoins });
+      return { text:`托比偷偷塞給你 ${amount} 枚金幣。`, notify:`◈ 托比的小獎勵：+${amount} 金幣`, type:'gold' };
+    }
+    if (roll < 85) {
+      const amount = 8;
+      const newExp = (player.exp || 0) + amount;
+      player.exp = newExp;
+      if (player.id) await sb(`player?id=eq.${player.id}`, 'PATCH', { exp: newExp });
+      return { text:`托比在紙籤背面蓋了一個小章：EXP +${amount}。`, notify:`⚡ 托比的小獎勵：+${amount} EXP`, type:'exp' };
+    }
+    if (roll < 98) {
+      const amount = 2;
+      if (typeof addFragments === 'function') await addFragments(amount);
+      else {
+        player.fragments = (player.fragments || 0) + amount;
+        if (player.id) await sb(`player?id=eq.${player.id}`, 'PATCH', { fragments: player.fragments });
+      }
+      return { text:`托比從靈石盒裡挑出 ${amount} 枚碎片給你。`, notify:`◈ 托比的小獎勵：+${amount} 碎片`, type:'gold' };
+    }
+    setTimeout(() => { if (typeof openChest === 'function') openChest(); }, 350);
+    return { text:'托比嚴肅地遞給你一只小寶箱。「這、這是骰子說可以給的。」', notify:'🎁 托比的小獎勵：小寶箱', type:'gold' };
+  } catch (e) {
+    console.error('Toby reward failed', e);
+    return { text:'托比本來想給你一點小獎勵，但口袋裡的齒輪卡住了。這次先記在帳上。', notify:'托比記下了你的偏航', type:'gold' };
+  }
+}
+
 async function markTobyTask(status) {
   const task = TOBY_TASK_POOL.find(t => t.id === tobyDiceState.currentTaskId);
   if (!task) return;
+  if (status === 'completed' && tobyDiceState.currentStatus === 'completed') {
+    notify('這張紙籤已經完成過了。托比請你再抽下一張。', 'gold');
+    return;
+  }
   const history = getTobyHistory();
   const item = history.find(h => h.taskId === task.id && h.dateKey === tobyDateKey() && h.status === 'drawn');
   const label = status === 'completed' ? '完成' : status === 'later' ? '稍後再說' : '今天先不做';
@@ -9257,16 +9513,12 @@ async function markTobyTask(status) {
   const finish = document.getElementById('tobyFinishPanel');
   const text = document.getElementById('tobyFinishText');
   if (status === 'completed') {
-    if (text) text.innerHTML = `${tobyEscape(task.finishText)}<br><br><span style="font-family:'Share Tech Mono',monospace;color:var(--gold)">托比偷偷塞給你 1 枚霧幣。今日偏航已記錄。托比似乎對自己的占卜更有信心了。</span>`;
-    if (finish) finish.classList.add('show');
-    if (player) {
-      const newCoins = (player.coins || 0) + 1;
-      player.coins = newCoins;
-      try { if (player.id) await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: newCoins }); } catch(e) {}
-      renderPlayer();
-    }
+    const reward = await grantTobySmallReward();
+    if (finish) finish.classList.remove('show');
+    openTobyFinishModal(task, reward);
     if (typeof applyChoiceEffects === 'function') applyChoiceEffects({ npcTrust: { toby: 1 } });
-    notify('◈ 托比偷偷塞給你 1 枚霧幣', 'gold');
+    renderPlayer();
+    notify(reward.notify, reward.type || 'gold');
     renderNPCs();
   } else {
     if (text) text.textContent = status === 'later'
@@ -9276,6 +9528,7 @@ async function markTobyTask(status) {
     notify(`托比已記下：${label}`, 'gold');
   }
   renderTobyHistory();
+  updateTobyDiceLockUI();
 }
 function renderTobyHistory() {
   const list = document.getElementById('tobyHistoryList');
@@ -9299,7 +9552,7 @@ loadTobyDiceState();
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t, i) => {
-    const names = ['tasks', 'shop', 'npc', 'tobydice', 'decor', 'bag', 'calendar', 'records', 'debt'];
+    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'calendar', 'records', 'debt'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => {
@@ -9311,11 +9564,7 @@ function switchTab(name) {
     if (hint && dailyRustyState && !dailyRustyState.claimed) hint.style.display = '';
     else if (hint) hint.style.display = 'none';
   }
-  if (name === 'tobydice') {
-    renderTobyStateButtons();
-    renderCurrentTobyCard();
-    renderTobyHistory();
-  }
+  if (name === 'npc') { renderNPCs(); }
   if (name === 'bag') renderBag();
   if (name === 'calendar') renderCalendar();
   if (name === 'records') {
