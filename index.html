@@ -1082,6 +1082,10 @@
 
 
   /* ── TOBY DICE SYSTEM ── */
+  .toby-npc-panel { padding: 12px 16px; background: rgba(224,184,74,0.035); border-bottom: 1px solid var(--border); }
+  .toby-npc-panel .toby-dice-hero { margin-bottom: 12px; }
+  .toby-npc-panel .section-label { margin-top: 8px; }
+  .toby-dice-actions .btn:disabled, .toby-state-btn:disabled { opacity: 0.38; cursor: default; border-style: dashed; transform: none; }
   .toby-dice-hero {
     background: var(--panel);
     border: 1px solid var(--border2);
@@ -2228,7 +2232,6 @@
     <div class="tab active" onclick="switchTab('tasks')">📋 任務</div>
     <div class="tab" onclick="switchTab('shop')">🏪 商店</div>
     <div class="tab" onclick="switchTab('npc')">👥 居民</div>
-    <div class="tab" onclick="switchTab('tobydice')">🎲 占卜</div>
     <div class="tab" onclick="switchTab('decor')">🏠 裝潢</div>
     <div class="tab" onclick="switchTab('bag')">🎒 背包</div>
     <div class="tab" onclick="switchTab('calendar')">📅 日誌</div>
@@ -2326,55 +2329,7 @@
 
 
 
-  <!-- TOBY DICE TAB -->
-  <div class="tab-content" id="tab-tobydice">
-    <div class="toby-dice-hero">
-      <div class="toby-dice-top">
-        <div class="toby-dice-avatar"><img src="character/Toby.png" alt="托比" onerror="this.parentElement.innerHTML='⚙️'"></div>
-        <div>
-          <div class="toby-dice-title">托比的業餘占卜｜任務骰子</div>
-          <div class="toby-dice-subtitle">AMATEUR DIVINATION · DAILY DRIFT DICE</div>
-          <div class="toby-dice-copy">
-            托比把黃銅骰子、舊紙籤和一顆有點裂掉的靈石排在桌上。<br>
-            「這不是命令，是一個可能性。骰子說，不用做很大的事，稍微繞一下就好。」
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-label">選擇現在的霧氣狀態</div>
-    <div class="toby-state-grid" id="tobyStateGrid"></div>
-
-    <div class="toby-dice-actions">
-      <button class="btn btn-gold" onclick="rollTobyDice()">擲骰</button>
-      <button class="btn btn-ghost" onclick="rerollTobyDice()">重新擲骰</button>
-      <button class="btn btn-ghost" onclick="renderTobyHistory()">更新紀錄</button>
-    </div>
-
-    <div class="toby-dice-note" id="tobyDiceHint">
-      今天的霧氣有點黏。先選一個狀態，讓托比抽一張不太重要、但可能讓今天發亮的小任務。
-    </div>
-
-    <div id="tobyCardWrap"></div>
-
-    <div class="toby-dice-actions" id="tobyCardActions" style="display:none">
-      <button class="btn btn-gold" onclick="markTobyTask('completed')">標記完成</button>
-      <button class="btn btn-ghost" onclick="markTobyTask('later')">稍後再說</button>
-      <button class="btn btn-ghost" onclick="markTobyTask('skip')">今天先不做</button>
-    </div>
-
-    <div class="toby-finish-panel" id="tobyFinishPanel">
-      <div class="toby-finish-title">✦ 托比回收占卜紙籤</div>
-      <div class="toby-finish-text" id="tobyFinishText"></div>
-    </div>
-
-    <div class="section-label">今日偏航紀錄</div>
-    <div class="toby-history-list" id="tobyHistoryList">
-      <div class="empty-state">今天還沒有偏航紀錄。骰子正在桌上小聲滾動。</div>
-    </div>
-  </div>
-
-    <!-- DECOR TAB -->
+      <!-- DECOR TAB -->
   <div class="tab-content" id="tab-decor">
     <!-- Scene selector -->
     <div class="scene-selector">
@@ -7441,6 +7396,55 @@ function renderNPCs() {
       <!-- 葛莉達專屬面板 -->
       ${npc.name === '葛莉達・鐵心' ? `<div id="gretaPanelInner"></div>` : ''}
 
+      <!-- 托比專屬：業餘占卜任務骰子 -->
+      ${npc.name === '托比' ? `
+      <div class="toby-npc-panel">
+        <div class="toby-dice-hero">
+          <div class="toby-dice-top">
+            <div class="toby-dice-avatar"><img src="character/Toby.png" alt="托比" onerror="this.parentElement.innerHTML='⚙️'"></div>
+            <div>
+              <div class="toby-dice-title">托比的業餘占卜｜任務骰子</div>
+              <div class="toby-dice-subtitle">AMATEUR DIVINATION · DAILY DRIFT DICE</div>
+              <div class="toby-dice-copy">
+                托比把黃銅骰子、舊紙籤和一顆有點裂掉的靈石排在桌上。<br>
+                「這不是命令，是一個可能性。骰子說，不用做很大的事，稍微繞一下就好。」
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">選擇現在的霧氣狀態</div>
+        <div class="toby-state-grid" id="tobyStateGrid"></div>
+
+        <div class="toby-dice-actions">
+          <button class="btn btn-gold" id="tobyRollBtn" onclick="rollTobyDice()">擲骰</button>
+          <button class="btn btn-ghost" id="tobyRerollBtn" onclick="rerollTobyDice()">重新擲骰</button>
+          <button class="btn btn-ghost" onclick="renderTobyHistory()">更新紀錄</button>
+        </div>
+
+        <div class="toby-dice-note" id="tobyDiceHint">
+          今天的霧氣有點黏。先選一個狀態，讓托比抽一張不太重要、但可能讓今天發亮的小任務。
+        </div>
+
+        <div id="tobyCardWrap"></div>
+
+        <div class="toby-dice-actions" id="tobyCardActions" style="display:none">
+          <button class="btn btn-gold" onclick="markTobyTask('completed')">標記完成</button>
+          <button class="btn btn-ghost" onclick="markTobyTask('later')">稍後再說</button>
+          <button class="btn btn-ghost" onclick="markTobyTask('skip')">今天先不做</button>
+        </div>
+
+        <div class="toby-finish-panel" id="tobyFinishPanel">
+          <div class="toby-finish-title">✦ 托比回收占卜紙籤</div>
+          <div class="toby-finish-text" id="tobyFinishText"></div>
+        </div>
+
+        <div class="section-label">今日偏航紀錄</div>
+        <div class="toby-history-list" id="tobyHistoryList">
+          <div class="empty-state">今天還沒有偏航紀錄。骰子正在桌上小聲滾動。</div>
+        </div>
+      </div>` : ''}
+
       <!-- 特殊話題（信任達門檻才顯示） -->
       ${topicUnlocked ? `
       <div class="npc-special-topic">
@@ -7475,7 +7479,7 @@ function renderNPCs() {
     list.appendChild(el);
   });
   // 葛莉達面板需要等 DOM 建立後渲染
-  requestAnimationFrame(renderGretaPanel);
+  requestAnimationFrame(() => { renderGretaPanel(); renderTobyDicePanel(); });
 }
 
 function renderDebt() {
@@ -9275,7 +9279,7 @@ loadTobyDiceState();
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t, i) => {
-    const names = ['tasks', 'shop', 'npc', 'tobydice', 'decor', 'bag', 'calendar', 'records', 'debt'];
+    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'calendar', 'records', 'debt'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => {
@@ -9286,11 +9290,6 @@ function switchTab(name) {
     const hint = document.getElementById('rustyHint');
     if (hint && dailyRustyState && !dailyRustyState.claimed) hint.style.display = '';
     else if (hint) hint.style.display = 'none';
-  }
-  if (name === 'tobydice') {
-    renderTobyStateButtons();
-    renderCurrentTobyCard();
-    renderTobyHistory();
   }
   if (name === 'bag') renderBag();
   if (name === 'calendar') renderCalendar();
