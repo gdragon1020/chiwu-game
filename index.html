@@ -1333,6 +1333,121 @@
     white-space: nowrap;
   }
 
+
+  /* ── 托比完成對話小窗 ── */
+  .toby-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: 2600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .toby-modal {
+    width: min(520px, 100%);
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    box-shadow: 0 0 32px rgba(224,184,74,0.16), 0 12px 40px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+    animation: tobyModalIn 0.22s ease-out;
+  }
+  .toby-modal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(224,184,74,0.10), transparent 35%),
+      radial-gradient(circle at 90% 85%, rgba(94,221,212,0.08), transparent 38%);
+    pointer-events: none;
+  }
+  @keyframes tobyModalIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .toby-modal-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border2);
+    background: rgba(30,33,48,0.42);
+  }
+  .toby-modal-avatar {
+    width: 46px;
+    height: 46px;
+    border: 1px solid var(--gold);
+    background: var(--bg2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .toby-modal-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .toby-modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .toby-modal-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    margin-top: 3px;
+  }
+  .toby-modal-close {
+    margin-left: auto;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+  }
+  .toby-modal-close:hover { color: var(--text); }
+  .toby-modal-body {
+    position: relative;
+    padding: 18px;
+  }
+  .toby-modal-task {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .toby-modal-speech {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    padding: 13px 15px;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.8;
+    margin-bottom: 12px;
+  }
+  .toby-modal-reward {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    line-height: 1.7;
+    background: rgba(224,184,74,0.07);
+    border: 1px solid rgba(224,184,74,0.25);
+    padding: 9px 12px;
+    margin-bottom: 14px;
+  }
+  .toby-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
   /* ── WEATHER CARD ── */
   .weather-card {
     background: var(--panel);
@@ -7429,7 +7544,6 @@ function renderTobyDicePanelHtml() {
           <div class="toby-dice-actions">
             <button class="btn btn-gold" id="tobyRollBtn" onclick="rollTobyDice()">擲骰</button>
             <button class="btn btn-ghost" id="tobyRerollBtn" onclick="rerollTobyDice()">重新擲骰</button>
-            <button class="btn btn-ghost" onclick="renderTobyHistory()">更新紀錄</button>
           </div>
           <div class="toby-dice-note" id="tobyDiceHint">
             今天的霧氣有點黏。先選一個狀態，讓托比抽一張不太重要、但可能讓今天發亮的小任務。
@@ -7443,10 +7557,6 @@ function renderTobyDicePanelHtml() {
           <div class="toby-finish-panel" id="tobyFinishPanel">
             <div class="toby-finish-title">✦ 托比回收占卜紙籤</div>
             <div class="toby-finish-text" id="tobyFinishText"></div>
-          </div>
-          <div class="section-label">今日偏航紀錄</div>
-          <div class="toby-history-list" id="tobyHistoryList">
-            <div class="empty-state">今天還沒有偏航紀錄。骰子正在桌上小聲滾動。</div>
           </div>
         </div>
       </div>
@@ -9310,6 +9420,41 @@ function renderCurrentTobyCard() {
   if (finish && tobyDiceState.currentStatus !== 'completed') finish.classList.remove('show');
   updateTobyDiceLockUI();
 }
+
+function closeTobyFinishModal() {
+  const modal = document.getElementById('tobyFinishModalOverlay');
+  if (modal) modal.remove();
+}
+function openTobyFinishModal(task, reward) {
+  closeTobyFinishModal();
+  const overlay = document.createElement('div');
+  overlay.className = 'toby-modal-overlay';
+  overlay.id = 'tobyFinishModalOverlay';
+  overlay.onclick = (event) => {
+    if (event.target === overlay) closeTobyFinishModal();
+  };
+  overlay.innerHTML = `
+    <div class="toby-modal" role="dialog" aria-modal="true" aria-label="托比完成回饋">
+      <div class="toby-modal-header">
+        <div class="toby-modal-avatar"><img src="character/Toby.png" alt="托比" onerror="this.parentElement.innerHTML='⚙️'"></div>
+        <div>
+          <div class="toby-modal-title">托比回收占卜紙籤</div>
+          <div class="toby-modal-subtitle">DRIFT CARD RECOVERED</div>
+        </div>
+        <div class="toby-modal-close" onclick="closeTobyFinishModal()">✕</div>
+      </div>
+      <div class="toby-modal-body">
+        <div class="toby-modal-task">完成任務：${tobyEscape(task.title)}</div>
+        <div class="toby-modal-speech">${tobyEscape(task.finishText)}</div>
+        <div class="toby-modal-reward">${tobyEscape(reward.text)}<br>今日偏航已悄悄記錄。托比似乎對自己的占卜更有信心了。</div>
+        <div class="toby-modal-actions">
+          <button class="btn btn-gold" onclick="closeTobyFinishModal()">收下紙籤</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
 async function grantTobySmallReward() {
   if (!player) return { text:'托比把空空的小袋子翻了翻，最後遞給你一張「努力有被看見」的紙條。', notify:'托比記下了你的偏航', type:'gold' };
   const roll = Math.random() * 100;
@@ -9369,8 +9514,8 @@ async function markTobyTask(status) {
   const text = document.getElementById('tobyFinishText');
   if (status === 'completed') {
     const reward = await grantTobySmallReward();
-    if (text) text.innerHTML = `${tobyEscape(task.finishText)}<br><br><span style="font-family:'Share Tech Mono',monospace;color:var(--gold)">${tobyEscape(reward.text)} 今日偏航已記錄。托比似乎對自己的占卜更有信心了。</span>`;
-    if (finish) finish.classList.add('show');
+    if (finish) finish.classList.remove('show');
+    openTobyFinishModal(task, reward);
     if (typeof applyChoiceEffects === 'function') applyChoiceEffects({ npcTrust: { toby: 1 } });
     renderPlayer();
     notify(reward.notify, reward.type || 'gold');
