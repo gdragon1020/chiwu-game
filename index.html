@@ -1079,6 +1079,225 @@
   }
 
 
+
+
+  /* ── TOBY DICE SYSTEM ── */
+  .toby-dice-hero {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--gold);
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .toby-dice-hero::before {
+    content: '⚂';
+    position: absolute;
+    right: 18px;
+    top: -18px;
+    font-size: 92px;
+    color: var(--gold);
+    opacity: 0.05;
+    transform: rotate(12deg);
+  }
+  .toby-dice-top {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+  .toby-dice-avatar {
+    width: 72px;
+    height: 72px;
+    border: 2px solid var(--gold);
+    background: var(--bg2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 18px rgba(224,184,74,0.12);
+  }
+  .toby-dice-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .toby-dice-title {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--gold2);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .toby-dice-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .toby-dice-copy {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.8;
+  }
+  .toby-state-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .toby-state-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 10px 12px;
+    text-align: left;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 46px;
+  }
+  .toby-state-btn:hover { border-color: var(--gold); color: var(--gold2); background: var(--gold-dim); transform: translateY(-1px); }
+  .toby-state-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .toby-dice-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .toby-dice-note {
+    background: var(--bg2);
+    border: 1px dashed var(--border2);
+    color: var(--text3);
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .toby-card {
+    background:
+      linear-gradient(135deg, rgba(224,184,74,0.09), transparent 40%),
+      var(--panel);
+    border: 1px solid var(--gold);
+    padding: 18px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+  }
+  .toby-card::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(224,184,74,0.15);
+    pointer-events: none;
+  }
+  .toby-card-kicker {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .toby-card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    color: var(--gold2);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .toby-card-desc {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.8;
+    border-left: 2px solid var(--gold);
+    padding-left: 12px;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+  }
+  .toby-action-box {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    padding: 11px 13px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .toby-action-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+  }
+  .toby-action-text { font-size: 16px; color: var(--text); line-height: 1.6; }
+  .toby-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .toby-meta {
+    background: rgba(30,33,48,0.65);
+    border: 1px solid var(--border);
+    padding: 7px 9px;
+  }
+  .toby-meta-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+  .toby-meta-value { font-size: 13px; color: var(--text2); }
+  .toby-finish-panel {
+    display: none;
+    background: rgba(110,208,110,0.07);
+    border: 1px solid rgba(110,208,110,0.35);
+    border-left: 3px solid var(--green);
+    padding: 13px 15px;
+    margin-bottom: 14px;
+  }
+  .toby-finish-panel.show { display: block; }
+  .toby-finish-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--green);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .toby-finish-text { font-size: 14px; color: var(--text2); line-height: 1.8; }
+  .toby-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .toby-history-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .toby-history-meta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+
   /* ── WEATHER CARD ── */
   .weather-card {
     background: var(--panel);
@@ -2009,6 +2228,7 @@
     <div class="tab active" onclick="switchTab('tasks')">📋 任務</div>
     <div class="tab" onclick="switchTab('shop')">🏪 商店</div>
     <div class="tab" onclick="switchTab('npc')">👥 居民</div>
+    <div class="tab" onclick="switchTab('tobydice')">🎲 占卜</div>
     <div class="tab" onclick="switchTab('decor')">🏠 裝潢</div>
     <div class="tab" onclick="switchTab('bag')">🎒 背包</div>
     <div class="tab" onclick="switchTab('calendar')">📅 日誌</div>
@@ -2104,7 +2324,57 @@
     <div class="npc-list" id="npcList"></div>
   </div>
 
-  <!-- DECOR TAB -->
+
+
+  <!-- TOBY DICE TAB -->
+  <div class="tab-content" id="tab-tobydice">
+    <div class="toby-dice-hero">
+      <div class="toby-dice-top">
+        <div class="toby-dice-avatar"><img src="character/Toby.png" alt="托比" onerror="this.parentElement.innerHTML='⚙️'"></div>
+        <div>
+          <div class="toby-dice-title">托比的業餘占卜｜任務骰子</div>
+          <div class="toby-dice-subtitle">AMATEUR DIVINATION · DAILY DRIFT DICE</div>
+          <div class="toby-dice-copy">
+            托比把黃銅骰子、舊紙籤和一顆有點裂掉的靈石排在桌上。<br>
+            「這不是命令，是一個可能性。骰子說，不用做很大的事，稍微繞一下就好。」
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">選擇現在的霧氣狀態</div>
+    <div class="toby-state-grid" id="tobyStateGrid"></div>
+
+    <div class="toby-dice-actions">
+      <button class="btn btn-gold" onclick="rollTobyDice()">擲骰</button>
+      <button class="btn btn-ghost" onclick="rerollTobyDice()">重新擲骰</button>
+      <button class="btn btn-ghost" onclick="renderTobyHistory()">更新紀錄</button>
+    </div>
+
+    <div class="toby-dice-note" id="tobyDiceHint">
+      今天的霧氣有點黏。先選一個狀態，讓托比抽一張不太重要、但可能讓今天發亮的小任務。
+    </div>
+
+    <div id="tobyCardWrap"></div>
+
+    <div class="toby-dice-actions" id="tobyCardActions" style="display:none">
+      <button class="btn btn-gold" onclick="markTobyTask('completed')">標記完成</button>
+      <button class="btn btn-ghost" onclick="markTobyTask('later')">稍後再說</button>
+      <button class="btn btn-ghost" onclick="markTobyTask('skip')">今天先不做</button>
+    </div>
+
+    <div class="toby-finish-panel" id="tobyFinishPanel">
+      <div class="toby-finish-title">✦ 托比回收占卜紙籤</div>
+      <div class="toby-finish-text" id="tobyFinishText"></div>
+    </div>
+
+    <div class="section-label">今日偏航紀錄</div>
+    <div class="toby-history-list" id="tobyHistoryList">
+      <div class="empty-state">今天還沒有偏航紀錄。骰子正在桌上小聲滾動。</div>
+    </div>
+  </div>
+
+    <!-- DECOR TAB -->
   <div class="tab-content" id="tab-decor">
     <!-- Scene selector -->
     <div class="scene-selector">
@@ -8732,9 +9002,280 @@ function correctCategory(taskId, taskTitle, newCat) {
   notify(`分類已更新為「${newCat}」，下次相同任務會優先使用此分類`, 'gold');
 }
 
+
+
+// ─── TOBY AMATEUR DIVINATION / TASK DICE ─────────────
+const TOBY_DICE_STATES = [
+  { key:'lost', label:'我不知道要做什麼' },
+  { key:'tired', label:'我今天很累，只能做小事' },
+  { key:'outdoor', label:'我想出門，但沒有方向' },
+  { key:'different', label:'我想讓今天不一樣' },
+  { key:'care', label:'我想照顧自己' },
+  { key:'weird', label:'給我一個奇怪但可愛的任務' },
+  { key:'noMoney', label:'今天不要花錢' },
+  { key:'indoor', label:'今天不要出門' }
+];
+
+const TOBY_TASK_POOL = [
+  { id:'toby_walk_001', title:'偏航之路', category:'偏航散步', description:'今天不要走最熟的那條路，讓霧氣帶你繞一點遠路。', action:'回家或移動時，走一條和平常不同的路。', time:'15分鐘', energy:'低', needOutdoor:true, needMoney:false, suitableTime:['白天','傍晚','夜晚'], completionType:'自由確認', tags:['出門','低壓','偏航','不花錢'], finishText:'看吧，你今天從另一條霧裡回來了。城沒有變，但你多知道了一條路。' },
+  { id:'toby_walk_002', title:'多走十刻', category:'偏航散步', description:'骰子在桌上轉了十圈，說今天適合多借一點路給腳。', action:'在安全的情況下，多走 10 分鐘再回到原本行程。', time:'10分鐘', energy:'中', needOutdoor:true, needMoney:false, suitableTime:['白天','傍晚'], completionType:'自由確認', tags:['出門','偏航','不花錢'], finishText:'托比把路線畫歪了一點。「這條線看起來像小龍，挺好的。」' },
+  { id:'toby_walk_003', title:'下一個轉角', category:'偏航散步', description:'霧氣說，下一個轉角可能沒有寶箱，但有今天沒看過的光。', action:'外出時，選一個平常不會注意的轉角看一眼。', time:'5分鐘', energy:'低', needOutdoor:true, needMoney:false, suitableTime:['白天','傍晚','夜晚'], completionType:'自由確認', tags:['出門','觀察','不花錢'], finishText:'轉角已登錄。托比很嚴肅地在紙上畫了一個小小箭頭。' },
+  { id:'toby_walk_004', title:'慢速回城', category:'偏航散步', description:'今天的鞋底需要慢一點。不是偷懶，是讓靈石燈追上你。', action:'回家路上刻意慢走 3 分鐘，看看路邊有什麼。', time:'3分鐘', energy:'低', needOutdoor:true, needMoney:false, suitableTime:['傍晚','夜晚'], completionType:'自由確認', tags:['出門','低壓','感官','不花錢'], finishText:'你把速度還給了今天。托比說，這是一種很少見的魔法。' },
+  { id:'toby_color_001', title:'藍色巡禮', category:'色彩巡禮', description:'骰子滾到藍色霧痕上。今天只要找藍色就好。', action:'今天留意 3 個藍色的東西，可以拍照或記在心裡。', time:'半天', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['色彩','觀察','可愛','不花錢'], finishText:'藍色已收集。托比說你的今天多了一點湖水味。' },
+  { id:'toby_color_002', title:'金色小巡邏', category:'色彩巡禮', description:'黃銅骰子發亮了。它懷疑今天有金色的線索。', action:'找 3 個金色、黃色或暖色的東西。', time:'15分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['白天','傍晚'], completionType:'拍照', tags:['色彩','觀察','世界觀','不花錢'], finishText:'金色線索回收完畢。托比偷偷說，這很像行會徽章的邊角。' },
+  { id:'toby_color_003', title:'一日 Color Walk', category:'色彩巡禮', description:'托比抽出一張歪歪的紙籤，上面寫著：跟著一種顏色走。', action:'選一個顏色，今天只要有空就找它出現在哪裡。', time:'半天', energy:'中', needOutdoor:'optional', needMoney:false, suitableTime:['不限'], completionType:'文字記錄', tags:['色彩','出門','觀察','創作','不花錢'], finishText:'今日色彩已封存。托比把紙籤折成小星星，放進抽屜。' },
+  { id:'toby_color_004', title:'紅色警戒但可愛版', category:'色彩巡禮', description:'不要緊張，這不是危機，只是紅色今天想被注意。', action:'找一個紅色或粉紅色的東西，給它一個奇怪名字。', time:'5分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['不限'], completionType:'文字記錄', tags:['色彩','奇怪','可愛','創作','不花錢'], finishText:'紅色名字登記完成。托比覺得它可能是小型魔物，但友善。' },
+  { id:'toby_obs_001', title:'花的密報', category:'觀察收集', description:'城裡的花很少說話，但今天可能有一封密報。', action:'拍一朵花，或看一朵花 10 秒。', time:'1分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['早晨','白天','傍晚'], completionType:'拍照', tags:['觀察','可愛','低壓','不花錢'], finishText:'花已登錄。今天的鑄霧城多了一個小座標。' },
+  { id:'toby_obs_002', title:'影子採樣', category:'觀察收集', description:'托比說影子是城市偷偷留下的墨水。聽起來不一定對，但很可愛。', action:'找一個漂亮或奇怪的影子，看一眼或拍下來。', time:'5分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['白天','傍晚','夜晚'], completionType:'拍照', tags:['觀察','奇怪','世界觀','不花錢'], finishText:'影子樣本已收納。托比說它沒有逃跑，表示很信任你。' },
+  { id:'toby_obs_003', title:'任務道具偵測', category:'觀察收集', description:'骰子說附近有東西長得很像任務道具，雖然可能只是湯匙。', action:'找一個像遊戲任務道具的日常物品。', time:'5分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['不限'], completionType:'拍照', tags:['觀察','奇怪','可愛','世界觀','不花錢'], finishText:'道具已鑑定。托比小聲說：「這個應該可以交任務吧？」' },
+  { id:'toby_obs_004', title:'NPC 站位調查', category:'觀察收集', description:'托比覺得每座城市都有 NPC 會站著的角落。今天去找一個。', action:'找一個像 NPC 會站在那裡等你的角落。', time:'10分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['白天','傍晚','夜晚'], completionType:'拍照', tags:['觀察','奇怪','世界觀','出門','不花錢'], finishText:'站位已標記。托比認真點頭：「這裡一定會觸發支線。」' },
+  { id:'toby_lux_001', title:'午茶護符', category:'小奢侈／照顧自己', description:'今天的補給不需要盛大，只需要一點甜、一點暖，或一點喜歡。', action:'為自己準備或買一份小小下午茶。', time:'15分鐘', energy:'低', needOutdoor:'optional', needMoney:'optional', suitableTime:['白天','傍晚'], completionType:'自由確認', tags:['照顧自己','食物／飲料','可選花錢'], finishText:'「這不是偷懶，這是補給。」托比很嚴肅地說。「冒險者不補給會壞掉。」' },
+  { id:'toby_lux_002', title:'溫飲藥水', category:'小奢侈／照顧自己', description:'水晶杯裡冒著霧。托比宣布：這杯是今日恢復藥。', action:'喝一杯有溫度的飲料，水、茶、咖啡都可以。', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:'optional', suitableTime:['早晨','白天','夜晚'], completionType:'自由確認', tags:['照顧自己','食物／飲料','感官','低能量'], finishText:'溫度抵達胃裡。托比說你的內部爐心亮了一格。' },
+  { id:'toby_lux_003', title:'舒服布料護甲', category:'小奢侈／照顧自己', description:'今天不一定要變強，但可以穿得比較像被世界善待。', action:'換上或摸一下讓你覺得舒服的衣服、毯子或布料。', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['照顧自己','感官','不出門','不花錢'], finishText:'護甲裝備完成。托比說這件裝備防禦焦慮 +1。' },
+  { id:'toby_lux_004', title:'喜歡補給點', category:'小奢侈／照顧自己', description:'骰子沒有說要奢華，它只說：請靠近一個你喜歡的小東西。', action:'拿出一個你喜歡的小物，看它 30 秒。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['照顧自己','低能量','可愛','不花錢','不出門'], finishText:'補給點已啟動。托比覺得那個小物剛剛也看了你一眼。' },
+  { id:'toby_sense_001', title:'水源確認', category:'感官回復', description:'托比敲敲杯子，說人體也需要補充靈石冷卻液。', action:'喝一口水。只要一口就可以。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['感官','低能量','照顧自己','不花錢','不出門'], finishText:'水源確認完畢。托比把這件事記得像大任務一樣慎重。' },
+  { id:'toby_sense_002', title:'離開螢幕三十息', category:'感官回復', description:'霧氣貼在眼睛上了。骰子建議你讓視線走遠一點。', action:'離開螢幕，看遠方或閉眼 30 秒。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['感官','低能量','不花錢','不出門'], finishText:'眼睛回收成功。托比說你的視野剛剛重新對焦了。' },
+  { id:'toby_sense_003', title:'聲音採集', category:'感官回復', description:'今天的鑄霧城不是只有待辦聲，也有很小的背景音。', action:'安靜聽 5 種聲音，不用記住。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['感官','低能量','觀察','不花錢','不出門'], finishText:'聲音已採集。托比說其中一個可能是牆壁在打哈欠。' },
+  { id:'toby_sense_004', title:'香氣小巡邏', category:'感官回復', description:'鼻子也有自己的小任務，只是平常沒有人問它。', action:'聞一聞手邊的飲料、香皂、衣服或空氣。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['感官','低能量','奇怪','不花錢','不出門'], finishText:'香氣巡邏完成。托比宣布鼻子今天也有上班。' },
+  { id:'toby_tidy_001', title:'桌角解放', category:'微整理／據點維護', description:'不是整理整張桌子。骰子只指向一個小角落，真的很小。', action:'清出桌面上的一個小角落。', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['微整理','低壓','不花錢','不出門'], finishText:'據點角落已修復。托比說那裡現在可以停一隻很小的龍。' },
+  { id:'toby_tidy_002', title:'一件物品回家', category:'微整理／據點維護', description:'城裡迷路的東西很多，今天只救一個就好。', action:'把一件不在原位的物品放回它的家。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['微整理','低能量','不花錢','不出門'], finishText:'物品返家成功。托比覺得它應該鬆了一口氣。' },
+  { id:'toby_tidy_003', title:'垃圾小放逐', category:'微整理／據點維護', description:'不需要大掃除。今天只把一個小小廢棄物送出城門。', action:'丟掉一個垃圾，或整理一張不要的紙。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['微整理','低能量','不花錢','不出門'], finishText:'小垃圾已放逐。托比對垃圾桶行了一個很短的禮。' },
+  { id:'toby_tidy_004', title:'床邊停靠', category:'微整理／據點維護', description:'托比說床邊是小屋的碼頭，碼頭太亂船會靠不上岸。', action:'把床邊或椅子上的一件東西移到比較合適的位置。', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['傍晚','夜晚'], completionType:'自由確認', tags:['微整理','夜晚收尾','不花錢','不出門'], finishText:'碼頭稍微清空了。今晚的你比較容易靠岸。' },
+  { id:'toby_social_001', title:'貼圖信鴿', category:'微社交', description:'如果文字太重，今天可以派一隻貼圖信鴿出去。', action:'傳一個貼圖給想到的人，不用開很長的話題。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['微社交','低壓','可愛','不花錢','不出門'], finishText:'信鴿出發。托比希望牠不要在半路睡著。' },
+  { id:'toby_social_002', title:'謝謝小印章', category:'微社交', description:'今天的紙籤上只有兩個字：謝謝。它很輕，但會發光。', action:'對一個人說謝謝，可以是訊息、當面，或心裡說。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['微社交','低壓','照顧自己','不花錢'], finishText:'謝謝已蓋章。托比說這種章不會很大，但很暖。' },
+  { id:'toby_social_003', title:'今天吃什麼電報', category:'微社交', description:'托比覺得問吃什麼是一種很安全的小型橋樑。', action:'問一個朋友或家人「你今天吃什麼？」', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['白天','傍晚','夜晚'], completionType:'文字記錄', tags:['微社交','低壓','食物／飲料','不花錢'], finishText:'橋樑架好了。就算很短，也是一座橋。' },
+  { id:'toby_social_004', title:'已讀不壓力', category:'微社交', description:'如果有一則你想回但卡住的訊息，今天只要碰一下邊緣。', action:'回覆一則簡短訊息，或只先打草稿不送出。', time:'5分鐘', energy:'中', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['微社交','低壓','不花錢','不出門'], finishText:'訊息霧氣變薄了。托比說草稿也算半個傳送門。' },
+  { id:'toby_create_001', title:'天空命名師', category:'創作靈感', description:'今天的天空沒有名字，這很不禮貌。托比拜託你幫它取一個。', action:'幫今天的天空取一個名字。', time:'1分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['早晨','白天','傍晚','夜晚'], completionType:'文字記錄', tags:['創作','奇怪','可愛','觀察','不花錢'], finishText:'天空有名字了。托比覺得它看起來比較安心。' },
+  { id:'toby_create_002', title:'飲料藥水學', category:'創作靈感', description:'托比把你的飲料看成藥水。這不科學，但很鑄霧城。', action:'把今天喝的飲料命名成一瓶藥水。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:'optional', suitableTime:['不限'], completionType:'文字記錄', tags:['創作','奇怪','可愛','食物／飲料','世界觀'], finishText:'藥水命名完成。托比問：「喝了會加什麼屬性？」' },
+  { id:'toby_create_003', title:'今日標題', category:'創作靈感', description:'每一天都可以是一章，即使這章只有一頁。', action:'替今天取一個標題。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['傍晚','夜晚'], completionType:'文字記錄', tags:['創作','低能量','夜晚收尾','不花錢','不出門'], finishText:'章節標題已寫下。托比把它放進今天的封面裡。' },
+  { id:'toby_create_004', title:'托比台詞練習', category:'創作靈感', description:'托比突然很想知道，如果他是正式占卜師，會說什麼怪話。', action:'寫一句托比會說的奇怪溫柔台詞。', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'文字記錄', tags:['創作','奇怪','可愛','世界觀','不出門'], finishText:'台詞已收錄。托比看起來有點害羞，但又很想偷背下來。' },
+  { id:'toby_low_001', title:'腳尖著陸', category:'低能量日專用', description:'今天不用起飛。骰子說，腳碰到地板就已經是登陸。', action:'把腳放到地上，停 5 秒。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['低能量','不花錢','不出門'], finishText:'著陸成功。托比沒有放煙火，怕嚇到你。' },
+  { id:'toby_low_002', title:'坐起來小儀式', category:'低能量日專用', description:'骰子沒有要求你站起來。它只小小地指向坐起來。', action:'坐起來，或換一個比較舒服的姿勢。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['低能量','照顧自己','不花錢','不出門'], finishText:'姿勢更新完成。托比說今天的任務介面終於載入了一點點。' },
+  { id:'toby_low_003', title:'看窗外', category:'低能量日專用', description:'外面的世界不用你處理，你只要確認它還在。', action:'看窗外 10 秒，或看房間裡最遠的地方。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'自由確認', tags:['低能量','感官','觀察','不花錢','不出門'], finishText:'遠方確認。托比說世界還在，今天可以先這樣。' },
+  { id:'toby_low_004', title:'呼吸三枚霧幣', category:'低能量日專用', description:'托比把三枚想像中的霧幣放在桌上，請你慢慢呼吸三次。', action:'慢慢呼吸 3 次。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['不限'], completionType:'打勾', tags:['低能量','感官','照顧自己','不花錢','不出門'], finishText:'三枚霧幣收回。托比說你剛剛把自己撿回來一點。' },
+  { id:'toby_morning_001', title:'早晨天空截圖', category:'早晨／夜晚限定', description:'早上的天空像剛開機的城市，需要一張紀錄。', action:'早上看一眼天空，可以拍照，也可以只記得它的顏色。', time:'1分鐘', energy:'低', needOutdoor:'optional', needMoney:false, suitableTime:['早晨'], completionType:'拍照', tags:['早晨','觀察','不花錢'], finishText:'晨間天空已備份。托比說今天的雲像剛睡醒。' },
+  { id:'toby_morning_002', title:'第一口水', category:'早晨／夜晚限定', description:'晨霧還沒散，先替身體點一盞小燈。', action:'早上喝第一口水。', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['早晨'], completionType:'打勾', tags:['早晨','低能量','感官','不花錢','不出門'], finishText:'第一口水抵達。托比說爐心啟動聲很小，但他聽見了。' },
+  { id:'toby_night_001', title:'睡前收工鈴', category:'早晨／夜晚限定', description:'鑄霧城的工坊都會收工，人也可以。今天不用再證明什麼。', action:'睡前對自己說：「今天收工。」', time:'1分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['夜晚'], completionType:'自由確認', tags:['夜晚收尾','低能量','照顧自己','不花錢','不出門'], finishText:'收工鈴已響。托比把明天的霧先蓋起來。' },
+  { id:'toby_night_002', title:'床邊水晶補給', category:'早晨／夜晚限定', description:'托比說明天的你會感謝今晚的你，雖然他不是很懂時間魔法。', action:'睡前準備一杯水，或把明天會用到的小東西放好。', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['夜晚'], completionType:'自由確認', tags:['夜晚收尾','微整理','照顧自己','不花錢','不出門'], finishText:'明日補給已放置。托比覺得你偷偷幫未來開了一扇小門。' }
+];
+
+let tobyDiceState = { selectedState:'lost', currentTaskId:null, currentStatus:null };
+
+function loadTobyDiceState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('chiwu_toby_dice_state') || '{}');
+    tobyDiceState = { ...tobyDiceState, ...saved };
+  } catch(e) {}
+}
+function saveTobyDiceState() { localStorage.setItem('chiwu_toby_dice_state', JSON.stringify(tobyDiceState)); }
+function getTobyHistory() {
+  try { return JSON.parse(localStorage.getItem('chiwu_toby_dice_history') || '[]'); }
+  catch(e) { return []; }
+}
+function saveTobyHistory(history) { localStorage.setItem('chiwu_toby_dice_history', JSON.stringify(history)); }
+function tobyDateKey() { return typeof getDateKey === 'function' ? getDateKey() : new Date().toISOString().slice(0,10); }
+function tobyEscape(str) {
+  return String(str ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+function renderTobyStateButtons() {
+  const grid = document.getElementById('tobyStateGrid');
+  if (!grid) return;
+  grid.innerHTML = TOBY_DICE_STATES.map(s => `<button class="toby-state-btn ${tobyDiceState.selectedState === s.key ? 'active' : ''}" onclick="selectTobyState('${s.key}')">${tobyEscape(s.label)}</button>`).join('');
+}
+function selectTobyState(key) {
+  tobyDiceState.selectedState = key;
+  saveTobyDiceState();
+  renderTobyStateButtons();
+  const state = TOBY_DICE_STATES.find(s => s.key === key);
+  const hint = document.getElementById('tobyDiceHint');
+  if (hint && state) hint.textContent = `托比把「${state.label}」寫到紙籤背面。骰子準備好了。`;
+}
+function timeRank(time) {
+  if (time === '1分鐘') return 1;
+  if (time === '3分鐘') return 3;
+  if (time === '5分鐘') return 5;
+  if (time === '10分鐘') return 10;
+  if (time === '15分鐘') return 15;
+  if (time === '30分鐘') return 30;
+  return 99;
+}
+function taskMatchesTobyState(task, key) {
+  const cat = task.category;
+  const tags = task.tags || [];
+  if (key === 'lost') return task.energy !== '高' && task.needMoney !== true;
+  if (key === 'tired') return task.energy === '低' && timeRank(task.time) <= 5 && task.needOutdoor !== true && task.needMoney === false;
+  if (key === 'outdoor') return task.needOutdoor === true || task.needOutdoor === 'optional';
+  if (key === 'different') return ['偏航散步','色彩巡禮','觀察收集','創作靈感','小奢侈／照顧自己'].includes(cat) && task.energy !== '高';
+  if (key === 'care') return ['小奢侈／照顧自己','感官回復','早晨／夜晚限定'].includes(cat) || tags.includes('食物／飲料') || tags.includes('夜晚收尾');
+  if (key === 'weird') return tags.some(t => ['奇怪','可愛','世界觀','觀察','創作'].includes(t));
+  if (key === 'noMoney') return task.needMoney === false;
+  if (key === 'indoor') return task.needOutdoor === false;
+  return true;
+}
+function tobyPreferredScore(task, key) {
+  let score = 0;
+  const cat = task.category;
+  const tags = task.tags || [];
+  if (task.energy === '低') score += 2;
+  if (key === 'tired' && ['低能量日專用','感官回復','微整理／據點維護'].includes(cat)) score += 4;
+  if (key === 'outdoor' && ['偏航散步','色彩巡禮','觀察收集'].includes(cat)) score += 4;
+  if (key === 'different' && ['偏航散步','色彩巡禮','觀察收集','創作靈感','小奢侈／照顧自己'].includes(cat)) score += 3;
+  if (key === 'care' && (['小奢侈／照顧自己','感官回復'].includes(cat) || tags.includes('食物／飲料') || tags.includes('夜晚收尾'))) score += 4;
+  if (key === 'weird' && tags.some(t => ['奇怪','可愛','世界觀'].includes(t))) score += 4;
+  if (key === 'indoor' && ['感官回復','微整理／據點維護','低能量日專用','創作靈感','早晨／夜晚限定'].includes(cat)) score += 3;
+  if (key === 'lost' && task.needMoney !== true && task.energy !== '高') score += 2;
+  return score;
+}
+function getTobyCandidates(key) {
+  let candidates = TOBY_TASK_POOL.filter(t => taskMatchesTobyState(t, key));
+  if (candidates.length === 0) {
+    const hint = document.getElementById('tobyDiceHint');
+    if (hint) hint.textContent = '骰子卡住了。托比把它敲了敲，決定改抽一個更輕的任務。';
+    candidates = TOBY_TASK_POOL.filter(t => t.energy === '低' && t.needMoney === false && t.needOutdoor !== true);
+  }
+  const maxScore = Math.max(...candidates.map(t => tobyPreferredScore(t, key)), 0);
+  const preferred = candidates.filter(t => tobyPreferredScore(t, key) >= Math.max(0, maxScore - 1));
+  return preferred.length ? preferred : candidates;
+}
+function pickTobyTask(key) {
+  const today = tobyDateKey();
+  const history = getTobyHistory().filter(h => h.dateKey === today);
+  const usedIds = new Set(history.map(h => h.taskId));
+  let candidates = getTobyCandidates(key);
+  const fresh = candidates.filter(t => !usedIds.has(t.id));
+  if (fresh.length) candidates = fresh;
+  const lastId = history[0]?.taskId;
+  const notLast = candidates.filter(t => t.id !== lastId);
+  if (notLast.length) candidates = notLast;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+function rollTobyDice() {
+  const task = pickTobyTask(tobyDiceState.selectedState || 'lost');
+  if (!task) return;
+  tobyDiceState.currentTaskId = task.id;
+  tobyDiceState.currentStatus = 'drawn';
+  saveTobyDiceState();
+  const history = getTobyHistory();
+  history.unshift({
+    id: `roll_${Date.now()}`,
+    taskId: task.id,
+    title: task.title,
+    state: tobyDiceState.selectedState,
+    status: 'drawn',
+    dateKey: tobyDateKey(),
+    createdAt: new Date().toISOString()
+  });
+  saveTobyHistory(history.slice(0, 80));
+  const hint = document.getElementById('tobyDiceHint');
+  if (hint) hint.textContent = '骰子停下了。托比把占卜卡推到你面前，表情非常慎重。';
+  renderCurrentTobyCard();
+  renderTobyHistory();
+}
+function rerollTobyDice() {
+  const hint = document.getElementById('tobyDiceHint');
+  if (hint) hint.textContent = '托比沒有責備你。他只是把骰子撿回來，重新吹了一口霧。';
+  rollTobyDice();
+}
+function boolText(value) {
+  if (value === true) return '是';
+  if (value === false) return '否';
+  return '可選';
+}
+function renderCurrentTobyCard() {
+  const wrap = document.getElementById('tobyCardWrap');
+  const actions = document.getElementById('tobyCardActions');
+  const finish = document.getElementById('tobyFinishPanel');
+  if (!wrap) return;
+  const task = TOBY_TASK_POOL.find(t => t.id === tobyDiceState.currentTaskId);
+  if (!task) {
+    wrap.innerHTML = '';
+    if (actions) actions.style.display = 'none';
+    if (finish) finish.classList.remove('show');
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="toby-card">
+      <div class="toby-card-kicker">${tobyEscape(task.category)} · 任務占卜卡</div>
+      <div class="toby-card-title">${tobyEscape(task.title)}</div>
+      <div class="toby-card-desc">${tobyEscape(task.description)}</div>
+      <div class="toby-action-box">
+        <div class="toby-action-label">現實行動</div>
+        <div class="toby-action-text">${tobyEscape(task.action)}</div>
+      </div>
+      <div class="toby-meta-grid">
+        <div class="toby-meta"><div class="toby-meta-label">預估時間</div><div class="toby-meta-value">${tobyEscape(task.time)}</div></div>
+        <div class="toby-meta"><div class="toby-meta-label">能量需求</div><div class="toby-meta-value">${tobyEscape(task.energy)}</div></div>
+        <div class="toby-meta"><div class="toby-meta-label">需要出門</div><div class="toby-meta-value">${boolText(task.needOutdoor)}</div></div>
+        <div class="toby-meta"><div class="toby-meta-label">需要花錢</div><div class="toby-meta-value">${boolText(task.needMoney)}</div></div>
+        <div class="toby-meta"><div class="toby-meta-label">完成方式</div><div class="toby-meta-value">${tobyEscape(task.completionType)}</div></div>
+        <div class="toby-meta"><div class="toby-meta-label">適合時間</div><div class="toby-meta-value">${tobyEscape((task.suitableTime || ['不限']).join('／'))}</div></div>
+      </div>
+    </div>`;
+  if (actions) actions.style.display = 'flex';
+  if (finish && tobyDiceState.currentStatus !== 'completed') finish.classList.remove('show');
+}
+async function markTobyTask(status) {
+  const task = TOBY_TASK_POOL.find(t => t.id === tobyDiceState.currentTaskId);
+  if (!task) return;
+  const history = getTobyHistory();
+  const item = history.find(h => h.taskId === task.id && h.dateKey === tobyDateKey() && h.status === 'drawn');
+  const label = status === 'completed' ? '完成' : status === 'later' ? '稍後再說' : '今天先不做';
+  if (item) {
+    item.status = status;
+    item.updatedAt = new Date().toISOString();
+  } else {
+    history.unshift({ id:`roll_${Date.now()}`, taskId:task.id, title:task.title, state:tobyDiceState.selectedState, status, dateKey:tobyDateKey(), createdAt:new Date().toISOString() });
+  }
+  saveTobyHistory(history.slice(0, 80));
+  tobyDiceState.currentStatus = status;
+  saveTobyDiceState();
+
+  const finish = document.getElementById('tobyFinishPanel');
+  const text = document.getElementById('tobyFinishText');
+  if (status === 'completed') {
+    if (text) text.innerHTML = `${tobyEscape(task.finishText)}<br><br><span style="font-family:'Share Tech Mono',monospace;color:var(--gold)">托比偷偷塞給你 1 枚霧幣。今日偏航已記錄。托比似乎對自己的占卜更有信心了。</span>`;
+    if (finish) finish.classList.add('show');
+    if (player) {
+      const newCoins = (player.coins || 0) + 1;
+      player.coins = newCoins;
+      try { if (player.id) await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: newCoins }); } catch(e) {}
+      renderPlayer();
+    }
+    if (typeof applyChoiceEffects === 'function') applyChoiceEffects({ npcTrust: { toby: 1 } });
+    notify('◈ 托比偷偷塞給你 1 枚霧幣', 'gold');
+    renderNPCs();
+  } else {
+    if (text) text.textContent = status === 'later'
+      ? '托比把紙籤夾進書裡。「稍後也可以。可能性不會那麼快過期。」'
+      : '托比點點頭，把骰子收回布袋。「今天先不做也可以，霧氣明天會重新洗牌。」';
+    if (finish) finish.classList.add('show');
+    notify(`托比已記下：${label}`, 'gold');
+  }
+  renderTobyHistory();
+}
+function renderTobyHistory() {
+  const list = document.getElementById('tobyHistoryList');
+  if (!list) return;
+  const today = tobyDateKey();
+  const stateMap = Object.fromEntries(TOBY_DICE_STATES.map(s => [s.key, s.label]));
+  const rows = getTobyHistory().filter(h => h.dateKey === today).slice(0, 10);
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty-state">今天還沒有偏航紀錄。骰子正在桌上小聲滾動。</div>';
+    return;
+  }
+  const statusMap = { drawn:'抽出', completed:'完成', later:'稍後', skip:'先不做' };
+  list.innerHTML = rows.map(h => `
+    <div class="toby-history-item">
+      <div>🎲 ${tobyEscape(h.title)} <span style="color:var(--text3)">｜${tobyEscape(stateMap[h.state] || '霧氣狀態')}</span></div>
+      <div class="toby-history-meta">${statusMap[h.status] || h.status}</div>
+    </div>`).join('');
+}
+
+loadTobyDiceState();
+
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t, i) => {
-    const names = ['tasks', 'shop', 'npc', 'decor', 'bag', 'calendar', 'records', 'debt'];
+    const names = ['tasks', 'shop', 'npc', 'tobydice', 'decor', 'bag', 'calendar', 'records', 'debt'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => {
@@ -8745,6 +9286,11 @@ function switchTab(name) {
     const hint = document.getElementById('rustyHint');
     if (hint && dailyRustyState && !dailyRustyState.claimed) hint.style.display = '';
     else if (hint) hint.style.display = 'none';
+  }
+  if (name === 'tobydice') {
+    renderTobyStateButtons();
+    renderCurrentTobyCard();
+    renderTobyHistory();
   }
   if (name === 'bag') renderBag();
   if (name === 'calendar') renderCalendar();
