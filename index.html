@@ -2751,10 +2751,17 @@ async function sb(path, method = 'GET', body = null) {
     }
   };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, opts);
-  if (!res.ok) { const e = await res.text(); throw new Error(e); }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  try {
+    const res = await fetch(url, opts);
+    if (!res.ok) { const e = await res.text(); throw new Error(`HTTP ${res.status}: ${e}`); }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  } catch(err) {
+    // 拋出帶有更多資訊的錯誤
+    const detail = err.message || String(err);
+    throw new Error(`[sb] ${method} ${path} → ${detail}`);
+  }
 }
 
 // ─── WEATHER SYSTEM ─────────────────────────────────
@@ -7239,8 +7246,26 @@ async function init() {
       runGretaRoomInspection();
     }, 800);
   } catch(e) {
-    console.error(e);
-    notify('連線失敗，請確認網路', 'red');
+    console.error('Init error:', e);
+    const msg = e?.message || String(e);
+    // 顯示詳細錯誤在畫面上，方便手機截圖回報
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.padding = '24px';
+      overlay.innerHTML = `
+        <div style="color:#ff6b6b;font-family:monospace;font-size:13px;max-width:90vw;word-break:break-all;text-align:left;background:#1a1a1a;padding:16px;border:1px solid #ff6b6b">
+          <div style="font-size:15px;margin-bottom:8px">⚠ 連線失敗</div>
+          <div style="color:#ccc;margin-bottom:8px">${msg}</div>
+          <div style="color:#888;font-size:11px">請截圖後回報此訊息</div>
+        </div>
+        <button onclick="location.reload()" style="margin-top:16px;padding:8px 20px;background:transparent;border:1px solid #888;color:#ccc;font-family:monospace;cursor:pointer">重新整理</button>`;
+      return;
+    }
+    notify('連線失敗：' + msg, 'red');
   }
   document.getElementById('loadingOverlay').style.display = 'none';
 }
