@@ -6492,6 +6492,7 @@ function markSpecialTopicUsed(topicId) {
     localStorage.setItem('chiwu_special_topics_used', JSON.stringify(used));
   }
 }
+let activeSummaryBuff = null;
 let summaryHistory = [];
 
 function loadSummaryState() {
