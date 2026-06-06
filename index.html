@@ -345,6 +345,12 @@
     color: var(--text2);
   }
   .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+  .btn-cyan {
+    background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
+    padding: 8px 18px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
+    cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+  }
+  .btn-cyan:hover { background: rgba(94,221,212,0.12); }
   .btn-red {
     background: transparent;
     border: 1px solid rgba(224,92,92,0.3);
@@ -5207,14 +5213,16 @@ function applyEquipmentEffects(baseExp, baseCoins, task) {
     }
     if (ef.type === 'chainBonus') {
       if (chainTracker.lastCategory === cat) {
+        // 同類別，連鎖計數遞增
         chainTracker.chainCount++;
       } else {
+        // 類別改變，連鎖中斷，以這個任務為新的起點重新開始計數
         chainTracker.lastCategory = cat;
         chainTracker.chainCount = 1;
       }
       if (chainTracker.chainCount >= ef.chainIndex) {
         if (ef.target === 'exp') expBonus = Math.min(expBonus + ef.valuePercent / 100, MAX_BONUS);
-        // Reset chain after trigger
+        // 觸發後重置，下一個同類才能再連鎖
         chainTracker.chainCount = 0;
         chainTracker.lastCategory = null;
       }
@@ -7550,9 +7558,10 @@ function renderTobyDicePanelHtml() {
           </div>
           <div id="tobyCardWrap"></div>
           <div class="toby-dice-actions" id="tobyCardActions" style="display:none">
-            <button class="btn btn-gold" onclick="markTobyTask('completed')">標記完成</button>
-            <button class="btn btn-ghost" onclick="markTobyTask('later')">稍後再說</button>
-            <button class="btn btn-ghost" onclick="markTobyTask('skip')">今天先不做</button>
+            <button class="btn btn-cyan" id="tobyDecideBtn" onclick="decideTobyTask()" style="display:none">✦ 決定這個任務</button>
+            <button class="btn btn-gold" id="tobyCompleteBtn" onclick="markTobyTask('completed')" style="display:none">標記完成</button>
+            <button class="btn btn-ghost" id="tobyLaterBtn" onclick="markTobyTask('later')" style="display:none">稍後再說</button>
+            <button class="btn btn-ghost" id="tobySkipBtn" onclick="markTobyTask('skip')" style="display:none">今天先不做</button>
           </div>
           <div class="toby-finish-panel" id="tobyFinishPanel">
             <div class="toby-finish-title">✦ 托比回收占卜紙籤</div>
@@ -9235,7 +9244,7 @@ const TOBY_TASK_POOL = [
   { id:'toby_night_002', title:'床邊水晶補給', category:'早晨／夜晚限定', description:'托比說明天的你會感謝今晚的你，雖然他不是很懂時間魔法。', action:'睡前準備一杯水，或把明天會用到的小東西放好。', time:'5分鐘', energy:'低', needOutdoor:false, needMoney:false, suitableTime:['夜晚'], completionType:'自由確認', tags:['夜晚收尾','微整理','照顧自己','不花錢','不出門'], finishText:'明日補給已放置。托比覺得你偷偷幫未來開了一扇小門。' }
 ];
 
-let tobyDiceState = { selectedState:'lost', currentTaskId:null, currentStatus:null };
+let tobyDiceState = { selectedState:'lost', currentTaskId:null, currentStatus:null, decidedAt:null };
 
 function loadTobyDiceState() {
   try {
@@ -9326,32 +9335,61 @@ function pickTobyTask(key) {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 function hasActiveTobyTask() {
-  return !!(tobyDiceState.currentTaskId && tobyDiceState.currentStatus !== 'completed');
+  // 已完成：檢查是否距離「決定任務」已超過24小時
+  if (tobyDiceState.currentStatus === 'completed') {
+    if (!tobyDiceState.decidedAt) return false;
+    const elapsed = Date.now() - tobyDiceState.decidedAt;
+    return elapsed < 24 * 60 * 60 * 1000; // 未滿24小時仍鎖定
+  }
+  // 已決定但未完成：永遠鎖定直到完成
+  if (tobyDiceState.currentStatus === 'decided') return true;
+  // 抽出但未決定：不鎖定（可重骰）
+  return false;
 }
+
+function tobyLockReason() {
+  if (tobyDiceState.currentStatus === 'decided') return '托比把骰子抱在懷裡：這張紙籤還亮著。完成它之後，骰子才會再醒來。';
+  if (tobyDiceState.currentStatus === 'completed' && tobyDiceState.decidedAt) {
+    const remaining = Math.ceil((tobyDiceState.decidedAt + 24*60*60*1000 - Date.now()) / 60000);
+    const h = Math.floor(remaining / 60), m = remaining % 60;
+    const timeStr = h > 0 ? `${h} 小時 ${m} 分鐘` : `${m} 分鐘`;
+    return `托比說：上一張紙籤的墨水還沒乾。再等 ${timeStr} 才能重新洗牌。`;
+  }
+  return '';
+}
+
 function updateTobyDiceLockUI() {
   const locked = hasActiveTobyTask();
+  const decided = tobyDiceState.currentStatus === 'decided';
+  const drawn = tobyDiceState.currentStatus === 'drawn';
   const rollBtn = document.getElementById('tobyRollBtn');
   const rerollBtn = document.getElementById('tobyRerollBtn');
+  const decideBtn = document.getElementById('tobyDecideBtn');
   [rollBtn, rerollBtn].forEach(btn => {
     if (!btn) return;
     btn.disabled = locked;
     btn.style.opacity = locked ? '0.45' : '';
     btn.style.cursor = locked ? 'not-allowed' : '';
   });
+  // 決定按鈕：只在「已抽出未決定」時顯示
+  if (decideBtn) {
+    decideBtn.style.display = drawn ? 'inline-block' : 'none';
+  }
   const hint = document.getElementById('tobyDiceHint');
-  if (hint && locked) hint.textContent = '托比把骰子抱在懷裡：這張紙籤還亮著。等你完成它，我們再抽下一張。';
+  if (hint && locked) hint.textContent = tobyLockReason();
 }
 function rollTobyDice() {
   if (hasActiveTobyTask()) {
     const hint = document.getElementById('tobyDiceHint');
-    if (hint) hint.textContent = '托比小聲說：這顆骰子一次只指向一件事。等這張任務完成，再讓霧氣重新洗牌。';
+    if (hint) hint.textContent = tobyLockReason();
     updateTobyDiceLockUI();
     return;
   }
   const task = pickTobyTask(tobyDiceState.selectedState || 'lost');
   if (!task) return;
   tobyDiceState.currentTaskId = task.id;
-  tobyDiceState.currentStatus = 'drawn';
+  tobyDiceState.currentStatus = 'drawn'; // 抽出，尚未決定
+  tobyDiceState.decidedAt = null;
   saveTobyDiceState();
   const history = getTobyHistory();
   history.unshift({
@@ -9373,13 +9411,37 @@ function rollTobyDice() {
 function rerollTobyDice() {
   if (hasActiveTobyTask()) {
     const hint = document.getElementById('tobyDiceHint');
-    if (hint) hint.textContent = '托比搖搖頭：這張占卜卡還沒有回到霧裡。完成之後，骰子才會再醒來。';
+    if (hint) hint.textContent = tobyLockReason();
     updateTobyDiceLockUI();
+    return;
+  }
+  // 只有在 drawn（未決定）狀態才能重骰
+  if (tobyDiceState.currentStatus === 'decided') {
+    const hint = document.getElementById('tobyDiceHint');
+    if (hint) hint.textContent = '托比搖搖頭：你已經決定了這張紙籤，霧氣不讓你反悔。';
     return;
   }
   const hint = document.getElementById('tobyDiceHint');
   if (hint) hint.textContent = '托比沒有責備你。他只是把骰子撿回來，重新吹了一口霧。';
   rollTobyDice();
+}
+function decideTobyTask() {
+  if (tobyDiceState.currentStatus !== 'drawn') return;
+  const task = TOBY_TASK_POOL.find(t => t.id === tobyDiceState.currentTaskId);
+  if (!task) return;
+  tobyDiceState.currentStatus = 'decided';
+  tobyDiceState.decidedAt = Date.now(); // 記錄決定時間，用於24小時冷卻
+  saveTobyDiceState();
+  const history = getTobyHistory();
+  const item = history.find(h => h.taskId === task.id && h.status === 'drawn');
+  if (item) { item.status = 'decided'; item.updatedAt = new Date().toISOString(); }
+  saveTobyHistory(history.slice(0, 80));
+  const hint = document.getElementById('tobyDiceHint');
+  if (hint) hint.textContent = `托比把這張紙籤放進你的手裡。「決定了。這是今天的偏航。」`;
+  renderCurrentTobyCard();
+  renderTobyHistory();
+  updateTobyDiceLockUI();
+  notify('✦ 托比的任務已決定，完成後才能再次擲骰', 'gold');
 }
 function boolText(value) {
   if (value === true) return '是';
@@ -9417,6 +9479,17 @@ function renderCurrentTobyCard() {
       </div>
     </div>`;
   if (actions) actions.style.display = tobyDiceState.currentStatus === 'completed' ? 'none' : 'flex';
+  // 根據狀態調整按鈕顯示
+  const decideBtn = document.getElementById('tobyDecideBtn');
+  const completeBtn = document.getElementById('tobyCompleteBtn');
+  const laterBtn = document.getElementById('tobyLaterBtn');
+  const skipBtn = document.getElementById('tobySkipBtn');
+  const drawn = tobyDiceState.currentStatus === 'drawn';
+  const decided = tobyDiceState.currentStatus === 'decided';
+  if (decideBtn) decideBtn.style.display = drawn ? 'inline-block' : 'none';
+  if (completeBtn) completeBtn.style.display = decided ? 'inline-block' : 'none';
+  if (laterBtn) laterBtn.style.display = decided ? 'inline-block' : 'none';
+  if (skipBtn) skipBtn.style.display = decided ? 'inline-block' : 'none';
   if (finish && tobyDiceState.currentStatus !== 'completed') finish.classList.remove('show');
   updateTobyDiceLockUI();
 }
@@ -9493,12 +9566,17 @@ async function grantTobySmallReward() {
 async function markTobyTask(status) {
   const task = TOBY_TASK_POOL.find(t => t.id === tobyDiceState.currentTaskId);
   if (!task) return;
+  // 必須是「已決定」狀態才能標記完成／稍後／先不做
+  if (tobyDiceState.currentStatus !== 'decided') {
+    notify('先用「決定這個任務」確認後，才能標記狀態。', 'gold');
+    return;
+  }
   if (status === 'completed' && tobyDiceState.currentStatus === 'completed') {
     notify('這張紙籤已經完成過了。托比請你再抽下一張。', 'gold');
     return;
   }
   const history = getTobyHistory();
-  const item = history.find(h => h.taskId === task.id && h.dateKey === tobyDateKey() && h.status === 'drawn');
+  const item = history.find(h => h.taskId === task.id && (h.status === 'drawn' || h.status === 'decided'));
   const label = status === 'completed' ? '完成' : status === 'later' ? '稍後再說' : '今天先不做';
   if (item) {
     item.status = status;
