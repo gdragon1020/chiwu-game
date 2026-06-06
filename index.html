@@ -2287,7 +2287,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.00</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.01</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -4945,7 +4945,13 @@ async function loadItemState() {
       }
     });
     const cs = await sb('chest_state?select=*&limit=1');
-    if (cs && cs[0]) chestState = cs[0];
+    if (cs && cs[0]) {
+      chestState = cs[0];
+    } else {
+      // 沒有記錄就建一筆
+      const newCs = await sb('chest_state', 'POST', { tasks_since_last_chest: 0, consecutive_no_equip: 0, total_chests_opened: 0 });
+      if (newCs && newCs[0]) chestState = newCs[0];
+    }
     const charges = await sb('charge_state?select=*');
     chargeState = {};
     (charges || []).forEach(c => { chargeState[c.charge_name] = c; });
@@ -7949,8 +7955,13 @@ async function completeTask(id) {
       // Chest progress
       chestState.tasks_since_last_chest = (chestState.tasks_since_last_chest || 0) + 1;
       if (chestState.tasks_since_last_chest >= 15 || task.size === '大任務') {
-        if (chestState.tasks_since_last_chest >= 15) chestState.tasks_since_last_chest = 0;
+        chestState.tasks_since_last_chest = 0; // 無論哪個條件觸發都歸零
+        // 立刻存回 DB 再開箱
+        if (chestState.id) await sb(`chest_state?id=eq.${chestState.id}`, 'PATCH', { tasks_since_last_chest: 0 });
         setTimeout(() => openChest(), 1000);
+      } else {
+        // 沒觸發也要存計數，否則重新整理後歸零
+        if (chestState.id) await sb(`chest_state?id=eq.${chestState.id}`, 'PATCH', { tasks_since_last_chest: chestState.tasks_since_last_chest });
       }
 
       // Update charge progress for next task
