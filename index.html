@@ -776,6 +776,36 @@
   }
 
   /* ── 葛莉達系統 ── */
+  /* ── 席爾咖啡系統 ── */
+  .coffee-menu-grid { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; }
+  .coffee-card {
+    background: var(--bg); border: 1px solid var(--border2);
+    border-left: 3px solid var(--gold); padding: 12px 14px;
+    transition: border-color 0.2s;
+  }
+  .coffee-card.selected { border-left-color: var(--cyan); background: rgba(94,221,212,0.04); }
+  .coffee-card.consumed { opacity: 0.5; border-left-color: var(--border2); }
+  .coffee-card-name { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); margin-bottom: 4px; }
+  .coffee-card-effect { font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .coffee-card-flavor {
+    font-size: 11px; color: var(--text3); font-style: italic;
+    margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .coffee-pay-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-coffee-pay {
+    background: transparent; border: 1px solid var(--border2); color: var(--text3);
+    padding: 5px 10px; font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .btn-coffee-pay:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+  .btn-coffee-pay:disabled { opacity: 0.35; cursor: not-allowed; }
+  .coffee-selected-box {
+    background: rgba(94,221,212,0.06); border: 1px solid rgba(94,221,212,0.25);
+    border-left: 2px solid var(--cyan); padding: 10px 14px; margin: 0 16px 12px;
+    font-size: 12px; color: var(--text2); line-height: 1.7;
+  }
+  .coffee-sear-quote { font-size: 11px; color: var(--text3); font-style: italic; margin-top:5px; }
+
   .greta-panel {
     padding: 12px 16px;
     background: var(--bg2);
@@ -2287,7 +2317,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.01</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.06</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -4898,7 +4928,9 @@ const CONSUMABLE_DATA = {
   combo_boost: { id:'combo_boost', name:'混合加速符', kind:'consumable', description:'今日完成1個日常委託+1個專注委託後，額外 +20 EXP', isConsumable:true,
     effects:[{ type:'comboBonus', requiredCategories:['日常委託','專注委託'], reward:{ target:'exp', amount:20 } }] },
   any_boost: { id:'any_boost', name:'萬用鼓勁符', kind:'consumable', description:'使用後，下一個任務 EXP +10%', isConsumable:true,
-    effects:[{ type:'nextTaskBonus', category:null, target:'exp', valuePercent:10 }] }
+    effects:[{ type:'nextTaskBonus', category:null, target:'exp', valuePercent:10 }] },
+  coffee_ticket: { id:'coffee_ticket', name:'咖啡券', kind:'consumable', description:'可以在席爾的咖啡館兌換一杯今日咖啡的紙券。邊角有一點咖啡漬。', isConsumable:true, stackable:true,
+    effects:[] }
 };
 
 // 家具 slots（之後填內容）
@@ -5001,6 +5033,21 @@ async function addFragments(amount) {
   player.fragments = fragments;
 }
 
+// 輔助：查詢背包中咖啡券數量
+function getCoffeeTicketCount() {
+  return inventory.filter(inv => inv.item_id === 'coffee_ticket').length;
+}
+
+// 輔助：消耗 1 張咖啡券（從 inventory 移除一筆，並同步 DB）
+async function consumeCoffeeTicket() {
+  const idx = inventory.findIndex(inv => inv.item_id === 'coffee_ticket');
+  if (idx === -1) return false;
+  const row = inventory[idx];
+  inventory.splice(idx, 1);
+  if (row.id) await sb(`inventory?id=eq.${row.id}`, 'DELETE');
+  return true;
+}
+
 // ─── CHEST SYSTEM ────────────────────────────────────
 async function openChest() {
   const roll = Math.random() * 100;
@@ -5015,10 +5062,13 @@ async function openChest() {
     result = { type: 'fragment', amount: 20 };
     chestState.consecutive_no_equip++;
   } else if (roll < 80) {
-    const consumables = Object.keys(CONSUMABLE_DATA);
-    const picked = consumables[Math.floor(Math.random() * consumables.length)];
-    await obtainItem(picked);
-    result = { type: 'consumable', itemId: picked };
+    // 消耗品池：一般消耗品 + 咖啡券（咖啡券佔 20% 機率）
+    const normalConsumables = Object.keys(CONSUMABLE_DATA).filter(id => id !== 'coffee_ticket');
+    const pickedId = Math.random() < 0.2
+      ? 'coffee_ticket'
+      : normalConsumables[Math.floor(Math.random() * normalConsumables.length)];
+    await obtainItem(pickedId);
+    result = { type: 'consumable', itemId: pickedId };
     chestState.consecutive_no_equip++;
   } else if (roll < 90) {
     result = await rollEquipment();
@@ -5461,8 +5511,9 @@ async function openFragmentShop() {
     const item = EQUIPMENT_DATA[si.id] || FURNITURE_DATA[si.id] || CONSUMABLE_DATA[si.id];
     if (!item) return '';
     const canAfford = fragments >= si.price;
+    const limitLabel = si.dailyLimit ? `<span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);margin-left:6px">每日限${si.dailyLimit}張</span>` : '';
     return `<div style="background:var(--bg2);border:1px solid var(--border);padding:12px;margin-bottom:8px;${purchased?'opacity:0.5':''}">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">${item.name}</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">${item.name}${limitLabel}</div>
       <div style="font-size:11px;color:var(--text2);margin:4px 0">${item.description}</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--cyan)">◈ ${si.price} 碎片</span>
@@ -5489,12 +5540,16 @@ async function openFragmentShop() {
 function generateShopItems() {
   const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
   const furnitures = Object.keys(FURNITURE_DATA).filter(id => canObtainFurniture(id));
-  const consumables = Object.keys(CONSUMABLE_DATA);
+  // 一般消耗品不包含咖啡券（咖啡券獨立固定出現）
+  const consumables = Object.keys(CONSUMABLE_DATA).filter(id => id !== 'coffee_ticket');
   const pool = [...available.slice(0,2), ...furnitures.slice(0,2), ...consumables.slice(0,2)].sort(() => Math.random()-0.5).slice(0,4);
-  return pool.map(id => ({
+  const items = pool.map(id => ({
     id,
     price: CONSUMABLE_DATA[id] ? 30 : 100
   }));
+  // 咖啡券固定加在最前面，10 碎片，每日限 1 張
+  items.unshift({ id: 'coffee_ticket', price: 10, dailyLimit: 1 });
+  return items;
 }
 
 async function buyFromShop(itemId, price, shopId) {
@@ -5759,6 +5814,274 @@ const NPC_SUMMARY_PROMPTS = {
   toby:  '你是托比，行會雜役少年，語氣興奮真誠，笨拙但陪伴感很強。',
   eli:   '你是伊萊・碎晶，碎光工坊老闆，語氣冷淡技術型，講話像看機械數據，但有一點可靠。'
 };
+
+// ─── SEAR COFFEE SYSTEM｜第五塊：效果觸發 ───────────────
+
+function applyCoffeeEffect(task, expGain, coinGain) {
+  const result = { expGain, coinGain, extraFragment: 0 };
+  const state = getTodayCoffeeState();
+
+  // 未選咖啡、未成功支付、已消耗 → 不觸發
+  if (!state.selectedCoffeeId || !state.paymentMethod) return result;
+  if (state.consumed) return result;
+
+  const coffee = getCoffeeById(state.selectedCoffeeId);
+  if (!coffee) return result;
+
+  // 迷霧占卜咖啡是立即型，不在這裡觸發
+  if (coffee.id === 'fog_divination') return result;
+
+  // 暖燈奶泡：根據昨天是否有完成任務決定加成
+  if (coffee.id === 'warm_lamp_foam') {
+    const yesterdayHadTask = checkYesterdayHadTask();
+    const pct = yesterdayHadTask ? 5 : 20;
+    result.expGain = Math.ceil(expGain * (1 + pct / 100));
+    _markCoffeeConsumed(state);
+    notify(`☕ ${coffee.name}：EXP +${pct}%${!yesterdayHadTask ? '（昨天沒完成任務，加倍！）' : ''}`, 'gold');
+    return result;
+  }
+
+  let triggered = false;
+
+  for (const ef of coffee.effects) {
+    // nextTaskBonus：下一個任務（不限或限類別）
+    if (ef.type === 'nextTaskBonus') {
+      if (!ef.category || ef.category === task.category) {
+        if (ef.valuePercent && ef.target === 'exp')      result.expGain  = Math.ceil(expGain  * (1 + ef.valuePercent / 100));
+        if (ef.valuePercent && ef.target === 'gold')     result.coinGain = Math.ceil(coinGain * (1 + ef.valuePercent / 100));
+        if (ef.amount       && ef.target === 'gold')     result.coinGain += ef.amount;
+        if (ef.amount       && ef.target === 'fragment') result.extraFragment += ef.amount;
+        triggered = true;
+      }
+    }
+    // nextCategoryTaskBonus：指定類別
+    if (ef.type === 'nextCategoryTaskBonus') {
+      if (ef.category === task.category) {
+        if (ef.valuePercent && ef.target === 'exp')      result.expGain  = Math.ceil(expGain  * (1 + ef.valuePercent / 100));
+        if (ef.valuePercent && ef.target === 'gold')     result.coinGain = Math.ceil(coinGain * (1 + ef.valuePercent / 100));
+        if (ef.amount       && ef.target === 'gold')     result.coinGain += ef.amount;
+        if (ef.amount       && ef.target === 'fragment') result.extraFragment += ef.amount;
+        triggered = true;
+      }
+    }
+    // nextSmallTaskBonus：預估時間 ≤ N 分鐘
+    if (ef.type === 'nextSmallTaskBonus') {
+      const maxMin = ef.condition?.maxEstimatedMinutes || 10;
+      const taskMin = task.estimated_minutes || task.estimatedMinutes || 999;
+      if (taskMin <= maxMin) {
+        if (ef.valuePercent && ef.target === 'exp') result.expGain = Math.ceil(expGain * (1 + ef.valuePercent / 100));
+        triggered = true;
+      }
+    }
+    // chainBonus：連鎖加成
+    if (ef.type === 'chainBonus') {
+      if (chainTracker.lastCategory === task.category && chainTracker.chainCount >= (ef.chainIndex - 1)) {
+        if (ef.valuePercent && ef.target === 'exp') result.expGain = Math.ceil(expGain * (1 + ef.valuePercent / 100));
+        triggered = true;
+      }
+    }
+  }
+
+  if (triggered) {
+    _markCoffeeConsumed(state);
+    notify(`☕ ${coffee.name} 效果觸發！`, 'gold');
+    renderSearCoffeePanel();
+  }
+
+  return result;
+}
+
+function _markCoffeeConsumed(state) {
+  state.consumed = true;
+  state.consumedAt = Date.now();
+  saveCoffeeState(state);
+}
+
+// 暖燈奶泡：檢查昨天是否有完成過任務
+function checkYesterdayHadTask() {
+  const today = getDateKey();
+  const d = new Date(today);
+  d.setDate(d.getDate() - 1);
+  const yesterday = d.toISOString().slice(0, 10);
+  return tasks.some(t =>
+    t.status === 'completed' &&
+    t.completed_at &&
+    t.completed_at.slice(0, 10) === yesterday
+  );
+}
+
+// ─── SEAR COFFEE SYSTEM｜第四塊：支付與防呆 ─────────────
+
+function canAffordCoffee(paymentMethod) {
+  if (paymentMethod === 'fragment')      return (fragments || 0) >= 10;
+  if (paymentMethod === 'gold')          return (player?.coins || 0) >= 5;
+  if (paymentMethod === 'coffee_ticket') return getCoffeeTicketCount() >= 1;
+  return false;
+}
+
+async function payForCoffee(paymentMethod) {
+  // 僅在 canAffordCoffee 通過後才呼叫
+  if (paymentMethod === 'fragment') {
+    await addFragments(-10);
+    return { fragment: 10 };
+  }
+  if (paymentMethod === 'gold') {
+    player.coins -= 5;
+    await sb(`player?id=eq.${player.id}`, 'PATCH', { coins: player.coins });
+    return { gold: 5 };
+  }
+  if (paymentMethod === 'coffee_ticket') {
+    const ok = await consumeCoffeeTicket();
+    if (!ok) throw new Error('咖啡券不足');
+    return { coffeeTicket: 1 };
+  }
+  throw new Error('不明支付方式');
+}
+
+async function selectCoffee(coffeeId, paymentMethod) {
+  // ── 防呆 1：今天已選過 ──
+  const state = getTodayCoffeeState();
+  if (state.selectedCoffeeId && state.paymentMethod) {
+    notify('席爾：「今天只調一杯。你已經選過了。」', 'gold');
+    return;
+  }
+
+  // ── 防呆 2：咖啡必須在今日菜單中 ──
+  if (!state.menu.includes(coffeeId)) {
+    notify('席爾：「這杯今天沒有。」', 'gold');
+    return;
+  }
+
+  // ── 防呆 3：資源檢查 ──
+  if (!canAffordCoffee(paymentMethod)) {
+    const msg = paymentMethod === 'fragment'
+      ? '席爾：「碎片不夠。別看我，我也不能拿霧氣找零。」'
+      : paymentMethod === 'gold'
+      ? '席爾：「金幣不夠。這杯先記在明天的願望裡吧。」'
+      : '席爾：「你沒有咖啡券。那張沾了咖啡漬的小紙片，很重要。」';
+    notify(msg, 'gold');
+    return;
+  }
+
+  // ── 支付（真實扣除資源）──
+  let paidCost;
+  try {
+    paidCost = await payForCoffee(paymentMethod);
+  } catch(e) {
+    notify('支付失敗：' + e.message, 'red');
+    return;
+  }
+
+  // ── 更新 state，防止重整重複扣款 ──
+  state.selectedCoffeeId = coffeeId;
+  state.selectedAt = Date.now();
+  state.paymentMethod = paymentMethod;
+  state.paidCost = paidCost;
+  saveCoffeeState(state);
+
+  // ── 迷霧占卜咖啡：立即觸發骰子重抽 +1 ──
+  if (coffeeId === 'fog_divination' && !state.systemEffectApplied) {
+    applyFogDivinationEffect(state);
+  }
+
+  const coffee = getCoffeeById(coffeeId);
+  notify(`☕ 選定：${coffee?.name}。席爾：「選好了就別後悔。」`, 'gold');
+
+  renderPlayer();
+  renderSearCoffeePanel();
+}
+
+// 迷霧占卜咖啡：今日托比骰子重抽 +1（防止重複發放）
+function applyFogDivinationEffect(state) {
+  if (state.systemEffectApplied) return;
+  // 給托比骰子多一次重骰機會（存進 tobyDiceState）
+  loadTobyDiceState();
+  tobyDiceState.bonusRerolls = (tobyDiceState.bonusRerolls || 0) + 1;
+  saveTobyDiceState();
+  state.systemEffectApplied = true;
+  state.systemEffectAppliedAt = Date.now();
+  saveCoffeeState(state);
+  notify('✦ 迷霧占卜咖啡：托比骰子今日獲得 1 次額外重骰。', 'gold');
+}
+
+// ─── SEAR COFFEE SYSTEM｜第四塊結束 ─────────────────────
+
+
+
+function renderSearCoffeePanelHtml() {
+  return `
+    <div class="npc-feature-box">
+      ${npcFeatureToggleHtml('sear_coffee', '☕ 霧中燈｜今日咖啡', '每日選一杯')}
+      <div class="npc-feature-body ${isNpcFeatureCollapsed('sear_coffee') ? 'collapsed' : ''}">
+        <div id="searCoffeeInner"></div>
+      </div>
+    </div>`;
+}
+
+function renderSearCoffeePanel() {
+  const el = document.getElementById('searCoffeeInner');
+  if (!el) return;
+
+  const state = getTodayCoffeeState();
+  const menu = state.menu.map(id => getCoffeeById(id)).filter(Boolean);
+  const selected = state.selectedCoffeeId ? getCoffeeById(state.selectedCoffeeId) : null;
+  const alreadyPaid = !!(state.paymentMethod && state.paidCost);
+
+  // 計算玩家資源
+  const myFragments = fragments || 0;
+  const myCoins = player?.coins || 0;
+  const myTickets = getCoffeeTicketCount();
+
+  let html = '';
+
+  // 已選咖啡後的狀態顯示
+  if (selected && alreadyPaid) {
+    const payLabel = state.paymentMethod === 'fragment' ? '10 碎片'
+      : state.paymentMethod === 'gold' ? '5 金幣'
+      : '1 張咖啡券';
+    const statusText = state.consumed
+      ? `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cyan);margin-top:4px">✦ 效果已觸發</div>`
+      : `<div style="font-size:11px;color:var(--text3);margin-top:4px">效果等待觸發：${selected.description}</div>`;
+    const quote = state.consumed
+      ? '「看來它沒有白煮。」'
+      : '「喝完就去做。別讓它冷掉。」';
+
+    html = `<div class="coffee-selected-box">
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">今日已選：${selected.name}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">支付方式：${payLabel}</div>
+      ${statusText}
+      <div class="coffee-sear-quote">${quote}</div>
+    </div>`;
+
+    el.innerHTML = html;
+    return;
+  }
+
+  // 菜單顯示
+  html = `<div class="coffee-menu-grid">`;
+  menu.forEach(coffee => {
+    const canFragment = myFragments >= 10;
+    const canGold = myCoins >= 5;
+    const canTicket = myTickets >= 1;
+
+    const btnFragment = `<button class="btn-coffee-pay" ${canFragment ? '' : 'disabled'}
+      onclick="selectCoffee('${coffee.id}','fragment')">${canFragment ? '10 碎片兌換' : '碎片不足'}</button>`;
+    const btnGold = `<button class="btn-coffee-pay" ${canGold ? '' : 'disabled'}
+      onclick="selectCoffee('${coffee.id}','gold')">${canGold ? '5 金幣兌換' : '金幣不足'}</button>`;
+    const btnTicket = `<button class="btn-coffee-pay" ${canTicket ? '' : 'disabled'}
+      onclick="selectCoffee('${coffee.id}','coffee_ticket')">${canTicket ? `咖啡券 ×${myTickets}` : '沒有咖啡券'}</button>`;
+
+    html += `<div class="coffee-card">
+      <div class="coffee-card-name">${coffee.name}</div>
+      <div class="coffee-card-effect">${coffee.description}</div>
+      <div class="coffee-card-flavor">${coffee.flavorText}</div>
+      <div class="coffee-pay-row">${btnFragment}${btnGold}${btnTicket}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  el.innerHTML = html;
+}
 
 // ─── GRETA SYSTEM ─────────────────────────────────────
 // 完全本地化，不呼叫 AI API
@@ -6379,6 +6702,163 @@ function renderGretaPanel() {
     </div>
     ${activeTasksHtml}
     ${repairTasksHtml}`;
+}
+
+// ─── SEAR COFFEE SYSTEM｜第一塊：資料與狀態 ──────────────
+
+const COFFEE_ITEMS = [
+  {
+    id: 'black_fog',
+    name: '黑霧濃縮',
+    description: '下一個專注委託 EXP +15%',
+    flavorText: '「苦一點，但能讓霧散開一小塊。」',
+    effects: [{ type:'nextCategoryTaskBonus', category:'專注委託', target:'exp', valuePercent:15, consumedOnTrigger:true }]
+  },
+  {
+    id: 'fog_latte',
+    name: '霧中拿鐵',
+    description: '下一個任務 EXP +8%',
+    flavorText: '「不挑任務。只要你願意開始，它就有用。」',
+    effects: [{ type:'nextTaskBonus', category:null, target:'exp', valuePercent:8, consumedOnTrigger:true }]
+  },
+  {
+    id: 'bitter_cold_brew',
+    name: '苦草冷萃',
+    description: '下一個任務委託 EXP +15%',
+    flavorText: '「大事不要整口吞。先喝一口，再拆一塊。」',
+    effects: [{ type:'nextCategoryTaskBonus', category:'任務委託', target:'exp', valuePercent:15, consumedOnTrigger:true }]
+  },
+  {
+    id: 'moonlight_milk',
+    name: '月光牛奶咖啡',
+    description: '下一個社交委託金幣 +10%，並額外 +3 碎片',
+    flavorText: '「有些話不用說得完美，能送出去就好。」',
+    effects: [
+      { type:'nextCategoryTaskBonus', category:'社交委託', target:'gold', valuePercent:10, consumedOnTrigger:true },
+      { type:'nextCategoryTaskBonus', category:'社交委託', target:'fragment', amount:3, consumedOnTrigger:true }
+    ]
+  },
+  {
+    id: 'red_sand_spice',
+    name: '赤沙香料咖啡',
+    description: '下一個外出委託金幣 +15%',
+    flavorText: '「娜娜會說這杯太便宜。我會說它剛好。」',
+    effects: [{ type:'nextCategoryTaskBonus', category:'外出委託', target:'gold', valuePercent:15, consumedOnTrigger:true }]
+  },
+  {
+    id: 'decaf_hot',
+    name: '無咖啡因熱飲',
+    description: '下一個日常委託 EXP +15%',
+    flavorText: '「不是所有清醒都需要咖啡因。」',
+    effects: [{ type:'nextCategoryTaskBonus', category:'日常委託', target:'exp', valuePercent:15, consumedOnTrigger:true }]
+  },
+  {
+    id: 'blue_crystal_mocha',
+    name: '藍晶摩卡',
+    description: '下一個專注委託完成後，額外 +5 碎片',
+    flavorText: '「藍晶粉末只放了一點點。放心，合法的那種。」',
+    effects: [{ type:'nextCategoryTaskBonus', category:'專注委託', target:'fragment', amount:5, consumedOnTrigger:true }]
+  },
+  {
+    id: 'old_city_brown_sugar',
+    name: '舊城黑糖咖啡',
+    description: '下一個任務完成後，額外 +5 金幣',
+    flavorText: '「下城的人喜歡甜一點，至少入口時像是賺到了。」',
+    effects: [{ type:'nextTaskBonus', category:null, target:'gold', amount:5, consumedOnTrigger:true }]
+  },
+  {
+    id: 'silent_mint',
+    name: '靜音薄荷咖啡',
+    description: '下一個任務若預估時間 ≤ 10 分鐘，EXP +15%',
+    flavorText: '「今天不用挑大的。小到你不想逃，就可以。」',
+    effects: [{ type:'nextSmallTaskBonus', target:'exp', valuePercent:15, condition:{ maxEstimatedMinutes:10 }, consumedOnTrigger:true }]
+  },
+  {
+    id: 'gear_caramel',
+    name: '齒輪焦糖咖啡',
+    description: '今天連鎖第 2 個同類任務 EXP +10%',
+    flavorText: '「齒輪一旦咬上，第二下會比較順。」',
+    effects: [{ type:'chainBonus', chainIndex:2, target:'exp', valuePercent:10, consumedOnTrigger:true }]
+  },
+  {
+    id: 'fog_divination',
+    name: '迷霧占卜咖啡',
+    description: '今日任務骰子免費重抽 +1',
+    flavorText: '「我不保證托比抽得準，但多一次機會總是好的。」',
+    effects: [{ type:'diceRerollBonus', amount:1, consumedOnTrigger:false }]
+  },
+  {
+    id: 'warm_lamp_foam',
+    name: '暖燈奶泡',
+    description: '昨天沒完成任務：下一個任務 EXP +20%；否則 EXP +5%',
+    flavorText: '「回來就好。杯子還熱著。」',
+    effects: [{ type:'restartBonus', target:'exp', valuePercentIfRestart:20, valuePercentNormal:5, condition:{ yesterdayHadNoTasks:true }, consumedOnTrigger:true }]
+  }
+];
+
+// ── 每日咖啡 State ──────────────────────────────────────
+// 存在 localStorage 的 key
+const COFFEE_STATE_KEY = 'chiwu_daily_coffee';
+
+function loadCoffeeState() {
+  try {
+    const raw = localStorage.getItem(COFFEE_STATE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function saveCoffeeState(state) {
+  localStorage.setItem(COFFEE_STATE_KEY, JSON.stringify(state));
+}
+
+// ── 每日菜單生成 ────────────────────────────────────────
+// 規則：凌晨 5:00 為分界（沿用 getDateKey()）
+// 同一個 dateKey 永遠產生同樣的 3 杯（用 dateKey 作亂數種子，防止重整後換掉）
+function seededRandom(seed) {
+  // 簡易 LCG 偽亂數，讓同一個 seed 每次產出相同結果
+  let s = 0;
+  for (let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) | 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) | 0;
+    return (s >>> 0) / 4294967296;
+  };
+}
+
+function generateDailyCoffeeMenu(dateKey) {
+  const rng = seededRandom(dateKey);
+  const shuffled = [...COFFEE_ITEMS].sort(() => rng() - 0.5);
+  return shuffled.slice(0, 3).map(c => c.id);
+}
+
+// ── 取得或建立今日 State ────────────────────────────────
+function getTodayCoffeeState() {
+  const dateKey = getDateKey();
+  const saved = loadCoffeeState();
+
+  // 如果已有今天的 state 直接回傳
+  if (saved && saved.dateKey === dateKey) return saved;
+
+  // 不然建新的（新的一天）
+  const newState = {
+    dateKey,
+    menu: generateDailyCoffeeMenu(dateKey), // 3 杯咖啡 id
+    selectedCoffeeId: null,
+    selectedAt: null,
+    paymentMethod: null,
+    paidCost: null,
+    consumed: false,
+    consumedAt: null,
+    systemEffectApplied: false,
+    systemEffectAppliedAt: null
+  };
+  saveCoffeeState(newState);
+  return newState;
+}
+
+// ── 輔助：根據 id 取得咖啡資料 ─────────────────────────
+function getCoffeeById(id) {
+  return COFFEE_ITEMS.find(c => c.id === id) || null;
 }
 
 // ─── NPC TRUST SYSTEM ────────────────────────────────
@@ -7650,6 +8130,9 @@ function renderNPCs() {
           </div>
         </div>` : ''}
 
+      <!-- 席爾咖啡系統 -->
+      ${npc.name === '席爾・煙霧' ? renderSearCoffeePanelHtml() : ''}
+
       <!-- 托比任務骰子 -->
       ${npc.name === '托比' ? renderTobyDicePanelHtml() : ''}
 
@@ -7688,6 +8171,7 @@ function renderNPCs() {
   });
   requestAnimationFrame(() => {
     renderGretaPanel();
+    renderSearCoffeePanel();
     renderTobyStateButtons();
     renderCurrentTobyCard();
     renderTobyHistory();
@@ -7905,6 +8389,12 @@ async function completeTask(id) {
       const weatherBonus = await applyWeatherBonus(task, expGain, coinGain);
       expGain = weatherBonus.expGain;
       coinGain = weatherBonus.coinGain;
+
+      // 4.5 Coffee effect（席爾咖啡加成）
+      const coffeeResult = applyCoffeeEffect(task, expGain, coinGain);
+      expGain = coffeeResult.expGain;
+      coinGain = coffeeResult.coinGain;
+      if (coffeeResult.extraFragment) await addFragments(coffeeResult.extraFragment);
 
       // 5. Cap at +100% of base
       const baseExp = cd.half ? Math.ceil(task.exp_reward * 0.5) : task.exp_reward;
@@ -8455,18 +8945,38 @@ function renderInventoryGrid() {
     return;
   }
   grid.innerHTML = '';
+
+  // 堆疊計數：stackable 的道具合併顯示
+  const countMap = {};
+  consumables.forEach(inv => {
+    countMap[inv.item_id] = (countMap[inv.item_id] || 0) + 1;
+  });
+  const displayed = new Set();
+
   consumables.forEach(inv => {
     const item = CONSUMABLE_DATA[inv.item_id];
     if (!item) return;
-    const isEquipped = false;
+    if (item.stackable && displayed.has(inv.item_id)) return; // stackable 只顯示一次
+    displayed.add(inv.item_id);
+
+    const count = item.stackable ? countMap[inv.item_id] : 1;
+    const countBadge = item.stackable && count > 1
+      ? `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cyan);margin-bottom:2px">× ${count}</div>`
+      : '';
+
     const div = document.createElement('div');
     div.className = 'inv-item ' + (item.isConsumable ? 'consumable' : 'equipment');
+    // 咖啡券不能在背包直接使用，只在席爾咖啡館使用
+    const useBtn = item.id === 'coffee_ticket'
+      ? `<button class="btn btn-ghost" style="font-size:10px;padding:4px 10px;width:100%" disabled title="只能在席爾咖啡館使用">席爾咖啡館限定</button>`
+      : `<button class="btn btn-cyan" style="font-size:10px;padding:4px 10px;width:100%" onclick="useConsumable('${item.id}')">使用</button>`;
+
     div.innerHTML = `
       <div class="inv-item-name">${item.name}</div>
+      ${countBadge}
       ${item.slot ? `<div class="inv-item-slot">${SLOT_LABELS[item.slot] || item.slot}</div>` : ''}
       <div class="inv-item-desc">${item.description}</div>
-      ${isEquipped ? '<div class="inv-item-equipped">✓ 已裝備</div>' : ''}
-      <button class="btn btn-cyan" style="font-size:10px;padding:4px 10px;width:100%" onclick="useConsumable('${item.id}')">使用</button>
+      ${useBtn}
     `;
     grid.appendChild(div);
   });
@@ -9446,7 +9956,19 @@ function rollTobyDice() {
   updateTobyDiceLockUI();
 }
 function rerollTobyDice() {
+  loadTobyDiceState();
+  const bonusRerolls = tobyDiceState.bonusRerolls || 0;
+
   if (hasActiveTobyTask()) {
+    // 即使鎖定，若有迷霧占卜咖啡的額外重骰，仍可在 drawn 狀態使用
+    if (bonusRerolls > 0 && tobyDiceState.currentStatus === 'drawn') {
+      tobyDiceState.bonusRerolls = bonusRerolls - 1;
+      saveTobyDiceState();
+      const hint = document.getElementById('tobyDiceHint');
+      if (hint) hint.textContent = `托比眼睛一亮：「迷霧占卜咖啡的餘韻。再擲一次。」${tobyDiceState.bonusRerolls > 0 ? `（剩餘 ${tobyDiceState.bonusRerolls} 次）` : ''}`;
+      rollTobyDice();
+      return;
+    }
     const hint = document.getElementById('tobyDiceHint');
     if (hint) hint.textContent = tobyLockReason();
     updateTobyDiceLockUI();
