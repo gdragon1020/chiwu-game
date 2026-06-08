@@ -2317,7 +2317,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.06</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.07</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -5511,9 +5511,8 @@ async function openFragmentShop() {
     const item = EQUIPMENT_DATA[si.id] || FURNITURE_DATA[si.id] || CONSUMABLE_DATA[si.id];
     if (!item) return '';
     const canAfford = fragments >= si.price;
-    const limitLabel = si.dailyLimit ? `<span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);margin-left:6px">每日限${si.dailyLimit}張</span>` : '';
     return `<div style="background:var(--bg2);border:1px solid var(--border);padding:12px;margin-bottom:8px;${purchased?'opacity:0.5':''}">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">${item.name}${limitLabel}</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">${item.name}</div>
       <div style="font-size:11px;color:var(--text2);margin:4px 0">${item.description}</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--cyan)">◈ ${si.price} 碎片</span>
@@ -5540,16 +5539,12 @@ async function openFragmentShop() {
 function generateShopItems() {
   const available = Object.keys(EQUIPMENT_DATA).filter(id => canObtainItem(id));
   const furnitures = Object.keys(FURNITURE_DATA).filter(id => canObtainFurniture(id));
-  // 一般消耗品不包含咖啡券（咖啡券獨立固定出現）
-  const consumables = Object.keys(CONSUMABLE_DATA).filter(id => id !== 'coffee_ticket');
+  const consumables = Object.keys(CONSUMABLE_DATA); // 咖啡券與其他消耗品同等隨機
   const pool = [...available.slice(0,2), ...furnitures.slice(0,2), ...consumables.slice(0,2)].sort(() => Math.random()-0.5).slice(0,4);
-  const items = pool.map(id => ({
+  return pool.map(id => ({
     id,
-    price: CONSUMABLE_DATA[id] ? 30 : 100
+    price: id === 'coffee_ticket' ? 10 : CONSUMABLE_DATA[id] ? 30 : 100
   }));
-  // 咖啡券固定加在最前面，10 碎片，每日限 1 張
-  items.unshift({ id: 'coffee_ticket', price: 10, dailyLimit: 1 });
-  return items;
 }
 
 async function buyFromShop(itemId, price, shopId) {
