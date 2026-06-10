@@ -2406,7 +2406,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.13</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.17</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -2726,6 +2726,7 @@
     <!-- Sub tabs -->
     <div class="record-subtabs">
       <div class="record-subtab active" onclick="switchRecordTab('tasks')" id="rtab-tasks">📋 任務紀錄</div>
+      <div class="record-subtab" onclick="switchRecordTab('tags')" id="rtab-tags">🏷 標籤紀錄</div>
       <div class="record-subtab" onclick="switchRecordTab('wishes')" id="rtab-wishes">🛍 心願紀錄</div>
       <div class="record-subtab" onclick="switchRecordTab('failed')" id="rtab-failed">💀 失敗紀錄</div>
       <div class="record-subtab" onclick="switchRecordTab('stats')" id="rtab-stats">📊 統計</div>
@@ -2746,6 +2747,11 @@
       </div>
       <div id="taskRecordList"></div>
       <div class="record-pagination" id="taskRecordPager"></div>
+    </div>
+
+    <!-- Tag records -->
+    <div id="rcontent-tags" style="display:none">
+      <div id="tagRecordList"></div>
     </div>
 
     <!-- Wish records -->
@@ -5920,30 +5926,39 @@ function renderEliPanelHtml() {
       <div class="npc-feature-body ${isNpcFeatureCollapsed('eli_research') ? 'collapsed' : ''}">
         <div id="eliResearchInner"></div>
       </div>
+    </div>
+    <div class="npc-feature-box">
+      ${npcFeatureToggleHtml('eli_paper', '📄 文獻存檔｜待讀論文', '記下待讀論文')}
+      <div class="npc-feature-body ${isNpcFeatureCollapsed('eli_paper') ? 'collapsed' : ''}">
+        <div id="eliPaperInner"></div>
+      </div>
     </div>`;
 }
 
 function renderEliPanel() {
+  renderEliResearch();
+  renderEliPaper();
+}
+
+function renderEliResearch() {
   const el = document.getElementById('eliResearchInner');
   if (!el) return;
 
-  const eliTasks = tasks.filter(t => t.source === 'eli' && t.status === 'pending');
+  const eliTasks = tasks.filter(t =>
+    t.source === 'eli' && t.status === 'pending' &&
+    (t.tags || []).includes('查詢')
+  );
 
   const listHtml = eliTasks.length === 0
-    ? `<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px 0 12px">
-        伊萊抬起眼，義眼掃了你一下。「有不懂的，記下來。」
-       </div>`
+    ? `<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px 0 12px">伊萊抬起眼，義眼掃了你一下。「有不懂的，記下來。」</div>`
     : eliTasks.map(t => `
-      <div class="eli-task-item${!t.exp_reward ? ' assessing' : ''}" id="eli-task-${t.id}">
+      <div class="eli-task-item" id="eli-task-${t.id}">
         <div class="eli-task-check" onclick="completeTask('${t.id}')" title="標記查詢完成">✓</div>
         <div class="eli-task-body">
           <div class="eli-task-title">${t.title}</div>
           <div class="eli-task-rewards">
-            ${t.exp_reward
-              ? `<span class="reward-tag exp">+${t.exp_reward} EXP</span>
-                 <span class="reward-tag coin">+${t.coin_reward} ◈</span>
-                 <span class="reward-tag focus">專注委託</span>`
-              : `<span style="font-size:10px;color:var(--text3)">伊萊評估中…</span>`}
+            <span class="reward-tag exp">+${t.exp_reward} EXP</span>
+            <span class="reward-tag coin">+${t.coin_reward} ◈</span>
           </div>
         </div>
         <button class="eli-task-delete" onclick="deleteEliTask('${t.id}')" title="移除">✕</button>
@@ -5959,6 +5974,50 @@ function renderEliPanel() {
     <div class="eli-task-list">${listHtml}</div>`;
 }
 
+function renderEliPaper() {
+  const el = document.getElementById('eliPaperInner');
+  if (!el) return;
+
+  const paperTasks = tasks.filter(t =>
+    t.source === 'eli' && t.status === 'pending' &&
+    (t.tags || []).includes('論文')
+  );
+
+  const listHtml = paperTasks.length === 0
+    ? `<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px 0 12px">伊萊把一本舊期刊推到桌角。「有要讀的，放這裡。」</div>`
+    : paperTasks.map(t => {
+        const note = t.description && !t.description.startsWith('論文：') ? t.description : t.description?.replace('論文：', '') || '';
+        return `
+      <div class="eli-task-item" id="eli-task-${t.id}">
+        <div class="eli-task-check" onclick="completeTask('${t.id}')" title="標記已讀完">✓</div>
+        <div class="eli-task-body">
+          <div class="eli-task-title">${t.title}</div>
+          ${note ? `<div style="font-size:11px;color:var(--text3);margin-bottom:3px">${note}</div>` : ''}
+          <div class="eli-task-rewards">
+            <span class="reward-tag exp">+${t.exp_reward} EXP</span>
+            <span class="reward-tag coin">+${t.coin_reward} ◈</span>
+          </div>
+        </div>
+        <button class="eli-task-delete" onclick="deleteEliTask('${t.id}')" title="移除">✕</button>
+      </div>`;
+      }).join('');
+
+  el.innerHTML = `
+    <div class="eli-task-input-row">
+      <input class="eli-task-input" id="eliPaperInput" type="text"
+        placeholder="論文標題…"
+        onkeydown="if(event.key==='Enter') addEliPaper()">
+      <button class="btn-eli-add" onclick="addEliPaper()">記下來</button>
+    </div>
+    <div style="padding:0 16px 8px">
+      <input class="eli-task-input" id="eliPaperNote" type="text"
+        placeholder="備註：作者、年份、為什麼想讀（選填）"
+        style="width:100%;font-size:12px"
+        onkeydown="if(event.key==='Enter') addEliPaper()">
+    </div>
+    <div class="eli-task-list">${listHtml}</div>`;
+}
+
 async function addEliTask() {
   const input = document.getElementById('eliTermInput');
   if (!input) return;
@@ -5968,11 +6027,9 @@ async function addEliTask() {
   input.value = '';
   input.disabled = true;
 
-  const title = `查詢：${term}`;
-
   try {
     const saved = await sb('tasks', 'POST', {
-      title,
+      title: `查詢：${term}`,
       description: `研究詞彙：${term}`,
       category: '專注委託',
       status: 'pending',
@@ -5980,10 +6037,47 @@ async function addEliTask() {
       exp_reward: 5,
       coin_reward: 2,
       size: '小任務',
+      tags: ['查詢'],
     });
     tasks.unshift(saved[0]);
-    renderEliPanel();
+    renderEliResearch();
     notify(`✦ 伊萊收下了：${term}`, 'exp');
+  } catch(e) {
+    console.error(e);
+    notify('記錄失敗', 'red');
+  }
+
+  input.disabled = false;
+  input.focus();
+}
+
+async function addEliPaper() {
+  const input = document.getElementById('eliPaperInput');
+  const noteInput = document.getElementById('eliPaperNote');
+  if (!input) return;
+  const title = input.value.trim();
+  if (!title) return;
+  const note = noteInput?.value.trim() || '';
+
+  input.value = '';
+  if (noteInput) noteInput.value = '';
+  input.disabled = true;
+
+  try {
+    const saved = await sb('tasks', 'POST', {
+      title: `閱讀：${title}`,
+      description: note ? note : null,
+      category: '專注委託',
+      status: 'pending',
+      source: 'eli',
+      exp_reward: 20,
+      coin_reward: 8,
+      size: '小任務',
+      tags: ['論文'],
+    });
+    tasks.unshift(saved[0]);
+    renderEliPaper();
+    notify(`✦ 伊萊把論文記下來了。`, 'exp');
   } catch(e) {
     console.error(e);
     notify('記錄失敗', 'red');
@@ -8548,8 +8642,9 @@ async function completeTask(id) {
   const task = tasks.find(t => t.id === id);
   if (!task) return;
 
-  const el = document.getElementById('task-' + id);
-  el.classList.add('completing');
+  // 伊萊面板的任務 id 是 eli-task-${id}，主任務板是 task-${id}
+  const el = document.getElementById('task-' + id) || document.getElementById('eli-task-' + id);
+  if (el) el.classList.add('completing');
 
   setTimeout(async () => {
     try {
@@ -9682,15 +9777,76 @@ async function loadPurchasedItems() {
 
 function switchRecordTab(tab) {
   currentRecordTab = tab;
-  ['tasks','wishes','failed','stats'].forEach(t => {
+  ['tasks','tags','wishes','failed','stats'].forEach(t => {
     document.getElementById('rtab-' + t)?.classList.toggle('active', t === tab);
     const el = document.getElementById('rcontent-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
   });
   if (tab === 'tasks') renderTaskRecords();
+  if (tab === 'tags') renderTagRecords();
   if (tab === 'wishes') renderWishRecords();
   if (tab === 'failed') renderFailedRecords();
   if (tab === 'stats') renderStats();
+}
+
+function renderTagRecords() {
+  const list = document.getElementById('tagRecordList');
+  if (!list) return;
+
+  // 只取有 tags 的已完成任務
+  const tagged = completedTasks.filter(t => t.tags && t.tags.length > 0);
+
+  if (tagged.length === 0) {
+    list.innerHTML = '<div class="empty-state">還沒有帶標籤的完成紀錄。</div>';
+    return;
+  }
+
+  // 收集所有 tag，並分組
+  const tagMap = {};
+  tagged.forEach(t => {
+    (t.tags || []).forEach(tag => {
+      if (!tagMap[tag]) tagMap[tag] = [];
+      tagMap[tag].push(t);
+    });
+  });
+
+  // 排序：#查詢、#論文 優先，其他按字母
+  const priority = ['查詢', '論文'];
+  const sortedTags = Object.keys(tagMap).sort((a, b) => {
+    const ai = priority.indexOf(a), bi = priority.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.localeCompare(b, 'zh-TW');
+  });
+
+  list.innerHTML = sortedTags.map(tag => {
+    const items = tagMap[tag];
+    const rows = items.map(t => {
+      const date = t.completed_at
+        ? new Date(t.completed_at).toLocaleDateString('zh-TW', { month:'short', day:'numeric' })
+        : '';
+      return `<div class="record-item" style="border-left:none;padding-left:8px">
+        <div class="record-item-body">
+          <div class="record-item-title" style="font-size:13px">${t.title}</div>
+          <div class="record-item-meta">
+            ${t.category ? `<span class="reward-tag ${getCatClass(t.category)}" style="font-size:10px;padding:1px 6px">${t.category}</span>` : ''}
+            ${t.exp_reward ? `<span style="color:var(--exp-color)">+${t.exp_reward} EXP</span>` : ''}
+            ${t.coin_reward ? `<span style="color:var(--gold)">+${t.coin_reward} ◈</span>` : ''}
+          </div>
+        </div>
+        <div class="record-item-right">${date}</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="margin-bottom:16px">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cyan);
+        letter-spacing:1px;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:6px">
+        #${tag} <span style="color:var(--text3);font-size:10px">(${items.length} 筆)</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
 }
 
 function renderTaskRecords() {
