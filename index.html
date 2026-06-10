@@ -776,6 +776,45 @@
   }
 
   /* ── 葛莉達系統 ── */
+  /* ── 伊萊・碎晶 研究詞彙面板 ── */
+  .eli-task-input-row { display:flex; gap:6px; padding:12px 16px 8px; }
+  .eli-task-input {
+    flex:1; background:var(--bg2); border:1px solid var(--border2); color:var(--text);
+    padding:7px 10px; font-size:13px; font-family:inherit;
+  }
+  .eli-task-input::placeholder { color:var(--text3); }
+  .eli-task-input:focus { outline:none; border-color:var(--cyan); }
+  .btn-eli-add {
+    background:transparent; border:1px solid var(--cyan); color:var(--cyan);
+    padding:7px 14px; font-family:'Share Tech Mono',monospace; font-size:11px;
+    cursor:pointer; letter-spacing:1px; white-space:nowrap; transition:all 0.2s;
+  }
+  .btn-eli-add:hover { background:rgba(94,221,212,0.1); }
+  .eli-task-list { padding:0 16px 16px; }
+  .eli-task-item {
+    display:flex; align-items:flex-start; gap:8px;
+    padding:9px 10px; margin-bottom:6px;
+    background:var(--bg); border:1px solid var(--border2);
+    border-left:3px solid var(--cyan);
+  }
+  .eli-task-item.assessing { border-left-color:var(--border2); opacity:0.6; }
+  .eli-task-check {
+    width:18px; height:18px; border:1px solid var(--border2); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; flex-shrink:0; margin-top:2px; color:var(--cyan);
+    transition:all 0.2s;
+  }
+  .eli-task-check:hover { border-color:var(--cyan); background:rgba(94,221,212,0.1); }
+  .eli-task-body { flex:1; min-width:0; }
+  .eli-task-title { font-size:13px; color:var(--text); margin-bottom:3px; }
+  .eli-task-rewards { display:flex; flex-wrap:wrap; gap:4px; }
+  .eli-task-delete {
+    background:transparent; border:none; color:var(--text3); cursor:pointer;
+    font-size:13px; padding:2px 4px; flex-shrink:0;
+    transition:color 0.2s;
+  }
+  .eli-task-delete:hover { color:var(--red,#ff6b6b); }
+
   /* ── 席爾咖啡系統 ── */
   .coffee-menu-grid { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; }
   .coffee-card {
@@ -2317,7 +2356,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.07</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.08</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -5810,6 +5849,112 @@ const NPC_SUMMARY_PROMPTS = {
   eli:   '你是伊萊・碎晶，碎光工坊老闆，語氣冷淡技術型，講話像看機械數據，但有一點可靠。'
 };
 
+// ─── ELI 研究詞彙面板 ────────────────────────────────────
+
+function renderEliPanelHtml() {
+  return `
+    <div class="npc-feature-box">
+      ${npcFeatureToggleHtml('eli_research', '🔮 碎晶記錄｜研究詞彙', '記下待查詞彙')}
+      <div class="npc-feature-body ${isNpcFeatureCollapsed('eli_research') ? 'collapsed' : ''}">
+        <div id="eliResearchInner"></div>
+      </div>
+    </div>`;
+}
+
+function renderEliPanel() {
+  const el = document.getElementById('eliResearchInner');
+  if (!el) return;
+
+  const eliTasks = tasks.filter(t => t.source === 'eli' && t.status === 'pending');
+
+  const listHtml = eliTasks.length === 0
+    ? `<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px 0 12px">
+        伊萊抬起眼，義眼掃了你一下。「有不懂的，記下來。」
+       </div>`
+    : eliTasks.map(t => `
+      <div class="eli-task-item${!t.exp_reward ? ' assessing' : ''}" id="eli-task-${t.id}">
+        <div class="eli-task-check" onclick="completeTask('${t.id}')" title="標記查詢完成">✓</div>
+        <div class="eli-task-body">
+          <div class="eli-task-title">${t.title}</div>
+          <div class="eli-task-rewards">
+            ${t.exp_reward
+              ? `<span class="reward-tag exp">+${t.exp_reward} EXP</span>
+                 <span class="reward-tag coin">+${t.coin_reward} ◈</span>
+                 <span class="reward-tag focus">專注委託</span>`
+              : `<span style="font-size:10px;color:var(--text3)">伊萊評估中…</span>`}
+          </div>
+        </div>
+        <button class="eli-task-delete" onclick="deleteEliTask('${t.id}')" title="移除">✕</button>
+      </div>`).join('');
+
+  el.innerHTML = `
+    <div class="eli-task-input-row">
+      <input class="eli-task-input" id="eliTermInput" type="text"
+        placeholder="輸入不懂的詞彙…"
+        onkeydown="if(event.key==='Enter') addEliTask()">
+      <button class="btn-eli-add" onclick="addEliTask()">記下來</button>
+    </div>
+    <div class="eli-task-list">${listHtml}</div>`;
+}
+
+async function addEliTask() {
+  const input = document.getElementById('eliTermInput');
+  if (!input) return;
+  const term = input.value.trim();
+  if (!term) return;
+
+  input.value = '';
+  input.disabled = true;
+
+  const title = `查詢：${term}`;
+
+  try {
+    // 先建一筆 pending 任務（無獎勵先顯示），再 AI 評估補上
+    const saved = await sb('tasks', 'POST', {
+      title,
+      description: `研究詞彙：${term}`,
+      category: '專注委託',
+      status: 'pending',
+      source: 'eli',
+      exp_reward: null,
+      coin_reward: null,
+    });
+    const newTask = saved[0];
+    tasks.unshift(newTask);
+    renderEliPanel();
+
+    // 背景 AI 評估
+    const assessment = await assessTask(title, `研究詞彙：${term}`);
+    await sb(`tasks?id=eq.${newTask.id}`, 'PATCH', {
+      exp_reward: assessment.exp,
+      coin_reward: assessment.coins,
+      size: assessment.size,
+      category: '專注委託', // 強制保持專注委託
+    });
+    const idx = tasks.findIndex(t => t.id === newTask.id);
+    if (idx !== -1) {
+      tasks[idx].exp_reward = assessment.exp;
+      tasks[idx].coin_reward = assessment.coins;
+      tasks[idx].size = assessment.size;
+      tasks[idx].category = '專注委託';
+    }
+    renderEliPanel();
+    notify(`✦ 伊萊收下了：${term}`, 'exp');
+  } catch(e) {
+    console.error(e);
+    notify('記錄失敗', 'red');
+  }
+
+  input.disabled = false;
+  input.focus();
+}
+
+async function deleteEliTask(id) {
+  await sb(`tasks?id=eq.${id}`, 'DELETE');
+  tasks = tasks.filter(t => t.id !== id);
+  renderEliPanel();
+}
+
 // ─── SEAR COFFEE SYSTEM｜第五塊：效果觸發 ───────────────
 
 function applyCoffeeEffect(task, expGain, coinGain) {
@@ -7933,12 +8078,15 @@ function renderTasks() {
   const list = document.getElementById('taskList');
   const empty = document.getElementById('emptyTasks');
 
-  if (tasks.length === 0) {
+  // 伊萊的研究詞彙任務只在伊萊面板顯示，不出現在主任務板
+  const mainTasks = tasks.filter(t => t.source !== 'eli');
+
+  if (mainTasks.length === 0) {
     list.innerHTML = '<div class="empty-state">尚無委託。去找點事情做吧，外鄉人。</div>';
     return;
   }
   list.innerHTML = '';
-  tasks.forEach(t => {
+  mainTasks.forEach(t => {
     const el = document.createElement('div');
     const cd = getCooldownStatus(t);
     const urgencyClass = t.urgency === 3 ? ' urgency-high' : t.urgency === 2 ? ' urgency-med' : '';
@@ -8128,6 +8276,9 @@ function renderNPCs() {
       <!-- 席爾咖啡系統 -->
       ${npc.name === '席爾・煙霧' ? renderSearCoffeePanelHtml() : ''}
 
+      <!-- 伊萊研究詞彙 -->
+      ${npc.name === '伊萊・碎晶' ? renderEliPanelHtml() : ''}
+
       <!-- 托比任務骰子 -->
       ${npc.name === '托比' ? renderTobyDicePanelHtml() : ''}
 
@@ -8167,6 +8318,7 @@ function renderNPCs() {
   requestAnimationFrame(() => {
     renderGretaPanel();
     renderSearCoffeePanel();
+    renderEliPanel();
     renderTobyStateButtons();
     renderCurrentTobyCard();
     renderTobyHistory();
