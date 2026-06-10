@@ -2406,7 +2406,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.17</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.18</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -2751,6 +2751,12 @@
 
     <!-- Tag records -->
     <div id="rcontent-tags" style="display:none">
+      <div class="record-filter-row">
+        <input type="text" class="input-field" id="tagRecordSearch" placeholder="搜尋任務名稱..." style="font-size:12px;padding:7px 10px" oninput="renderTagRecords()" />
+        <select class="input-field" id="tagRecordFilter" style="font-size:12px;padding:7px 10px;max-width:130px" onchange="renderTagRecords()">
+          <option value="">全部標籤</option>
+        </select>
+      </div>
       <div id="tagRecordList"></div>
     </div>
 
@@ -9793,32 +9799,57 @@ function renderTagRecords() {
   const list = document.getElementById('tagRecordList');
   if (!list) return;
 
+  const search = (document.getElementById('tagRecordSearch')?.value || '').toLowerCase();
+  const filterTag = document.getElementById('tagRecordFilter')?.value || '';
+
   // 只取有 tags 的已完成任務
   const tagged = completedTasks.filter(t => t.tags && t.tags.length > 0);
+
+  // 更新標籤下拉選單
+  const filterEl = document.getElementById('tagRecordFilter');
+  if (filterEl) {
+    const allTags = [...new Set(tagged.flatMap(t => t.tags || []))].sort((a, b) => {
+      const priority = ['查詢', '論文'];
+      const ai = priority.indexOf(a), bi = priority.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b, 'zh-TW');
+    });
+    const current = filterEl.value;
+    filterEl.innerHTML = '<option value="">全部標籤</option>' +
+      allTags.map(t => `<option value="${t}" ${t === current ? 'selected' : ''}>#${t}</option>`).join('');
+  }
 
   if (tagged.length === 0) {
     list.innerHTML = '<div class="empty-state">還沒有帶標籤的完成紀錄。</div>';
     return;
   }
 
-  // 收集所有 tag，並分組
+  // 收集分組（受篩選影響）
   const tagMap = {};
   tagged.forEach(t => {
+    if (search && !t.title.toLowerCase().includes(search)) return;
     (t.tags || []).forEach(tag => {
+      if (filterTag && tag !== filterTag) return;
       if (!tagMap[tag]) tagMap[tag] = [];
       tagMap[tag].push(t);
     });
   });
 
-  // 排序：#查詢、#論文 優先，其他按字母
-  const priority = ['查詢', '論文'];
   const sortedTags = Object.keys(tagMap).sort((a, b) => {
+    const priority = ['查詢', '論文'];
     const ai = priority.indexOf(a), bi = priority.indexOf(b);
     if (ai !== -1 && bi !== -1) return ai - bi;
     if (ai !== -1) return -1;
     if (bi !== -1) return 1;
     return a.localeCompare(b, 'zh-TW');
   });
+
+  if (sortedTags.length === 0) {
+    list.innerHTML = '<div class="empty-state">沒有符合條件的紀錄。</div>';
+    return;
+  }
 
   list.innerHTML = sortedTags.map(tag => {
     const items = tagMap[tag];
