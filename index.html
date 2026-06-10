@@ -776,6 +776,56 @@
   }
 
   /* ── 葛莉達系統 ── */
+  .tag-filter-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .tag-filter-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .tag-filter-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(94,221,212,0.1); }
+
+  /* ── 標籤系統 ── */
+  .task-tag {
+    display: inline-block;
+    background: rgba(94,221,212,0.1);
+    border: 1px solid rgba(94,221,212,0.3);
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 1px 7px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .task-tag:hover { background: rgba(94,221,212,0.2); }
+  .task-tag-add {
+    display: inline-block;
+    background: transparent;
+    border: 1px dashed var(--border2);
+    color: var(--text3);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 1px 7px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .task-tag-add:hover { border-color: var(--cyan); color: var(--cyan); }
+  .tag-edit-row {
+    display: flex; gap: 6px; margin-top: 6px; align-items: center;
+  }
+  .tag-edit-input {
+    flex: 1; background: var(--bg2); border: 1px solid var(--cyan);
+    color: var(--text); padding: 3px 8px; font-size: 11px;
+    font-family: inherit;
+  }
+  .tag-edit-input:focus { outline: none; }
+
   /* ── 伊萊・碎晶 研究詞彙面板 ── */
   .eli-task-input-row { display:flex; gap:6px; padding:12px 16px 8px; }
   .eli-task-input {
@@ -2356,7 +2406,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.09</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.12</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -2473,6 +2523,10 @@
         <span class="deadline-label">截止日期（選填）：</span>
         <input type="date" class="input-field" id="taskDeadline" style="max-width:160px;font-size:12px;padding:6px 10px" />
       </div>
+      <div class="deadline-input-row" style="margin-top:6px">
+        <span class="deadline-label">標籤（選填）：</span>
+        <input type="text" class="input-field" id="taskTags" placeholder="#樣品名稱 #老師 #專案..." style="font-size:12px;padding:6px 10px" />
+      </div>
       <div class="ai-loading" id="aiLoading">
         <div class="ai-loading-dot"></div>
         <div class="ai-loading-dot"></div>
@@ -2482,6 +2536,10 @@
     </div>
 
     <div class="section-label">進行中的委託</div>
+    <div id="tagFilterBar" style="display:none;padding:0 0 10px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px">篩選：</span>
+      <span class="tag-filter-btn active" data-tag="__all__" onclick="toggleTagFilter('__all__')">全部</span>
+    </div>
     <div class="task-list" id="taskList">
       <div class="empty-state" id="emptyTasks">尚無委託。去找點事情做吧，外鄉人。</div>
     </div>
@@ -2503,6 +2561,10 @@
         <div class="draft-remind-input">
           <span class="draft-remind-label">提醒日期（選填）：</span>
           <input type="date" class="input-field" id="draftRemind" style="max-width:160px;font-size:12px;padding:6px 10px" />
+        </div>
+        <div class="draft-remind-input" style="margin-top:6px">
+          <span class="draft-remind-label">標籤（選填）：</span>
+          <input type="text" class="input-field" id="draftTags" placeholder="#樣品名稱 #老師 #專案..." style="font-size:12px;padding:6px 10px;max-width:100%" />
         </div>
       </div>
 
@@ -8061,10 +8123,22 @@ function renderTasks() {
   const empty = document.getElementById('emptyTasks');
 
   // 伊萊的研究詞彙任務只在伊萊面板顯示，不出現在主任務板
-  const mainTasks = tasks.filter(t => t.source !== 'eli');
+  let mainTasks = tasks.filter(t => t.source !== 'eli');
+
+  // 套用標籤篩選
+  if (activeTagFilters.size > 0) {
+    mainTasks = mainTasks.filter(t =>
+      [...activeTagFilters].every(tag => (t.tags || []).includes(tag))
+    );
+  }
+
+  // 更新篩選列
+  renderTagFilterBar();
 
   if (mainTasks.length === 0) {
-    list.innerHTML = '<div class="empty-state">尚無委託。去找點事情做吧，外鄉人。</div>';
+    list.innerHTML = activeTagFilters.size > 0
+      ? '<div class="empty-state">沒有符合篩選條件的委託。</div>'
+      : '<div class="empty-state">尚無委託。去找點事情做吧，外鄉人。</div>';
     return;
   }
   list.innerHTML = '';
@@ -8087,6 +8161,17 @@ function renderTasks() {
           ${t.category ? `<span class="reward-tag ${getCatClass(t.category)}">${t.category}</span>` : ''}
           ${t.cooldown_type ? `<span class="cooldown-badge ${cd.half ? 'half' : ''}">⏱ ${t.cooldown_type === 'time' ? t.cooldown_minutes+'分鐘冷卻' : '每日'+t.daily_limit+'次'}</span>` : ''}
           ${t.deadline ? `<span class="deadline-tag ${getDeadlineClass(t.deadline)}">${getDeadlineText(t.deadline)}</span>` : ''}
+        </div>
+        <div class="task-tags-row" id="tags-row-${t.id}" style="margin-top:${(t.tags && t.tags.length > 0) ? '5px' : '3px'};display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+          ${(t.tags || []).map(tag => `<span class="task-tag" onclick="removeTaskTag('${t.id}','${tag}')" title="點擊移除">#${tag}</span>`).join('')}
+          <span class="task-tag-add" onclick="showTagInput('${t.id}')" title="新增標籤">+</span>
+        </div>
+        <div id="tag-input-row-${t.id}" style="display:none">
+          <div class="tag-edit-row">
+            <input class="tag-edit-input" id="tag-input-${t.id}" placeholder="#標籤 多個用空格分隔"
+              onkeydown="if(event.key==='Enter') saveTaskTags('${t.id}')">
+            <button class="btn-eli-add" style="font-size:10px;padding:4px 10px" onclick="saveTaskTags('${t.id}')">確認</button>
+          </div>
         </div>
         ${cd.notice ? `<div class="cooldown-notice">${cd.notice}</div>` : ''}
       </div>
@@ -8315,16 +8400,27 @@ function renderDebt() {
 }
 
 // ─── TASKS ──────────────────────────────────────────
+// 解析標籤輸入：「#Fe1 #鄭老師 廖老師」→ ['Fe1','鄭老師','廖老師']
+function parseTags(input) {
+  if (!input) return [];
+  return input.split(/[\s,，]+/)
+    .map(t => t.replace(/^#/, '').trim())
+    .filter(t => t.length > 0);
+}
+
 async function addTask() {
   const title = document.getElementById('taskInput').value.trim();
   const desc = document.getElementById('taskDesc').value.trim();
   const deadline = document.getElementById('taskDeadline').value || null;
+  const tagsRaw = document.getElementById('taskTags').value.trim();
+  const tags = parseTags(tagsRaw);
   if (!title) return;
 
   document.getElementById('aiLoading').classList.add('show');
   document.getElementById('taskInput').value = '';
   document.getElementById('taskDesc').value = '';
   document.getElementById('taskDeadline').value = '';
+  document.getElementById('taskTags').value = '';
 
   try {
     const assessment = await assessTask(title, desc);
@@ -8339,7 +8435,8 @@ async function addTask() {
       cooldown_minutes: assessment.cooldown_minutes || null,
       daily_limit: assessment.daily_limit || null,
       status: 'pending',
-      deadline: deadline
+      deadline: deadline,
+      tags: tags.length > 0 ? tags : null,
     });
     tasks.unshift(task[0]);
     renderTasks();
@@ -9400,14 +9497,17 @@ async function addDraft() {
   const title = document.getElementById('draftInput').value.trim();
   const desc = document.getElementById('draftDesc').value.trim();
   const remind = document.getElementById('draftRemind').value || null;
+  const tagsRaw = document.getElementById('draftTags').value.trim();
+  const tags = parseTags(tagsRaw);
   if (!title) return;
 
-  const record = { title, description: desc || null, remind_date: remind };
+  const record = { title, description: desc || null, remind_date: remind, tags: tags.length > 0 ? tags : null };
   const saved = await sb('drafts', 'POST', record);
   drafts.unshift(saved[0]);
   document.getElementById('draftInput').value = '';
   document.getElementById('draftDesc').value = '';
   document.getElementById('draftRemind').value = '';
+  document.getElementById('draftTags').value = '';
   renderDrafts();
   notify('草稿已暫存', 'gold');
 }
@@ -9423,17 +9523,17 @@ async function promoteDraft(id) {
   const draft = drafts.find(d => d.id === id);
   if (!draft) return;
 
-  // Fill task input with draft content and trigger AI assessment
   document.getElementById('taskInput').value = draft.title;
   document.getElementById('taskDesc').value = draft.description || '';
+  // 帶入草稿的標籤
+  if (draft.tags && draft.tags.length > 0) {
+    document.getElementById('taskTags').value = draft.tags.map(t => '#' + t).join(' ');
+  }
 
-  // Switch to tasks tab and scroll to top
   switchTab('tasks');
   window.scrollTo({ top: 0, behavior: 'smooth' });
-
   notify('草稿已移至任務輸入區，按送出讓魔法鑑定師評估！', 'cyan');
 
-  // Delete draft after promotion
   await sb(`drafts?id=eq.${id}`, 'DELETE');
   drafts = drafts.filter(d => d.id !== id);
   renderDrafts();
@@ -9473,6 +9573,7 @@ function renderDrafts() {
           <span>${new Date(d.created_at).toLocaleDateString('zh-TW', { month:'short', day:'numeric' })}</span>
           ${d.remind_date ? `<span class="${isRemindToday ? 'draft-remind-today-tag' : 'draft-remind-tag'}">${isRemindToday ? '⚠ 該行動了' : '📅 ' + d.remind_date}</span>` : ''}
         </div>
+        ${(d.tags && d.tags.length > 0) ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${d.tags.map(tag => `<span class="task-tag" style="cursor:default">#${tag}</span>`).join('')}</div>` : ''}
       </div>
       <div class="draft-actions">
         <button class="btn-promote" onclick="promoteDraft('${d.id}')">提交委託</button>
@@ -9481,6 +9582,89 @@ function renderDrafts() {
     `;
     list.appendChild(el);
   });
+}
+
+// ── 標籤篩選系統 ────────────────────────────────────────
+let activeTagFilters = new Set(); // 空 = 顯示全部
+
+function toggleTagFilter(tag) {
+  if (tag === '__all__') {
+    activeTagFilters.clear();
+  } else {
+    if (activeTagFilters.has(tag)) {
+      activeTagFilters.delete(tag);
+    } else {
+      activeTagFilters.add(tag);
+    }
+  }
+  renderTagFilterBar();
+  renderTasks();
+}
+
+function renderTagFilterBar() {
+  const bar = document.getElementById('tagFilterBar');
+  if (!bar) return;
+
+  // 收集所有 pending 任務（非 eli）的標籤
+  const allTags = new Set();
+  tasks.filter(t => t.source !== 'eli' && t.status === 'pending').forEach(t => {
+    (t.tags || []).forEach(tag => allTags.add(tag));
+  });
+
+  if (allTags.size === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+
+  const isAllActive = activeTagFilters.size === 0;
+  let html = `<span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px">篩選：</span>`;
+  html += `<span class="tag-filter-btn ${isAllActive ? 'active' : ''}" onclick="toggleTagFilter('__all__')">全部</span>`;
+  [...allTags].sort().forEach(tag => {
+    const isActive = activeTagFilters.has(tag);
+    html += `<span class="tag-filter-btn ${isActive ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">#${tag}</span>`;
+  });
+  bar.innerHTML = html;
+}
+
+// ── 標籤編輯函式 ────────────────────────────────────────
+function showTagInput(taskId) {
+  const row = document.getElementById(`tag-input-row-${taskId}`);
+  const input = document.getElementById(`tag-input-${taskId}`);
+  if (!row) return;
+  row.style.display = row.style.display === 'none' ? 'block' : 'none';
+  if (row.style.display === 'block' && input) {
+    input.focus();
+    // 預填現有標籤
+    const task = tasks.find(t => t.id === taskId);
+    if (task && task.tags && task.tags.length > 0) {
+      input.value = task.tags.map(t => '#' + t).join(' ');
+    }
+  }
+}
+
+async function saveTaskTags(taskId) {
+  const input = document.getElementById(`tag-input-${taskId}`);
+  if (!input) return;
+  const newTags = parseTags(input.value);
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  task.tags = newTags.length > 0 ? newTags : null;
+  await sb(`tasks?id=eq.${taskId}`, 'PATCH', { tags: task.tags });
+
+  const row = document.getElementById(`tag-input-row-${taskId}`);
+  if (row) row.style.display = 'none';
+  renderTasks();
+}
+
+async function removeTaskTag(taskId, tag) {
+  const task = tasks.find(t => t.id === taskId);
+  if (!task || !task.tags) return;
+  task.tags = task.tags.filter(t => t !== tag);
+  if (task.tags.length === 0) task.tags = null;
+  await sb(`tasks?id=eq.${taskId}`, 'PATCH', { tags: task.tags });
+  renderTasks();
 }
 
 // ─── RECORDS SYSTEM ──────────────────────────────────
