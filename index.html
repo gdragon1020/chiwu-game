@@ -2356,7 +2356,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.08</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.09</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -5909,35 +5909,17 @@ async function addEliTask() {
   const title = `查詢：${term}`;
 
   try {
-    // 先建一筆 pending 任務（無獎勵先顯示），再 AI 評估補上
     const saved = await sb('tasks', 'POST', {
       title,
       description: `研究詞彙：${term}`,
       category: '專注委託',
       status: 'pending',
       source: 'eli',
-      exp_reward: null,
-      coin_reward: null,
+      exp_reward: 5,
+      coin_reward: 2,
+      size: '小任務',
     });
-    const newTask = saved[0];
-    tasks.unshift(newTask);
-    renderEliPanel();
-
-    // 背景 AI 評估
-    const assessment = await assessTask(title, `研究詞彙：${term}`);
-    await sb(`tasks?id=eq.${newTask.id}`, 'PATCH', {
-      exp_reward: assessment.exp,
-      coin_reward: assessment.coins,
-      size: assessment.size,
-      category: '專注委託', // 強制保持專注委託
-    });
-    const idx = tasks.findIndex(t => t.id === newTask.id);
-    if (idx !== -1) {
-      tasks[idx].exp_reward = assessment.exp;
-      tasks[idx].coin_reward = assessment.coins;
-      tasks[idx].size = assessment.size;
-      tasks[idx].category = '專注委託';
-    }
+    tasks.unshift(saved[0]);
     renderEliPanel();
     notify(`✦ 伊萊收下了：${term}`, 'exp');
   } catch(e) {
