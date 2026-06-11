@@ -791,62 +791,76 @@
   .tag-filter-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(94,221,212,0.1); }
 
   /* ── 草稿週曆 ── */
-  .draft-calendar { margin-bottom: 16px; }
-  .draft-calendar-header {
+  .draft-calendar { margin-bottom: 8px; }
+  .draft-calendar-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; background: var(--bg2);
+    border: 1px solid var(--border); cursor: pointer;
     font-family: 'Share Tech Mono', monospace;
     font-size: 10px; color: var(--text3); letter-spacing: 2px;
-    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .draft-calendar-toggle:hover { border-color: var(--cyan); color: var(--cyan); }
+  .draft-calendar-toggle.open { border-color: var(--cyan); color: var(--cyan); }
+  .draft-calendar-body {
+    display: none; overflow-x: auto;
+    border: 1px solid var(--border); border-top: none;
+    padding: 8px;
+  }
+  .draft-calendar-body.open { display: block; }
+  .draft-calendar-row {
+    display: flex; gap: 6px; min-width: max-content;
   }
   .draft-day-col {
-    border: 1px solid var(--border); margin-bottom: 6px;
-    background: var(--bg);
+    border: 1px solid var(--border);
+    background: var(--bg); width: 130px; flex-shrink: 0;
   }
-  .draft-day-col.today { border-color: var(--cyan); }
-  .draft-day-col.is-over { opacity: 0.45; }
-  .draft-day-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 7px 12px; border-bottom: 1px solid var(--border);
-    background: var(--bg2);
-  }
-  .draft-day-label {
-    font-family: 'Share Tech Mono', monospace; font-size: 11px;
-    color: var(--text2); letter-spacing: 1px;
-  }
-  .draft-day-col.today .draft-day-label { color: var(--cyan); }
-  .draft-day-submit {
-    background: transparent; border: 1px solid var(--border2);
-    color: var(--text3); font-family: 'Share Tech Mono', monospace;
-    font-size: 9px; padding: 2px 8px; cursor: pointer;
-    letter-spacing: 0.5px; transition: all 0.2s;
-  }
-  .draft-day-submit:hover { border-color: var(--gold); color: var(--gold); }
-  .draft-day-body {
-    min-height: 36px; padding: 6px 8px;
-    display: flex; flex-direction: column; gap: 4px;
-  }
-  .draft-day-empty {
-    font-size: 11px; color: var(--text3); font-style: italic;
-    padding: 4px 0;
-  }
-  .draft-cal-item {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--bg2); border: 1px solid var(--border2);
-    border-left: 2px solid var(--gold);
-    padding: 5px 8px; cursor: grab;
-    font-size: 12px; color: var(--text2);
-  }
-  .draft-cal-item:active { cursor: grabbing; opacity: 0.7; }
-  .draft-cal-item-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .draft-cal-unschedule {
-    background: transparent; border: none; color: var(--text3);
-    cursor: pointer; font-size: 11px; padding: 0 2px; margin-left: 6px;
-    flex-shrink: 0;
-  }
-  .draft-cal-unschedule:hover { color: var(--red, #ff6b6b); }
   .draft-day-col.drag-over { border-color: var(--cyan); background: rgba(94,221,212,0.05); }
   .draft-cal-item.dragging { opacity: 0.4; }
   .draft-item[data-draft-id] { cursor: grab; }
   .draft-item[data-draft-id]:active { cursor: grabbing; }
+  .draft-day-header {
+    padding: 6px 8px; border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .draft-day-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    color: var(--text2); letter-spacing: 0.5px; display: block;
+    margin-bottom: 3px;
+  }
+  .draft-day-submit {
+    background: transparent; border: 1px solid var(--border2);
+    color: var(--text3); font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; padding: 2px 6px; cursor: pointer;
+    width: 100%; transition: all 0.2s;
+  }
+  .draft-day-submit:hover { border-color: var(--gold); color: var(--gold); }
+  .draft-day-body {
+    min-height: 48px; padding: 5px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .draft-day-empty {
+    font-size: 10px; color: var(--text3); font-style: italic;
+    padding: 4px 2px; text-align: center;
+  }
+  .draft-cal-item {
+    display: flex; align-items: center;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-left: 2px solid var(--gold);
+    padding: 4px 6px; cursor: grab;
+    font-size: 11px; color: var(--text2);
+  }
+  .draft-cal-item:active { cursor: grabbing; opacity: 0.7; }
+  .draft-cal-item-title {
+    flex: 1; min-width: 0; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; font-size: 11px;
+  }
+  .draft-cal-unschedule {
+    background: transparent; border: none; color: var(--text3);
+    cursor: pointer; font-size: 10px; padding: 0 0 0 4px;
+    flex-shrink: 0;
+  }
+  .draft-cal-unschedule:hover { color: var(--red, #ff6b6b); }
 
   /* ── 標籤系統 ── */
   .task-tag {
@@ -2464,7 +2478,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.21</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.22</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -2628,8 +2642,13 @@
 
       <!-- 週曆暫存區 -->
       <div class="draft-calendar">
-        <div class="draft-calendar-header">✦ 週曆排程</div>
-        <div id="draftCalendar"></div>
+        <div class="draft-calendar-toggle" id="draftCalToggle" onclick="toggleDraftCalendar()">
+          <span>✦ 週曆排程</span>
+          <span id="draftCalArrow">▼</span>
+        </div>
+        <div class="draft-calendar-body" id="draftCalBody">
+          <div class="draft-calendar-row" id="draftCalendar"></div>
+        </div>
       </div>
 
       <div class="section-label" style="border-style:dashed;color:var(--text3);margin-top:4px">未排定</div>
@@ -9935,12 +9954,24 @@ function getDraftCalendarDays() {
   const days = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < 7; i++) {
+  for (let i = 1; i <= 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     days.push(d.toISOString().slice(0, 10));
   }
   return days;
+}
+
+function toggleDraftCalendar() {
+  const body = document.getElementById('draftCalBody');
+  const toggle = document.getElementById('draftCalToggle');
+  const arrow = document.getElementById('draftCalArrow');
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle?.classList.toggle('open', !isOpen);
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
+  if (!isOpen) initDraftDragDrop();
 }
 
 function renderDraftCalendar() {
@@ -9952,8 +9983,7 @@ function renderDraftCalendar() {
 
   el.innerHTML = days.map(dateStr => {
     const d = new Date(dateStr + 'T00:00:00');
-    const dayLabel = `${dateStr.slice(5)} (${weekDays[d.getDay()]})`;
-    const isToday = dateStr === today;
+    const dayLabel = `${dateStr.slice(5)}\n(${weekDays[d.getDay()]})`;
     const scheduledHere = drafts.filter(dr => dr.scheduled_date === dateStr);
 
     const items = scheduledHere.map(dr => `
@@ -9963,23 +9993,22 @@ function renderDraftCalendar() {
       </div>`).join('');
 
     const submitBtn = scheduledHere.length > 0
-      ? `<button class="draft-day-submit" onclick="submitDayDrafts('${dateStr}')">全部提交 (${scheduledHere.length})</button>`
+      ? `<button class="draft-day-submit" onclick="submitDayDrafts('${dateStr}')">提交(${scheduledHere.length})</button>`
       : '';
 
-    return `<div class="draft-day-col ${isToday ? 'today' : ''}" id="day-col-${dateStr}" data-date="${dateStr}">
+    return `<div class="draft-day-col" id="day-col-${dateStr}" data-date="${dateStr}">
       <div class="draft-day-header">
-        <span class="draft-day-label">${isToday ? '▶ ' : ''}${dayLabel}</span>
+        <span class="draft-day-label">${dateStr.slice(5)} (${weekDays[d.getDay()]})</span>
         ${submitBtn}
       </div>
       <div class="draft-day-body" id="day-body-${dateStr}">
         ${scheduledHere.length === 0
-          ? `<div class="draft-day-empty">拖曳草稿至此</div>`
+          ? `<div class="draft-day-empty">拖至此</div>`
           : items}
       </div>
     </div>`;
   }).join('');
 
-  // 渲染完畢後綁定拖拉
   requestAnimationFrame(() => initDraftDragDrop());
 }
 
