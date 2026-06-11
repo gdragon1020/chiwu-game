@@ -790,6 +790,64 @@
   .tag-filter-btn:hover { border-color: var(--cyan); color: var(--cyan); }
   .tag-filter-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(94,221,212,0.1); }
 
+  /* ── 草稿週曆 ── */
+  .draft-calendar { margin-bottom: 16px; }
+  .draft-calendar-header {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text3); letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .draft-day-col {
+    border: 1px solid var(--border); margin-bottom: 6px;
+    background: var(--bg);
+  }
+  .draft-day-col.today { border-color: var(--cyan); }
+  .draft-day-col.is-over { opacity: 0.45; }
+  .draft-day-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 12px; border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .draft-day-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    color: var(--text2); letter-spacing: 1px;
+  }
+  .draft-day-col.today .draft-day-label { color: var(--cyan); }
+  .draft-day-submit {
+    background: transparent; border: 1px solid var(--border2);
+    color: var(--text3); font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; padding: 2px 8px; cursor: pointer;
+    letter-spacing: 0.5px; transition: all 0.2s;
+  }
+  .draft-day-submit:hover { border-color: var(--gold); color: var(--gold); }
+  .draft-day-body {
+    min-height: 36px; padding: 6px 8px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .draft-day-empty {
+    font-size: 11px; color: var(--text3); font-style: italic;
+    padding: 4px 0;
+  }
+  .draft-cal-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-left: 2px solid var(--gold);
+    padding: 5px 8px; cursor: grab;
+    font-size: 12px; color: var(--text2);
+  }
+  .draft-cal-item:active { cursor: grabbing; opacity: 0.7; }
+  .draft-cal-item-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .draft-cal-unschedule {
+    background: transparent; border: none; color: var(--text3);
+    cursor: pointer; font-size: 11px; padding: 0 2px; margin-left: 6px;
+    flex-shrink: 0;
+  }
+  .draft-cal-unschedule:hover { color: var(--red, #ff6b6b); }
+  .draft-day-col.drag-over { border-color: var(--cyan); background: rgba(94,221,212,0.05); }
+  .draft-cal-item.dragging { opacity: 0.4; }
+  .draft-item[data-draft-id] { cursor: grab; }
+  .draft-item[data-draft-id]:active { cursor: grabbing; }
+
   /* ── 標籤系統 ── */
   .task-tag {
     display: inline-block;
@@ -2406,7 +2464,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.18</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.21</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -2568,6 +2626,13 @@
         </div>
       </div>
 
+      <!-- 週曆暫存區 -->
+      <div class="draft-calendar">
+        <div class="draft-calendar-header">✦ 週曆排程</div>
+        <div id="draftCalendar"></div>
+      </div>
+
+      <div class="section-label" style="border-style:dashed;color:var(--text3);margin-top:4px">未排定</div>
       <div class="draft-list" id="draftList">
         <div class="empty-state" id="emptyDrafts">草稿區是空的。把腦袋裡的想法丟進來吧。</div>
       </div>
@@ -9589,9 +9654,29 @@ async function loadDrafts() {
   try {
     const rows = await sb('drafts?select=*&order=created_at.desc');
     drafts = rows || [];
+    await returnExpiredDrafts();
+    renderDraftCalendar();
     renderDrafts();
     checkDraftReminders();
   } catch(e) { console.error('loadDrafts error:', e); }
+}
+
+// 開網頁時檢查：scheduled_date < 今天的草稿退回未排定
+async function returnExpiredDrafts() {
+  const today = getDateKey();
+  const expired = drafts.filter(d =>
+    d.scheduled_date && d.scheduled_date < today
+  );
+  if (expired.length === 0) return;
+
+  await Promise.all(expired.map(d =>
+    sb(`drafts?id=eq.${d.id}`, 'PATCH', { scheduled_date: null })
+  ));
+  expired.forEach(d => { d.scheduled_date = null; });
+
+  if (expired.length > 0) {
+    notify(`📝 ${expired.length} 個草稿已過期，退回未排定區。`, 'gold');
+  }
 }
 
 async function addDraft() {
@@ -9609,6 +9694,7 @@ async function addDraft() {
   document.getElementById('draftDesc').value = '';
   document.getElementById('draftRemind').value = '';
   document.getElementById('draftTags').value = '';
+  renderDraftCalendar();
   renderDrafts();
   notify('草稿已暫存', 'gold');
 }
@@ -9652,20 +9738,23 @@ function checkDraftReminders() {
 
 function renderDrafts() {
   const list = document.getElementById('draftList');
-  const empty = document.getElementById('emptyDrafts');
   if (!list) return;
 
-  if (drafts.length === 0) {
+  // 只顯示未排定的草稿（scheduled_date 為 null）
+  const unscheduled = drafts.filter(d => !d.scheduled_date);
+
+  if (unscheduled.length === 0) {
     list.innerHTML = '<div class="empty-state">草稿區是空的。把腦袋裡的想法丟進來吧。</div>';
     return;
   }
 
   const today = new Date().toISOString().slice(0,10);
   list.innerHTML = '';
-  drafts.forEach(d => {
+  unscheduled.forEach(d => {
     const isRemindToday = d.remind_date && d.remind_date <= today;
     const el = document.createElement('div');
     el.className = 'draft-item' + (isRemindToday ? ' remind-today' : '');
+    el.dataset.draftId = d.id;
     el.innerHTML = `
       <div class="draft-body">
         <div class="draft-title">${d.title}</div>
@@ -9683,6 +9772,7 @@ function renderDrafts() {
     `;
     list.appendChild(el);
   });
+  requestAnimationFrame(() => initDraftDragDrop());
 }
 
 // ── 標籤篩選系統 ────────────────────────────────────────
@@ -9766,6 +9856,173 @@ async function removeTaskTag(taskId, tag) {
   if (task.tags.length === 0) task.tags = null;
   await sb(`tasks?id=eq.${taskId}`, 'PATCH', { tags: task.tags });
   renderTasks();
+}
+
+// ─── 草稿拖拉系統 ─────────────────────────────────────
+
+let draggedDraftId = null;
+
+function initDraftDragDrop() {
+  // 週曆每個格子：可接收
+  document.querySelectorAll('.draft-day-col').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', () => {
+      col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (!draggedDraftId) return;
+      const date = col.dataset.date;
+      await scheduleDraft(draggedDraftId, date);
+      draggedDraftId = null;
+    });
+  });
+
+  // 未排定區：可接收（拖回）
+  const unscheduledZone = document.getElementById('draftList');
+  if (unscheduledZone) {
+    unscheduledZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      unscheduledZone.style.outline = '1px dashed var(--cyan)';
+    });
+    unscheduledZone.addEventListener('dragleave', () => {
+      unscheduledZone.style.outline = '';
+    });
+    unscheduledZone.addEventListener('drop', async e => {
+      e.preventDefault();
+      unscheduledZone.style.outline = '';
+      if (!draggedDraftId) return;
+      await unscheduleDraft(draggedDraftId);
+      draggedDraftId = null;
+    });
+  }
+
+  // 草稿卡片：可拖出
+  document.querySelectorAll('[data-draft-id]').forEach(el => {
+    el.setAttribute('draggable', 'true');
+    el.addEventListener('dragstart', e => {
+      draggedDraftId = el.dataset.draftId;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+    });
+  });
+}
+
+async function scheduleDraft(id, dateStr) {
+  const today = getDateKey();
+  if (dateStr < today) return; // 不允許排到過去
+  const draft = drafts.find(d => d.id == id);
+  if (!draft) return;
+  if (draft.scheduled_date === dateStr) return; // 已在同一天
+
+  draft.scheduled_date = dateStr;
+  await sb(`drafts?id=eq.${id}`, 'PATCH', { scheduled_date: dateStr });
+  renderDraftCalendar();
+  renderDrafts();
+  initDraftDragDrop();
+}
+
+// ─── 草稿週曆系統 ─────────────────────────────────────
+
+function getDraftCalendarDays() {
+  const days = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  return days;
+}
+
+function renderDraftCalendar() {
+  const el = document.getElementById('draftCalendar');
+  if (!el) return;
+  const today = getDateKey();
+  const days = getDraftCalendarDays();
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+  el.innerHTML = days.map(dateStr => {
+    const d = new Date(dateStr + 'T00:00:00');
+    const dayLabel = `${dateStr.slice(5)} (${weekDays[d.getDay()]})`;
+    const isToday = dateStr === today;
+    const scheduledHere = drafts.filter(dr => dr.scheduled_date === dateStr);
+
+    const items = scheduledHere.map(dr => `
+      <div class="draft-cal-item" draggable="true" data-draft-id="${dr.id}">
+        <span class="draft-cal-item-title">${dr.title}</span>
+        <button class="draft-cal-unschedule" onclick="unscheduleDraft('${dr.id}')" title="退回未排定">✕</button>
+      </div>`).join('');
+
+    const submitBtn = scheduledHere.length > 0
+      ? `<button class="draft-day-submit" onclick="submitDayDrafts('${dateStr}')">全部提交 (${scheduledHere.length})</button>`
+      : '';
+
+    return `<div class="draft-day-col ${isToday ? 'today' : ''}" id="day-col-${dateStr}" data-date="${dateStr}">
+      <div class="draft-day-header">
+        <span class="draft-day-label">${isToday ? '▶ ' : ''}${dayLabel}</span>
+        ${submitBtn}
+      </div>
+      <div class="draft-day-body" id="day-body-${dateStr}">
+        ${scheduledHere.length === 0
+          ? `<div class="draft-day-empty">拖曳草稿至此</div>`
+          : items}
+      </div>
+    </div>`;
+  }).join('');
+
+  // 渲染完畢後綁定拖拉
+  requestAnimationFrame(() => initDraftDragDrop());
+}
+
+async function submitDayDrafts(dateStr) {
+  const dayDrafts = drafts.filter(d => d.scheduled_date === dateStr);
+  if (dayDrafts.length === 0) return;
+
+  notify(`⚙ 提交 ${dayDrafts.length} 個草稿，魔法師鑑定中...`, 'gold');
+
+  for (const d of dayDrafts) {
+    try {
+      const assessment = await assessTask(d.title, d.description || '');
+      const saved = await sb('tasks', 'POST', {
+        title: d.title,
+        description: d.description || null,
+        exp_reward: assessment.exp,
+        coin_reward: assessment.coins,
+        size: assessment.size,
+        category: assessment.category || null,
+        status: 'pending',
+        tags: d.tags || null,
+      });
+      if (saved && saved[0]) tasks.unshift(saved[0]);
+      await sb(`drafts?id=eq.${d.id}`, 'DELETE');
+      drafts = drafts.filter(dr => dr.id !== d.id);
+      notify(`✦ 已提交：${d.title}`, 'exp');
+    } catch(e) {
+      console.error(e);
+      notify(`提交失敗：${d.title}`, 'red');
+    }
+  }
+
+  renderTasks();
+  renderDraftCalendar();
+  renderDrafts();
+}
+
+async function unscheduleDraft(id) {
+  await sb(`drafts?id=eq.${id}`, 'PATCH', { scheduled_date: null });
+  const d = drafts.find(dr => dr.id === id);
+  if (d) d.scheduled_date = null;
+  renderDraftCalendar();
+  renderDrafts();
 }
 
 // ─── RECORDS SYSTEM ──────────────────────────────────
