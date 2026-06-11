@@ -2478,7 +2478,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.22</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.23</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -9952,11 +9952,11 @@ async function scheduleDraft(id, dateStr) {
 
 function getDraftCalendarDays() {
   const days = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 1; i <= 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
+  const todayKey = getDateKey(); // 凌晨5:00為分界，跟系統一致
+  const base = new Date(todayKey + 'T00:00:00');
+  for (let i = 1; i <= 6; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
     days.push(d.toISOString().slice(0, 10));
   }
   return days;
