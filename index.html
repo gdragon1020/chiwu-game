@@ -2478,7 +2478,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.23</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.24</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -9952,12 +9952,18 @@ async function scheduleDraft(id, dateStr) {
 
 function getDraftCalendarDays() {
   const days = [];
-  const todayKey = getDateKey(); // 凌晨5:00為分界，跟系統一致
-  const base = new Date(todayKey + 'T00:00:00');
+  const todayKey = getDateKey(); // 已有凌晨5:00分界，直接用
+  // 把 todayKey 解析成台灣當地時間的日期物件
+  const [y, m, d] = todayKey.split('-').map(Number);
+  const base = new Date(y, m - 1, d); // 本地時間，不是UTC
   for (let i = 1; i <= 6; i++) {
-    const d = new Date(base);
-    d.setDate(base.getDate() + i);
-    days.push(d.toISOString().slice(0, 10));
+    const next = new Date(base);
+    next.setDate(base.getDate() + i);
+    // 用本地時間格式化，避免 UTC 偏移問題
+    const yy = next.getFullYear();
+    const mm = String(next.getMonth() + 1).padStart(2, '0');
+    const dd = String(next.getDate()).padStart(2, '0');
+    days.push(`${yy}-${mm}-${dd}`);
   }
   return days;
 }
@@ -9977,13 +9983,13 @@ function toggleDraftCalendar() {
 function renderDraftCalendar() {
   const el = document.getElementById('draftCalendar');
   if (!el) return;
-  const today = getDateKey();
   const days = getDraftCalendarDays();
-  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
   el.innerHTML = days.map(dateStr => {
-    const d = new Date(dateStr + 'T00:00:00');
-    const dayLabel = `${dateStr.slice(5)}\n(${weekDays[d.getDay()]})`;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d); // 本地時間
+    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+    const dayLabel = `${dateStr.slice(5)} (${weekDays[dateObj.getDay()]})`;
     const scheduledHere = drafts.filter(dr => dr.scheduled_date === dateStr);
 
     const items = scheduledHere.map(dr => `
