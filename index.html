@@ -2478,7 +2478,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.26</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.27</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -9952,14 +9952,12 @@ async function scheduleDraft(id, dateStr) {
 
 function getDraftCalendarDays() {
   const days = [];
-  const todayKey = getDateKey(); // 已有凌晨5:00分界，直接用
-  // 把 todayKey 解析成台灣當地時間的日期物件
+  const todayKey = getDateKey();
   const [y, m, d] = todayKey.split('-').map(Number);
-  const base = new Date(y, m - 1, d); // 本地時間，不是UTC
-  for (let i = 1; i <= 6; i++) {
+  const base = new Date(y, m - 1, d);
+  for (let i = 0; i < 6; i++) {
     const next = new Date(base);
     next.setDate(base.getDate() + i);
-    // 用本地時間格式化，避免 UTC 偏移問題
     const yy = next.getFullYear();
     const mm = String(next.getMonth() + 1).padStart(2, '0');
     const dd = String(next.getDate()).padStart(2, '0');
