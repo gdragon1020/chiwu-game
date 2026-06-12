@@ -2526,7 +2526,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.30</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.31</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -2646,6 +2646,12 @@
       <div class="deadline-input-row" style="margin-top:6px">
         <span class="deadline-label">標籤（選填）：</span>
         <input type="text" class="input-field" id="taskTags" placeholder="#樣品名稱 #老師 #專案..." style="font-size:12px;padding:6px 10px" />
+      </div>
+      <div class="deadline-input-row" style="margin-top:6px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text3);font-size:12px">
+          <input type="checkbox" id="taskPinned" style="accent-color:var(--gold);width:14px;height:14px">
+          📌 加入快速委託（固定顯示，一鍵完成）
+        </label>
       </div>
       <div class="ai-loading" id="aiLoading">
         <div class="ai-loading-dot"></div>
@@ -8363,7 +8369,8 @@ function renderTasks() {
   const empty = document.getElementById('emptyTasks');
 
   // 伊萊的研究詞彙任務只在伊萊面板顯示，不出現在主任務板
-  let mainTasks = tasks.filter(t => t.source !== 'eli');
+  // 釘選任務只在快速委託區顯示，不出現在主任務板
+  let mainTasks = tasks.filter(t => t.source !== 'eli' && !t.is_pinned);
 
   // 套用標籤篩選
   if (activeTagFilters.size > 0) {
@@ -8416,9 +8423,6 @@ function renderTasks() {
         ${cd.notice ? `<div class="cooldown-notice">${cd.notice}</div>` : ''}
       </div>
       <div class="task-actions">
-        <button class="btn-pin ${t.is_pinned ? 'pinned' : ''}" onclick="togglePin('${t.id}')" title="${t.is_pinned ? '取消釘選' : '釘選為快速委託'}">
-          ${t.is_pinned ? '📌' : '📍'}
-        </button>
         <select class="cat-select" onchange="correctCategory('${t.id}', '${t.title}', this.value)" title="修改分類">
           ${['日常委託','專注委託','外出委託','社交委託','任務委託'].map(c =>
             `<option value="${c}" ${c === t.category ? 'selected' : ''}>${c}</option>`
@@ -8657,6 +8661,7 @@ async function addTask() {
   const deadline = document.getElementById('taskDeadline').value || null;
   const tagsRaw = document.getElementById('taskTags').value.trim();
   const tags = parseTags(tagsRaw);
+  const isPinned = document.getElementById('taskPinned')?.checked || false;
   if (!title) return;
 
   document.getElementById('aiLoading').classList.add('show');
@@ -8664,6 +8669,7 @@ async function addTask() {
   document.getElementById('taskDesc').value = '';
   document.getElementById('taskDeadline').value = '';
   document.getElementById('taskTags').value = '';
+  if (document.getElementById('taskPinned')) document.getElementById('taskPinned').checked = false;
 
   try {
     const assessment = await assessTask(title, desc);
@@ -8680,6 +8686,7 @@ async function addTask() {
       status: 'pending',
       deadline: deadline,
       tags: tags.length > 0 ? tags : null,
+      is_pinned: isPinned,
     });
     tasks.unshift(task[0]);
     renderTasks();
@@ -8927,25 +8934,13 @@ async function completeTask(id) {
       // Update charge progress for next task
       await updateChargeProgress(task);
 
-      // 釘選任務完成後自動重建，繼續待命
+      // 釘選任務完成後重設為 pending 繼續待命（不進紀錄，不消失）
       if (task.is_pinned) {
-        try {
-          const newTask = await sb('tasks', 'POST', {
-            title: task.title,
-            description: task.description || null,
-            exp_reward: task.exp_reward,
-            coin_reward: task.coin_reward,
-            size: task.size,
-            category: task.category,
-            cooldown_type: task.cooldown_type || null,
-            cooldown_minutes: task.cooldown_minutes || null,
-            daily_limit: task.daily_limit || null,
-            tags: task.tags || null,
-            is_pinned: true,
-            status: 'pending',
-          });
-          if (newTask && newTask[0]) tasks.unshift(newTask[0]);
-        } catch(e) { console.error('重建釘選任務失敗', e); }
+        await sb(`tasks?id=eq.${task.id}`, 'PATCH', { status: 'pending' });
+        task.status = 'pending';
+        // 把它從 completedTasks 移回 tasks
+        completedTasks = completedTasks.filter(t => t.id !== task.id);
+        if (!tasks.find(t => t.id === task.id)) tasks.unshift(task);
       }
 
       renderAll();
@@ -9901,15 +9896,18 @@ function renderQuickTaskPanel() {
   body.innerHTML = pinned.map(t => {
     const cd = getCooldownStatus(t);
     const cdText = cd.onCooldown
-      ? (cd.notice?.match(/還有 (.+?) 分鐘/) ? `${cd.notice.match(/還有 (\d+) 分鐘/)?.[1]}分` : '冷卻中')
-      : (t.cooldown_type === 'daily' ? `今日可用` : '可完成');
-    return `<button class="btn-quick ${cd.onCooldown ? 'on-cd' : ''}"
-      onclick="${cd.onCooldown ? '' : `completeTask('${t.id}')`}"
-      title="${t.title}">
-      <div class="btn-quick-title">${t.title}</div>
-      <div class="btn-quick-reward">+${t.exp_reward} EXP</div>
-      <div class="btn-quick-cd">${cdText}</div>
-    </button>`;
+      ? (cd.notice?.match(/還有 (\d+) 分鐘/) ? `${cd.notice.match(/還有 (\d+) 分鐘/)?.[1]}分` : '冷卻中')
+      : '可完成';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <button class="btn-quick ${cd.onCooldown ? 'on-cd' : ''}"
+        onclick="${cd.onCooldown ? '' : `completeTask('${t.id}')`}"
+        title="${t.title}">
+        <div class="btn-quick-title">${t.title}</div>
+        <div class="btn-quick-reward">+${t.exp_reward} EXP</div>
+        <div class="btn-quick-cd">${cdText}</div>
+      </button>
+      <button onclick="deleteTask('${t.id}')" style="background:transparent;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:1px 4px" title="刪除">✕ 刪除</button>
+    </div>`;
   }).join('');
 }
 
