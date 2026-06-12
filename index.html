@@ -790,6 +790,54 @@
   .tag-filter-btn:hover { border-color: var(--cyan); color: var(--cyan); }
   .tag-filter-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(94,221,212,0.1); }
 
+  /* ── 快速委託 ── */
+  .quick-task-panel {
+    margin-bottom: 10px;
+    border: 1px solid var(--border2);
+  }
+  .quick-task-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; background: var(--bg2); cursor: pointer;
+    font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    color: var(--text3); letter-spacing: 2px; transition: color 0.2s;
+  }
+  .quick-task-toggle:hover { color: var(--gold); }
+  .quick-task-body {
+    display: none; padding: 8px 10px;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .quick-task-body.collapsed { display: none; }
+  .btn-quick {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--bg); border: 1px solid var(--border2);
+    padding: 7px 14px; cursor: pointer; transition: all 0.2s;
+    min-width: 72px;
+  }
+  .btn-quick:hover:not(.on-cd) { border-color: var(--gold); background: rgba(212,175,55,0.08); }
+  .btn-quick.on-cd { opacity: 0.45; cursor: not-allowed; }
+  .btn-quick-title {
+    font-size: 12px; color: var(--text); margin-bottom: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 90px;
+  }
+  .btn-quick-cd {
+    font-family: 'Share Tech Mono', monospace; font-size: 9px;
+    color: var(--text3); letter-spacing: 0.5px;
+  }
+  .btn-quick-reward {
+    font-family: 'Share Tech Mono', monospace; font-size: 9px;
+    color: var(--gold);
+  }
+
+  /* ── 釘選按鈕 ── */
+  .btn-pin {
+    background: transparent; border: 1px solid var(--border2);
+    color: var(--text3); padding: 4px 8px; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-pin:hover { border-color: var(--gold); }
+  .btn-pin.pinned { border-color: var(--gold); background: rgba(212,175,55,0.1); }
+
   /* ── 草稿週曆 ── */
   .draft-calendar { margin-bottom: 8px; }
   .draft-calendar-toggle {
@@ -2478,7 +2526,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.27</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.30</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -2605,6 +2653,14 @@
         <div class="ai-loading-dot"></div>
         <span>魔法鑑定師正在評估任務難度...</span>
       </div>
+    </div>
+
+    <div class="quick-task-panel" id="quickTaskPanel">
+      <div class="quick-task-toggle" onclick="toggleQuickPanel()">
+        <span>⚡ 快速委託</span>
+        <span id="quickPanelArrow">▼</span>
+      </div>
+      <div class="quick-task-body collapsed" id="quickTaskBody"></div>
     </div>
 
     <div class="section-label">進行中的委託</div>
@@ -8258,7 +8314,6 @@ function renderStatusPanel() {
 
 function renderAll() {
   renderPlayer();
-  // Sort tasks by urgency then created_at
   tasks.sort((a, b) => {
     const ua = a.urgency || 0;
     const ub = b.urgency || 0;
@@ -8270,6 +8325,7 @@ function renderAll() {
   renderNPCs();
   renderDebt();
   renderStatusPanel();
+  renderQuickTaskPanel();
 }
 
 function renderPlayer() {
@@ -8360,6 +8416,9 @@ function renderTasks() {
         ${cd.notice ? `<div class="cooldown-notice">${cd.notice}</div>` : ''}
       </div>
       <div class="task-actions">
+        <button class="btn-pin ${t.is_pinned ? 'pinned' : ''}" onclick="togglePin('${t.id}')" title="${t.is_pinned ? '取消釘選' : '釘選為快速委託'}">
+          ${t.is_pinned ? '📌' : '📍'}
+        </button>
         <select class="cat-select" onchange="correctCategory('${t.id}', '${t.title}', this.value)" title="修改分類">
           ${['日常委託','專注委託','外出委託','社交委託','任務委託'].map(c =>
             `<option value="${c}" ${c === t.category ? 'selected' : ''}>${c}</option>`
@@ -8867,6 +8926,27 @@ async function completeTask(id) {
 
       // Update charge progress for next task
       await updateChargeProgress(task);
+
+      // 釘選任務完成後自動重建，繼續待命
+      if (task.is_pinned) {
+        try {
+          const newTask = await sb('tasks', 'POST', {
+            title: task.title,
+            description: task.description || null,
+            exp_reward: task.exp_reward,
+            coin_reward: task.coin_reward,
+            size: task.size,
+            category: task.category,
+            cooldown_type: task.cooldown_type || null,
+            cooldown_minutes: task.cooldown_minutes || null,
+            daily_limit: task.daily_limit || null,
+            tags: task.tags || null,
+            is_pinned: true,
+            status: 'pending',
+          });
+          if (newTask && newTask[0]) tasks.unshift(newTask[0]);
+        } catch(e) { console.error('重建釘選任務失敗', e); }
+      }
 
       renderAll();
     } catch(e) {
@@ -9792,6 +9872,55 @@ function renderDrafts() {
     list.appendChild(el);
   });
   requestAnimationFrame(() => initDraftDragDrop());
+}
+
+// ── 快速委託面板 ─────────────────────────────────────────
+
+function toggleQuickPanel() {
+  const body = document.getElementById('quickTaskBody');
+  const arrow = document.getElementById('quickPanelArrow');
+  if (!body) return;
+  const collapsed = body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', !collapsed);
+  if (arrow) arrow.textContent = collapsed ? '▲' : '▼';
+  if (collapsed) renderQuickTaskPanel();
+}
+
+function renderQuickTaskPanel() {
+  const body = document.getElementById('quickTaskBody');
+  if (!body || body.classList.contains('collapsed')) return;
+
+  const pinned = tasks.filter(t => t.is_pinned && t.status === 'pending');
+
+  if (pinned.length === 0) {
+    body.innerHTML = `<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px">
+      還沒有釘選的委託。在任務卡片上按 📍 釘選。</div>`;
+    return;
+  }
+
+  body.innerHTML = pinned.map(t => {
+    const cd = getCooldownStatus(t);
+    const cdText = cd.onCooldown
+      ? (cd.notice?.match(/還有 (.+?) 分鐘/) ? `${cd.notice.match(/還有 (\d+) 分鐘/)?.[1]}分` : '冷卻中')
+      : (t.cooldown_type === 'daily' ? `今日可用` : '可完成');
+    return `<button class="btn-quick ${cd.onCooldown ? 'on-cd' : ''}"
+      onclick="${cd.onCooldown ? '' : `completeTask('${t.id}')`}"
+      title="${t.title}">
+      <div class="btn-quick-title">${t.title}</div>
+      <div class="btn-quick-reward">+${t.exp_reward} EXP</div>
+      <div class="btn-quick-cd">${cdText}</div>
+    </button>`;
+  }).join('');
+}
+
+async function togglePin(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  task.is_pinned = !task.is_pinned;
+  await sb(`tasks?id=eq.${id}`, 'PATCH', { is_pinned: task.is_pinned });
+  renderTasks();
+  renderQuickTaskPanel();
+  notify(task.is_pinned ? `📌 已釘選：${task.title}` : `取消釘選：${task.title}`, 'gold');
 }
 
 // ── 標籤篩選系統 ────────────────────────────────────────
@@ -10988,6 +11117,7 @@ function switchTab(name) {
   if (name === 'tasks') {
     renderDraftCalendar();
     renderDrafts();
+    renderQuickTaskPanel();
   }
   if (name === 'decor') {
     renderScene();
