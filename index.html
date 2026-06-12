@@ -2478,7 +2478,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.25</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.26</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -10004,7 +10004,7 @@ function renderDraftCalendar() {
 
     return `<div class="draft-day-col" id="day-col-${dateStr}" data-date="${dateStr}">
       <div class="draft-day-header">
-        <span class="draft-day-label">${dateStr.slice(5)} (${weekDays[d.getDay()]})</span>
+        <span class="draft-day-label">${dateStr.slice(5)} (${weekDays[dateObj.getDay()]})</span>
         ${submitBtn}
       </div>
       <div class="draft-day-body" id="day-body-${dateStr}">
