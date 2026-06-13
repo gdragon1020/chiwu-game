@@ -2526,7 +2526,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.31</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.33</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -5653,9 +5653,10 @@ async function generateLevelUpChoices(level) {
   // Shuffle
   pool = pool.sort(() => Math.random() - 0.5);
   const choices = pool.slice(0, 3).map(id => {
-    const item = EQUIPMENT_DATA[id] || CONSUMABLE_DATA[id];
+    const item = EQUIPMENT_DATA[id] || FURNITURE_DATA[id] || CONSUMABLE_DATA[id];
+    if (!item) return null;
     return { type: 'item', itemId: id, item };
-  });
+  }).filter(Boolean);
 
   // Pad with gold/fragment if less than 3
   while (choices.length < 3) {
@@ -8157,6 +8158,7 @@ async function init() {
     await loadCalendarEvents();
     renderAll();
     initWeather();
+    initDefaultQuickTasks(); // 背景建立預設快速委託
     setTimeout(() => {
       checkOverdueTasks();
       triggerNPCVisit();
@@ -10183,6 +10185,47 @@ async function unscheduleDraft(id) {
   if (d) d.scheduled_date = null;
   renderDraftCalendar();
   renderDrafts();
+}
+
+// ── 預設快速委託 ─────────────────────────────────────────
+const DEFAULT_QUICK_TASKS = [
+  { title: '喝水',     category: '日常委託', cooldown_type: 'time',  cooldown_minutes: 30,  daily_limit: 8 },
+  { title: '吃飯',     category: '日常委託', cooldown_type: 'time',  cooldown_minutes: 240, daily_limit: 3 },
+  { title: '吃藥',     category: '日常委託', cooldown_type: 'time',  cooldown_minutes: 180, daily_limit: 3 },
+  { title: '保健食品', category: '日常委託', cooldown_type: 'time',  cooldown_minutes: 360, daily_limit: 2 },
+  { title: '洗澡',     category: '日常委託', cooldown_type: 'daily', cooldown_minutes: null, daily_limit: 1 },
+  { title: '刷牙',     category: '日常委託', cooldown_type: 'time',  cooldown_minutes: 480, daily_limit: 2 },
+];
+
+async function initDefaultQuickTasks() {
+  // 已有釘選任務就不重複建立
+  const existing = tasks.filter(t => t.is_pinned);
+  const existingTitles = new Set(existing.map(t => t.title));
+
+  const toCreate = DEFAULT_QUICK_TASKS.filter(q => !existingTitles.has(q.title));
+  if (toCreate.length === 0) return;
+
+  for (const q of toCreate) {
+    try {
+      const assessment = await assessTask(q.title, '');
+      const saved = await sb('tasks', 'POST', {
+        title: q.title,
+        category: q.category,
+        exp_reward: assessment.exp,
+        coin_reward: assessment.coins,
+        size: assessment.size,
+        cooldown_type: q.cooldown_type,
+        cooldown_minutes: q.cooldown_minutes,
+        daily_limit: q.daily_limit,
+        status: 'pending',
+        is_pinned: true,
+      });
+      if (saved && saved[0]) tasks.unshift(saved[0]);
+    } catch(e) {
+      console.error(`建立快速委託失敗：${q.title}`, e);
+    }
+  }
+  renderQuickTaskPanel();
 }
 
 // ─── RECORDS SYSTEM ──────────────────────────────────
