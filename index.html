@@ -2526,7 +2526,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="cursor:pointer" onclick="openStoryLog()" title="查看劇情日誌">
-      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.33</span>
+      鑄霧城日誌<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.4;margin-left:6px;letter-spacing:1px;vertical-align:middle">v1.34</span>
       <span>IRONMIST CITY CHRONICLE · 點擊查看劇情</span>
     </div>
     <div class="header-stats">
@@ -8902,6 +8902,8 @@ async function completeTask(id) {
       const oldLv = getLevel(player.exp - expGain);
       const newLv = getLevel(player.exp);
       if (newLv > oldLv) {
+        player.level = newLv;
+        await sb(`player?id=eq.${player.id}`, 'PATCH', { level: newLv });
         notify(`🎉 升級！LV.${newLv}`, 'gold');
         setTimeout(() => checkAndShowStory(newLv), 800);
         setTimeout(() => showLevelUpChoices(newLv), 1800);
